@@ -83,12 +83,14 @@ export function WalletConnectButton() {
     switch (chainId) {
       case 1:
         return "Ethereum"
+      case 11142220:
+        return "Celo Sepolia"
       case 5:
         return "Goerli"
       case 11155111:
         return "Sepolia"
       default:
-        return "Unknown"
+        return "Unknown"  
     }
   }
 
