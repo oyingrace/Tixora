@@ -8,6 +8,7 @@ import { Plus, ShoppingBag, TicketIcon, Activity } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { WalletConnectButton } from "@/components/wallet-connect-button"
+import { ReferralDashboard } from "@/components/referral-dashboard"
 
 export default function Dashboard() {
   const { address, isConnected } = useAccount()
@@ -193,6 +194,11 @@ export default function Dashboard() {
                 )
               })}
             </div>
+          </div>
+
+          {/* Referral Dashboard Section */}
+          <div className="mb-12">
+            <ReferralDashboard className="bg-gradient-to-br from-slate-800/80 to-purple-900/30 border-purple-500/30" />
           </div>
 
           {/* Recent Activity Section */}
