@@ -18,7 +18,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     celo: {
-      url: "https://forno.celo-sepolia.celo-testnet.org",
+      url: "https://rpc.ankr.com/celo_sepolia",
       accounts: [PRIVATE_KEY],
     },
   },
@@ -28,11 +28,11 @@ const config: HardhatUserConfig = {
     },
     customChains: [
       {
-        network: "celo",
+        network: "celo-sepolia",
         chainId: 11142220,
         urls: {
-          apiURL: "https://api-celo-sepolia.celoscan.io/api",
-          browserURL: "https://celo-sepolia.blockscout.com/",
+          apiURL: "https://celo-sepolia.blockscout.com/api",
+          browserURL: "https://celo-sepolia.blockscout.com"
         }
       }
     ],

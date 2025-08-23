@@ -1,10 +1,9 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAccount } from 'wagmi'
 import { useRouter } from "next/navigation"
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,11 +14,11 @@ import Image from "next/image"
 import Link from "next/link"
 import { Upload } from "lucide-react"
 import { WalletConnectButton } from "@/components/wallet-connect-button"
+import { eventTicketingAddress, eventTicketingAbi } from "@/lib/addressAndAbi"
 
 export default function CreateEvent() {
   const { address, isConnected } = useAccount()
   const router = useRouter()
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -30,6 +29,74 @@ export default function CreateEvent() {
     totalSupply: "",
     bannerImage: null as File | null,
   })
+
+  // Contract write hook
+  const { writeContract, data: hash, isPending: isSubmitting, error: writeError } = useWriteContract()
+
+  // Wait for transaction receipt
+  const { isLoading: isTransactionPending, isSuccess: isTransactionSuccess, error: transactionError } = useWaitForTransactionReceipt({
+    hash,
+  })
+
+  // Handle successful transaction and errors
+  useEffect(() => {
+    if (isTransactionSuccess) {
+      toast.success("🎉 Event created successfully on blockchain!")
+      router.push("/marketplace")
+    }
+  }, [isTransactionSuccess, router])
+
+  useEffect(() => {
+    if (writeError) {
+      toast.error(`Contract write error: ${writeError.message}`)
+    }
+  }, [writeError])
+
+  useEffect(() => {
+    if (transactionError) {
+      toast.error(`Transaction failed: ${transactionError.message}`)
+    }
+  }, [transactionError])
+
+  const createTicket = () => {
+    if (!formData.title || !formData.description || !formData.date || !formData.time || !formData.location || !formData.price || !formData.totalSupply) {
+      toast.error("Please fill in all required fields")
+      return
+    }
+
+    // Validate price and total supply
+    const price = parseFloat(formData.price)
+    const totalSupply = parseInt(formData.totalSupply)
+    
+    if (isNaN(price) || price <= 0) {
+      toast.error("Please enter a valid price greater than 0")
+      return
+    }
+    
+    if (isNaN(totalSupply) || totalSupply <= 0 || totalSupply >= 100) {
+      toast.error("Please enter a valid total supply greater than 0")
+      return
+    }
+
+    writeContract({
+      address: eventTicketingAddress as `0x${string}`,
+      abi: eventTicketingAbi,
+      functionName: 'createTicket',
+      args: [
+        BigInt(Math.floor(price * 10**18)), // Convert to wei
+        formData.title,
+        formData.description,
+        BigInt(new Date(`${formData.date}T${formData.time}`).getTime() / 1000), // Convert to Unix timestamp
+        BigInt(totalSupply),
+        JSON.stringify({ // Metadata as JSON string
+          bannerImage: formData.bannerImage ? formData.bannerImage.name : "",
+          date: formData.date,
+          time: formData.time
+        }),
+        formData.location
+      ],
+    })
+  }
 
   // Redirect to landing page if wallet is not connected
   if (!isConnected) {
@@ -46,13 +113,7 @@ export default function CreateEvent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
-
-    // Simulate smart contract deployment
-    await new Promise((resolve) => setTimeout(resolve, 3000))
-
-    toast.success("🎉 Event created successfully!")
-    router.push("/marketplace")
+    createTicket()
   }
 
   const totalRevenue =
@@ -61,6 +122,20 @@ export default function CreateEvent() {
       : "0"
 
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ""
+
+  // Show loading state while transaction is pending
+  if (isTransactionPending) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <div className="text-center p-8 bg-slate-800/50 rounded-lg border border-purple-500/30 backdrop-blur-sm">
+          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <h1 className="text-2xl font-bold text-white mb-4">Creating Event on Blockchain</h1>
+          <p className="text-slate-300 mb-2">Transaction Hash: {hash}</p>
+          <p className="text-slate-300">Please wait while your transaction is being processed...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -260,10 +335,10 @@ export default function CreateEvent() {
                 <Button
                   type="submit"
                   size="lg"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isTransactionPending}
                   className="w-full text-lg py-6 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500"
                 >
-                  {isSubmitting ? (
+                  {isSubmitting || isTransactionPending ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                       Creating Event & Minting NFTs...

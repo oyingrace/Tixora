@@ -1,24 +1,133 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { useAccount, useWriteContract } from 'wagmi'
-import { Search, Filter, TrendingUp, Clock, MapPin, Calendar, Ticket, Users } from "lucide-react"
+import { useAccount, useReadContract } from 'wagmi'
+import { Search, Filter, TrendingUp, Clock } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import eventsData from "@/data/events.json"
 import { WalletConnectButton } from "@/components/wallet-connect-button"
+import { eventTicketingAbi, eventTicketingAddress } from "@/lib/addressAndAbi"
+import { formatEther } from "viem"
+import { EventCard } from "@/components/event-card"
+import { Card } from "@/components/ui/card"
+
+interface TicketData {
+  id: number
+  creator: string
+  price: bigint
+  eventName: string
+  description: string
+  eventTimestamp: bigint
+  location: string
+  closed: boolean
+  canceled: boolean
+  metadata: string
+  maxSupply: bigint
+  sold: bigint
+  totalCollected: bigint
+  totalRefunded: bigint
+  proceedsWithdrawn: boolean
+}
+
+interface MarketplaceEvent {
+  id: number
+  eventTitle: string
+  price: string
+  date: string
+  location: string
+  image: string
+  attendees: number
+  ticketsLeft: number
+  status: string
+  category: string
+  trending: boolean
+  createdAt: string
+  originalPrice: bigint
+}
 
 export default function Marketplace() {
   const { address, isConnected } = useAccount()
-  const { writeContract, isPending } = useWriteContract()
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("trending")
   const [activeTab, setActiveTab] = useState("upcoming")
-  const [purchasingEventId, setPurchasingEventId] = useState<number | null>(null)
+  const [events, setEvents] = useState<MarketplaceEvent[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Read contract data
+  const { data: totalTickets } = useReadContract({
+    address: eventTicketingAddress,
+    abi: eventTicketingAbi,
+    functionName: 'getTotalTickets',
+  })
+
+  const { data: recentTickets } = useReadContract({
+    address: eventTicketingAddress,
+    abi: eventTicketingAbi,
+    functionName: 'getRecentTickets',
+  })
+
+
+
+  // Transform blockchain data to marketplace format
+  useEffect(() => {
+    if (recentTickets && Array.isArray(recentTickets)) {
+      const transformedEvents: MarketplaceEvent[] = recentTickets.map((ticket: TicketData, index: number) => {
+        const eventDate = new Date(Number(ticket.eventTimestamp) * 1000)
+        const now = new Date()
+        const isUpcoming = eventDate > now
+        const isPassed = eventDate < now
+        const isCanceled = ticket.canceled
+        const isClosed = ticket.closed
+        const ticketsLeft = Number(ticket.maxSupply - ticket.sold)
+        
+        let status = "upcoming"
+        if (isCanceled) status = "canceled"
+        else if (isClosed) status = "closed"
+        else if (isPassed) status = "passed"
+        else if (ticketsLeft === 0) status = "sold_out"
+
+        // Parse metadata for additional info
+        let category = "Event"
+        let image = "/placeholder.svg"
+        try {
+          if (ticket.metadata) {
+            const metadata = JSON.parse(ticket.metadata)
+            category = metadata.category || "Event"
+            image = metadata.image || "/placeholder.svg"
+          }
+        } catch (e) {
+          console.log("Could not parse metadata")
+        }
+
+        return {
+          id: Number(ticket.id),
+          eventTitle: ticket.eventName,
+          price: `${formatEther(ticket.price)} CELO`,
+          date: eventDate.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+          }),
+          location: ticket.location,
+          image: image,
+          attendees: Number(ticket.maxSupply),
+          ticketsLeft: ticketsLeft,
+          status: status,
+          category: category,
+          trending: ticket.sold > (ticket.maxSupply * BigInt(7)) / BigInt(10), // Trending if 70% sold
+          createdAt: eventDate.toISOString(),
+          originalPrice: ticket.price,
+        }
+      })
+
+      setEvents(transformedEvents)
+      setLoading(false)
+    }
+  }, [recentTickets])
+
+
 
   // Redirect to landing page if wallet is not connected
   if (!isConnected) {
@@ -33,216 +142,29 @@ export default function Marketplace() {
     )
   }
 
-  // Transform events data for marketplace display
-  const upcomingEvents = eventsData.events
-    .filter(event => event.status === "Upcoming")
-    .map(event => ({
-      id: parseInt(event.id),
-      eventTitle: event.title,
-      price: `${event.price} ${event.currency}`,
-      date: new Date(event.date).toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
-      }),
-      location: `${event.city}, ${event.country}`,
-      image: event.image,
-      attendees: event.totalTickets,
-      ticketsLeft: event.totalTickets - event.soldTickets,
-      status: "upcoming",
-      category: event.category,
-      trending: event.featured, // Use featured as trending indicator
-      createdAt: event.date,
-    }))
-
-  const pastEvents = eventsData.events
-    .filter(event => event.status === "Passed")
-    .map(event => ({
-      id: parseInt(event.id),
-      eventTitle: event.title,
-      price: `${event.price} ${event.currency}`,
-      date: new Date(event.date).toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
-      }),
-      location: `${event.city}, ${event.country}`,
-      image: event.image,
-      attendees: event.totalTickets,
-      ticketsLeft: 0,
-      status: "passed",
-      category: event.category,
-      trending: false,
-      createdAt: event.date,
-    }))
-
-  const canceledEvents = eventsData.events
-    .filter(event => event.status === "Canceled")
-    .map(event => ({
-      id: parseInt(event.id),
-      eventTitle: event.title,
-      price: `${event.price} ${event.currency}`,
-      date: new Date(event.date).toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
-      }),
-      location: `${event.city}, ${event.country}`,
-      image: event.image,
-      attendees: event.totalTickets,
-      ticketsLeft: event.totalTickets - event.soldTickets,
-      status: "canceled",
-      category: event.category,
-      trending: false,
-      createdAt: event.date,
-    }))
-
-  const closedEvents = eventsData.events
-    .filter(event => event.status === "Closed")
-    .map(event => ({
-      id: parseInt(event.id),
-      eventTitle: event.title,
-      price: `${event.price} ${event.currency}`,
-      date: new Date(event.date).toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
-      }),
-      location: `${event.city}, ${event.country}`,
-      image: event.image,
-      attendees: event.totalTickets,
-      ticketsLeft: 0,
-      status: "closed",
-      category: event.category,
-      trending: false,
-      createdAt: event.date,
-    }))
-
-  const allEvents = [...upcomingEvents, ...pastEvents, ...canceledEvents, ...closedEvents]
-
-  const legacyCompletedEvents = [
-    {
-      id: 15,
-      eventTitle: "NFT Art Gallery Opening",
-      price: "20 CELO",
-      date: "Nov 25, 2024",
-      location: "New York, NY",
-      image: "/nft-art-gallery.png",
-      attendees: 800,
-      ticketsLeft: 0,
-      status: "completed",
-      category: "Art",
-      trending: false,
-      createdAt: "2024-11-10",
-    },
-    {
-      id: 16,
-      eventTitle: "DeFi Yield Farming Workshop",
-      price: "15 CELO",
-      date: "Nov 20, 2024",
-      location: "Miami, FL",
-      image: "/defi-yield-farming-workshop.png",
-      attendees: 500,
-      ticketsLeft: 0,
-      status: "completed",
-      category: "Education",
-      trending: false,
-      createdAt: "2024-11-05",
-    },
-    {
-      id: 17,
-      eventTitle: "Blockchain Innovation Summit",
-      price: "60 CELO",
-      date: "Nov 15, 2024",
-      location: "Silicon Valley, CA",
-      image: "/blockchain-developer-meetup.png",
-      attendees: 3000,
-      ticketsLeft: 0,
-      status: "completed",
-      category: "Conference",
-      trending: false,
-      createdAt: "2024-10-30",
-    },
-    {
-      id: 18,
-      eventTitle: "Crypto Startup Demo Day",
-      price: "25 CELO",
-      date: "Nov 10, 2024",
-      location: "Boston, MA",
-      image: "/web3-startup-pitch-night.png",
-      attendees: 600,
-      ticketsLeft: 0,
-      status: "completed",
-      category: "Business",
-      trending: false,
-      createdAt: "2024-10-25",
-    },
-    {
-      id: 19,
-      eventTitle: "Web3 Gaming Tournament",
-      price: "30 CELO",
-      date: "Nov 5, 2024",
-      location: "Los Angeles, CA",
-      image: "/crypto-gaming-tournament-esports.png",
-      attendees: 1500,
-      ticketsLeft: 0,
-      status: "completed",
-      category: "Gaming",
-      trending: false,
-      createdAt: "2024-10-20",
-    },
-    {
-      id: 20,
-      eventTitle: "Metaverse Architecture Expo",
-      price: "35 CELO",
-      date: "Oct 28, 2024",
-      location: "Chicago, IL",
-      image: "/metaverse-fashion-show.png",
-      attendees: 400,
-      ticketsLeft: 0,
-      status: "completed",
-      category: "Architecture",
-      trending: false,
-      createdAt: "2024-10-15",
-    },
-    {
-      id: 21,
-      eventTitle: "DeFi Protocol Launch",
-      price: "40 CELO",
-      date: "Oct 20, 2024",
-      location: "New York, NY",
-      image: "/defi-conference-blockchain-presentation.png",
-      attendees: 1200,
-      ticketsLeft: 0,
-      status: "completed",
-      category: "Finance",
-      trending: false,
-      createdAt: "2024-10-10",
-    },
-  ]
-
   const getEventsByTab = () => {
-    let events = []
+    let filteredEvents = events
+
     switch (activeTab) {
       case "upcoming":
-        events = upcomingEvents
+        filteredEvents = events.filter(event => event.status === "upcoming")
         break
       case "passed":
-        events = pastEvents
+        filteredEvents = events.filter(event => event.status === "passed")
         break
       case "canceled":
-        events = canceledEvents
+        filteredEvents = events.filter(event => event.status === "canceled")
         break
       case "closed":
-        events = closedEvents
+        filteredEvents = events.filter(event => event.status === "closed" || event.status === "sold_out")
         break
       default:
-        events = upcomingEvents
+        filteredEvents = events.filter(event => event.status === "upcoming")
     }
 
-    // Apply search filter first
+    // Apply search filter
     if (searchTerm) {
-      events = events.filter(
+      filteredEvents = filteredEvents.filter(
         (event) =>
           event.eventTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
           event.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -250,85 +172,27 @@ export default function Marketplace() {
       )
     }
 
+    // Apply sorting
     if (sortBy === "recent") {
-      events = [...events].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      filteredEvents = [...filteredEvents].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    } else if (sortBy === "trending") {
+      filteredEvents = [...filteredEvents].sort((a, b) => (a.trending ? 1 : 0) - (b.trending ? 1 : 0))
     }
-    // Note: Removed trending filter to ensure events always show in categories
 
-    return events
+    return filteredEvents
   }
 
-  const getStatusBadge = (event: any) => {
-    if (event.status === "passed") {
-      return <Badge className="bg-gray-500 text-white">Passed</Badge>
-    }
-    if (event.status === "canceled") {
-      return <Badge className="bg-red-500 text-white">Canceled</Badge>
-    }
-    if (event.status === "closed") {
-      return <Badge className="bg-orange-500 text-white">Closed</Badge>
-    }
-    if (event.ticketsLeft === 0 && event.status === "upcoming") {
-      return <Badge className="bg-red-500 text-white">Sold Out</Badge>
-    }
-    return <Badge className="bg-purple-500 text-white">{event.ticketsLeft} left</Badge>
-  }
 
-  const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ""
 
-  const handlePurchaseTicket = async (event: any) => {
-    if (!isConnected || !address) {
-      alert("Please connect your wallet first")
-      return
-    }
-
-    if (event.ticketsLeft === 0) {
-      alert("Sorry, this event is sold out!")
-      return
-    }
-
-    setPurchasingEventId(event.id)
-
-    try {
-      // Show transaction prompt
-      const confirmed = window.confirm(
-        `Purchase ticket for "${event.eventTitle}"?\n\nPrice: ${event.price}\nGas fee: ~0.002 CELO\n\nClick OK to approve the transaction in your wallet.`,
-      )
-
-      if (!confirmed) {
-        setPurchasingEventId(null)
-        return
-      }
-
-      // For demo purposes, simulate the transaction
-      // In a real app, you would call writeContract with your smart contract
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // Store purchased ticket in localStorage (in real app, this would be handled by smart contract events)
-      const purchasedTickets = JSON.parse(localStorage.getItem("purchasedTickets") || "[]")
-      const newTicket = {
-        id: Date.now(),
-        eventId: event.id,
-        eventTitle: event.eventTitle,
-        price: event.price,
-        purchaseDate: new Date().toISOString(),
-        txHash: `0x${Math.random().toString(16).substr(2, 64)}`,
-        status: "confirmed",
-        qrCode: `ticket-${event.id}-${Date.now()}`,
-      }
-
-      purchasedTickets.push(newTicket)
-      localStorage.setItem("purchasedTickets", JSON.stringify(purchasedTickets))
-
-      alert(
-        `Ticket purchased successfully!\n\nEvent: ${event.eventTitle}\nPrice: ${event.price}\n\nYour NFT ticket has been added to your wallet. Check "My Tickets" to view it.`,
-      )
-    } catch (error) {
-      console.error("Purchase error:", error)
-      alert("Transaction failed. Please check your wallet and try again.")
-    } finally {
-      setPurchasingEventId(null)
-    }
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center">
+        <div className="text-center p-8 bg-slate-800/50 rounded-lg border border-purple-500/30 backdrop-blur-sm">
+          <div className="w-8 h-8 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-300">Loading events from blockchain...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -470,109 +334,48 @@ export default function Marketplace() {
           {/* Events Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {getEventsByTab().map((event, index) => (
-              <Card
-                key={event.id}
-                className="group cursor-pointer bg-slate-800/50 border-slate-700 hover:border-purple-500/50 backdrop-blur-sm"
-              >
-                <CardContent className="p-0 h-full flex flex-col">
-                  <div className="relative h-48 overflow-hidden rounded-t-lg">
-                    <Image
-                      src={event.image || "/placeholder.svg"}
-                      alt={event.eventTitle}
-                      fill
-                      className="object-cover"
-                    />
-                    <Badge className="absolute top-4 left-4 bg-blue-600">{event.category}</Badge>
-                    <div className="absolute top-4 right-4">{getStatusBadge(event)}</div>
-                    {event.trending && (
-                      <Badge className="absolute bottom-4 left-4 bg-orange-500 text-white">🔥 Trending</Badge>
-                    )}
-                  </div>
-
-                  <div className="p-6 flex-1 flex flex-col">
-                    <h3 className="text-xl font-semibold mb-2 text-white">{event.eventTitle}</h3>
-
-                    <div className="space-y-2 text-sm text-slate-400 mb-4">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-purple-400" />
-                        {event.date}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-blue-400" />
-                        {event.location}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-purple-400" />
-                        {event.attendees.toLocaleString()} attendees
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between mt-auto">
-                      <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                        {event.price}
-                      </span>
-                      {event.status === "upcoming" && event.ticketsLeft > 0 ? (
-                        <Button
-                          className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
-                          onClick={() => handlePurchaseTicket(event)}
-                          disabled={isPending || purchasingEventId === event.id}
-                        >
-                          <Ticket className="h-4 w-4 mr-2" />
-                          {purchasingEventId === event.id ? "Processing..." : "Buy Now"}
-                        </Button>
-                      ) : (
-                        <Button
-                          className="bg-slate-600 text-slate-300 cursor-not-allowed"
-                          disabled
-                        >
-                          <Ticket className="h-4 w-4 mr-2" />
-                          {event.status === "passed" ? "Event Ended" : 
-                           event.status === "canceled" ? "Canceled" : 
-                           event.status === "closed" ? "Sold Out" : "Unavailable"}
-                        </Button>
-                      )}
-                      {event.status === "ongoing" && (
-                        <Button className="bg-green-500 hover:bg-green-600 text-white">Join Live</Button>
-                      )}
-                      {event.status === "completed" && (
-                        <Button
-                          variant="outline"
-                          className="border-slate-600 text-slate-300 hover:border-purple-500 bg-transparent"
-                        >
-                          View Details
-                        </Button>
-                      )}
-                      {event.status === "upcoming" && event.ticketsLeft === 0 && (
-                        <Button disabled className="bg-gray-600 text-gray-400">
-                          Sold Out
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <EventCard key={event.id} event={event} userAddress={address} />
             ))}
           </div>
+
+          {/* Empty State */}
+          {getEventsByTab().length === 0 && (
+            <div className="text-center py-16">
+              <div className="text-6xl mb-4">🎫</div>
+              <h3 className="text-2xl font-semibold text-white mb-2">No events found</h3>
+              <p className="text-slate-400 mb-6">
+                {searchTerm ? `No events match "${searchTerm}"` : `No ${activeTab} events available`}
+              </p>
+              {searchTerm && (
+                <Button
+                  onClick={() => setSearchTerm("")}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  Clear Search
+                </Button>
+              )}
+            </div>
+          )}
 
           {/* Stats Section */}
           <div className="mt-16 grid grid-cols-1 md:grid-cols-4 gap-8">
             <Card className="text-center p-6 bg-slate-800/50 border-slate-700">
               <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
-                {upcomingEvents.length + pastEvents.length + canceledEvents.length + closedEvents.length}+
+                {totalTickets ? Number(totalTickets) : 0}
+              </div>
+              <div className="text-sm text-slate-400">Total Events Created</div>
+            </Card>
+            <Card className="text-center p-6 bg-slate-800/50 border-slate-700">
+              <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
+                {events.filter(e => e.status === "upcoming").length}
               </div>
               <div className="text-sm text-slate-400">Active Events</div>
             </Card>
             <Card className="text-center p-6 bg-slate-800/50 border-slate-700">
               <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
-                50K+
+                {events.reduce((sum, e) => sum + e.attendees, 0).toLocaleString()}+
               </div>
-              <div className="text-sm text-slate-400">Tickets Sold</div>
-            </Card>
-            <Card className="text-center p-6 bg-slate-800/50 border-slate-700">
-              <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
-                25K+
-              </div>
-              <div className="text-sm text-slate-400">Happy Users</div>
+              <div className="text-sm text-slate-400">Total Capacity</div>
             </Card>
             <Card className="text-center p-6 bg-slate-800/50 border-slate-700">
               <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
