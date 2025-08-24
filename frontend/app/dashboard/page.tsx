@@ -83,18 +83,12 @@ export default function Dashboard() {
         type: "create" as const,
       }))
   }, [recentTickets, address])
+          
+  const router = useRouter()
 
   // Redirect to landing page if wallet is not connected
   if (!isConnected) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center">
-        <div className="text-center p-8 bg-slate-800/50 rounded-lg border border-purple-500/30 backdrop-blur-sm">
-          <h1 className="text-2xl font-bold text-white mb-4">Wallet Connection Required</h1>
-          <p className="text-slate-300 mb-6">Please connect your wallet to access the dashboard.</p>
-          <WalletConnectButton className="mx-auto" />
-        </div>
-      </div>
-    )
+    router.push("/")
   }
 
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ""
@@ -125,37 +119,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 text-foreground">
-      {/* Dashboard Header */}
-      <header className="bg-slate-900/80 backdrop-blur-md border-b border-purple-500/20">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <Image src="/tixora-logo.png" alt="Tixora" width={40} height={40} />
-            <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-              Tixora
-            </span>
-          </Link>
-
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/dashboard" className="text-purple-400 font-medium">
-              Dashboard
-            </Link>
-            <Link href="/marketplace" className="text-slate-300 hover:text-purple-400 transition-colors font-medium">
-              Marketplace
-            </Link>
-            <Link href="/tickets" className="text-slate-300 hover:text-blue-400 transition-colors font-medium">
-              My Tickets
-            </Link>
-            <Link href="/create-event" className="text-slate-300 hover:text-purple-400 transition-colors font-medium">
-              Create Event
-            </Link>
-          </nav>
-
-          <div className="flex items-center space-x-4">
-            <WalletConnectButton />
-          </div>
-        </div>
-      </header>
-
       <div className="pb-16 px-4">
         <div className="container mx-auto max-w-7xl">
           {/* Welcome Section */}
@@ -217,6 +180,11 @@ export default function Dashboard() {
                 )
               })}
             </div>
+          </div>
+
+          {/* Referral Dashboard Section */}
+          <div className="mb-12">
+            <ReferralDashboard className="bg-gradient-to-br from-slate-800/80 to-purple-900/30 border-purple-500/30" />
           </div>
 
           {/* Recent Activity Section */}

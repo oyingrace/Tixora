@@ -1,25 +1,24 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAccount } from 'wagmi'
 import { useRouter } from "next/navigation"
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { toast } from "sonner"
+import { toast } from "react-toastify"
 import Image from "next/image"
 import Link from "next/link"
 import { Upload } from "lucide-react"
 import { WalletConnectButton } from "@/components/wallet-connect-button"
+import { eventTicketingAddress, eventTicketingAbi } from "@/lib/addressAndAbi"
 
 export default function CreateEvent() {
   const { address, isConnected } = useAccount()
   const router = useRouter()
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -31,28 +30,90 @@ export default function CreateEvent() {
     bannerImage: null as File | null,
   })
 
-  // Redirect to landing page if wallet is not connected
+  const { writeContract, data: hash, isPending: isSubmitting, error: writeError } = useWriteContract()
+
+  const { isLoading: isTransactionPending, isSuccess: isTransactionSuccess, error: transactionError } = useWaitForTransactionReceipt({
+    hash,
+  })
+
+  useEffect(() => {
+    if (isSubmitting) {
+      toast.info("Creating event on blockchain...")
+    }
+  }, [isSubmitting]) 
+
+  useEffect(() => {
+    if (isTransactionPending) {
+      toast.info("Transaction is being processed...")
+    }
+  }, [isTransactionPending])
+
+  useEffect(() => {
+    if (isTransactionSuccess) {
+      toast.success("🎉 Event created successfully on blockchain!")
+      router.push("/marketplace")
+      toast.success(`Ticket hash is: ${hash}`)
+    }
+  }, [isTransactionSuccess, router])
+
+  useEffect(() => {
+    if (writeError) {
+      toast.error(`Transaction denied`)
+    }
+  }, [writeError])
+
+  useEffect(() => {
+    if (transactionError) {
+      toast.error(`Transaction failed: ${transactionError.message}`)
+    }
+  }, [transactionError])
+
+  const createTicket = () => {
+    if (!formData.title || !formData.description || !formData.date || !formData.time || !formData.location || !formData.price || !formData.totalSupply) {
+      toast.error("Please fill in all required fields")
+      return
+    }
+
+    const price = parseFloat(formData.price)
+    const totalSupply = parseInt(formData.totalSupply)
+    
+    if (isNaN(price) || price <= 0) {
+      toast.error("Please enter a valid price greater than 0")
+      return
+    }
+    
+    if (isNaN(totalSupply) || totalSupply <= 0) {
+      toast.error("Please enter a valid total supply greater than 0")
+      return
+    }
+
+    writeContract({
+      address: eventTicketingAddress as `0x${string}`,
+      abi: eventTicketingAbi,
+      functionName: 'createTicket',
+      args: [
+        BigInt(Math.floor(price * 10**18)), // Convert to wei
+        formData.title,
+        formData.description,
+        BigInt(new Date(`${formData.date}T${formData.time}`).getTime() / 1000), // Convert to Unix timestamp
+        BigInt(totalSupply),
+        JSON.stringify({ // Metadata as JSON string
+          bannerImage: formData.bannerImage ? formData.bannerImage.name : "",
+          date: formData.date,
+          time: formData.time
+        }),
+        formData.location
+      ],
+    })
+  }
+
   if (!isConnected) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center">
-        <div className="text-center p-8 bg-slate-800/50 rounded-lg border border-purple-500/30 backdrop-blur-sm">
-          <h1 className="text-2xl font-bold text-white mb-4">Wallet Connection Required</h1>
-          <p className="text-slate-300 mb-6">Please connect your wallet to create events.</p>
-          <WalletConnectButton className="mx-auto" />
-        </div>
-      </div>
-    )
+    router.push("/")
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
-
-    // Simulate smart contract deployment
-    await new Promise((resolve) => setTimeout(resolve, 3000))
-
-    toast.success("🎉 Event created successfully!")
-    router.push("/marketplace")
+    createTicket()
   }
 
   const totalRevenue =
@@ -60,39 +121,9 @@ export default function CreateEvent() {
       ? (Number.parseFloat(formData.price) * Number.parseInt(formData.totalSupply)).toFixed(2)
       : "0"
 
-  const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ""
-
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <Image src="/tixora-logo.png" alt="Tixora" width={40} height={40} />
-            <span className="text-2xl font-bold gradient-text">Tixora</span>
-          </Link>
-
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/dashboard" className="text-muted-foreground hover:text-primary transition-colors">
-              Dashboard
-            </Link>
-            <Link href="/marketplace" className="text-muted-foreground hover:text-primary transition-colors">
-              Marketplace
-            </Link>
-            <Link href="/tickets" className="text-muted-foreground hover:text-primary transition-colors">
-              Tickets
-            </Link>
-            <Link href="/create-event" className="text-primary">
-              Create Event
-            </Link>
-          </nav>
-
-          <div className="flex items-center space-x-4">
-            <WalletConnectButton />
-          </div>
-        </div>
-      </header>
-
-      <div className="pb-16 px-4">
+      <div className="pb-16 px-4 pt-12">
         <div className="container mx-auto max-w-4xl">
           <div className="mb-8">
             <h1 className="text-4xl font-bold gradient-text">Create Event</h1>
@@ -129,7 +160,7 @@ export default function CreateEvent() {
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       placeholder="Describe your event..."
-                      rows={4}
+                      rows={8}
                       required
                       className="bg-slate-800/80 border-purple-500/30 text-white focus:border-purple-400 focus:ring-purple-400/20"
                     />
@@ -146,7 +177,7 @@ export default function CreateEvent() {
                         value={formData.date}
                         onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                         required
-                        className="bg-slate-800/80 border-purple-500/30 text-white focus:border-purple-400 focus:ring-purple-400/20"
+                        className="bg-slate-800/80 border-purple-500/30 text-white focus:border-purple-400 focus:ring-purple-400/20 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:ml-auto [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                       />
                     </div>
                     <div>
@@ -159,7 +190,7 @@ export default function CreateEvent() {
                         value={formData.time}
                         onChange={(e) => setFormData({ ...formData, time: e.target.value })}
                         required
-                        className="bg-slate-800/80 border-purple-500/30 text-white focus:border-purple-400 focus:ring-purple-400/20"
+                        className="bg-slate-800/80 border-purple-500/30 text-white focus:border-purple-400 focus:ring-purple-400/20 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:ml-auto [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                       />
                     </div>
                   </div>
@@ -204,7 +235,7 @@ export default function CreateEvent() {
 
                   <div>
                     <Label htmlFor="totalSupply" className="text-cyan-200">
-                      Total Tickets to Mint
+                      Total Tickets to Mint (Total Supply)
                     </Label>
                     <Input
                       id="totalSupply"
@@ -260,10 +291,10 @@ export default function CreateEvent() {
                 <Button
                   type="submit"
                   size="lg"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isTransactionPending}
                   className="w-full text-lg py-6 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500"
                 >
-                  {isSubmitting ? (
+                  {isSubmitting || isTransactionPending ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                       Creating Event & Minting NFTs...

@@ -1,4 +1,4 @@
-export const ticketNftAddress = "0x9f2595C4fC87903F940c1eb7503507EF78a07E72";
+export const ticketNftAddress = "0xc88229Ab87658823580E500aA4E4d5b48c10a604";
 export const ticketNftAbi = [
     {
       "inputs": [
@@ -778,7 +778,7 @@ export const ticketNftAbi = [
     }
   ];
 
-export const eventTicketingAddress = "0xdE254352681d843375895186a88DAF82B2930C7b";
+export const eventTicketingAddress = "0xA48c69773a797bE0a799237f2389ebf42551EF20";
 export const eventTicketingAbi = [
     {
       "inputs": [
@@ -1707,7 +1707,7 @@ export const eventTicketingAbi = [
     }
   ];
 
-export const resaleMarketAddress = "0x124c6F40571dFc3F2A03c17d2C502BB59F75dff6";
+export const resaleMarketAddress = "0x9f7ABE0e663fA89506A2d227A7321a5dCb89D5E5";
 export const resaleMarketAbi = [
     {
       "inputs": [

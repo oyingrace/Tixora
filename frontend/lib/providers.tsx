@@ -7,6 +7,7 @@ import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit'
 import '@rainbow-me/rainbowkit/styles.css'
 
 import { config } from './wagmi-config'
+import { DivviProvider } from './divvi-provider'
 
 const queryClient = new QueryClient()
 
@@ -32,7 +33,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
             overlayBlur: 'small',
           })}
         >
-          {children}
+          <DivviProvider>
+            {children}
+          </DivviProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
