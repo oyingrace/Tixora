@@ -183,15 +183,20 @@ export default function EventDetailPage() {
   }, [eventData, isConnected, router, params.id])
 
   if (!isConnected) {
-    return null // Redirecting, no need to render anything
-  }
-
-  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center">
         <div className="text-center p-8 bg-slate-800/50 rounded-lg border border-purple-500/30 backdrop-blur-sm">
-          <div className="w-8 h-8 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-300">Loading event details...</p>
+          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Shield className="w-8 h-8 text-red-400" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Wallet Not Connected</h2>
+          <p className="text-slate-300 mb-4">Please connect your wallet to view event details and purchase tickets.</p>
+          <Button 
+            onClick={() => router.push('/')}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            Go to Home
+          </Button>
         </div>
       </div>
     )
@@ -203,19 +208,20 @@ export default function EventDetailPage() {
       return
     }
 
+    if (!isConnected) {
+      toast.error("Please connect your wallet first")
+      return
+    }
+
     setPurchasing(true)
 
     try {
-      const confirmed = true
-      toast.info(`Purchasing ticket for "${events.eventName}", click Confirm in your wallet to approve the transaction...`)
-
-      if (!confirmed) {
-        setPurchasing(false)
-        return
-      }
-
+      toast.info(`Preparing to purchase ticket for "${events.eventName}"...`)
+      
       // Convert price from ETH to Wei for the contract call
       const priceInWei = parseEther(events.price)
+      
+      toast.info(`Purchasing ticket for "${events.eventName}" - Please confirm the transaction in your wallet. Ticket price: ${events.price} ETH`)
       
       writeContract({
         address: eventTicketingAddress as `0x${string}`,
@@ -231,12 +237,37 @@ export default function EventDetailPage() {
     }
   }
 
-  if (isSuccess) {
-    setPurchasing(false)
-    // Refresh the page to show updated data
-    window.location.reload()
-    toast.success("Ticket purchased successfully!")
-  }
+  // Handle transaction states with toast notifications
+  useEffect(() => {
+    if (isPending) {
+      toast.info("Transaction submitted! Waiting for confirmation...")
+    }
+  }, [isPending])
+
+  useEffect(() => {
+    if (isConfirming) {
+      toast.info("Transaction confirmed! Processing on the blockchain...")
+    }
+  }, [isConfirming])
+
+  useEffect(() => {
+    if (isSuccess) {
+      setPurchasing(false)
+      toast.success("🎉 Ticket purchased successfully! Your NFT ticket has been minted.")
+      // Refresh the page to show updated data after a short delay
+      setTimeout(() => {
+        window.location.reload()
+      }, 2000)
+    }
+  }, [isSuccess])
+
+  // Handle contract errors
+  useEffect(() => {
+    if (contractError) {
+      toast.error(`Failed to load event data: ${contractError.message}`)
+      console.error('Contract error:', contractError)
+    }
+  }, [contractError])
 
   const isProcessing = purchasing || isPending || isConfirming
 
@@ -370,18 +401,46 @@ export default function EventDetailPage() {
                       className="w-full bg-purple-600 hover:bg-purple-700 h-12 text-base"
                       disabled={events?.status === 'canceled' || events?.status === 'closed' || events?.ticketsLeft === 0 || events?.status === 'passed' || events?.status === 'registered' || isProcessing }
                     >
-                      {events?.status === 'canceled' ? 'Event Canceled' : 
-                       events?.status === 'closed' ? 'Sales Ended' :
-                       events?.status === 'sold_out' ? 'Sold Out' : 
-                       events?.status === 'passed' ? 'Event Ended' : 
-                       events?.status === 'registered' ? 'Registered' :
-                       events?.status === 'active' ? 'Buy Ticket' : 'Event Canceled'}
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          {isPending ? 'Confirming...' : 
+                           isConfirming ? 'Processing...' : 
+                           purchasing ? 'Preparing...' : 'Processing...'}
+                        </>
+                      ) : (
+                        events?.status === 'canceled' ? 'Event Canceled' : 
+                        events?.status === 'closed' ? 'Sales Ended' :
+                        events?.status === 'sold_out' ? 'Sold Out' : 
+                        events?.status === 'passed' ? 'Event Ended' : 
+                        events?.status === 'registered' ? 'Registered' :
+                        events?.status === 'active' ? 'Buy Ticket' : 'Event Canceled'
+                      )}
                     </Button>
                     
                     {events?.ticketsLeft && events.ticketsLeft < 10 && (
                       <p className="mt-2 text-sm text-amber-400 text-center">
                         Only {events.ticketsLeft} {events.ticketsLeft === 1 ? 'ticket' : 'tickets'} left!
                       </p>
+                    )}
+
+                    {/* Transaction Status Indicator */}
+                    {isProcessing && (
+                      <div className="mt-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
+                          <span className="text-slate-300">
+                            {isPending ? 'Waiting for wallet confirmation...' : 
+                             isConfirming ? 'Transaction confirmed! Processing on blockchain...' : 
+                             purchasing ? 'Preparing transaction...' : 'Processing...'}
+                          </span>
+                        </div>
+                        {hash && (
+                          <p className="text-xs text-slate-400 mt-2">
+                            Transaction Hash: {hash.slice(0, 10)}...{hash.slice(-8)}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>

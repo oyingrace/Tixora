@@ -117,15 +117,6 @@ export function WalletConnectButton({ className }: WalletConnectButtonProps = {}
                       )}
                     </div>
                   </button>
-
-                  <button
-                    onClick={handleDisconnect}
-                    type="button"
-                    className="flex items-center gap-2 px-3 py-2 bg-red-500/80 border border-red-400/30 text-white rounded-lg hover:bg-red-500 hover:opacity-90 transition-all duration-200"
-                    title="Disconnect Wallet"
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </button>
                 </div>
               )
             })()}

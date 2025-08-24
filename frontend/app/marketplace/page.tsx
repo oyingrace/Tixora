@@ -3,17 +3,15 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useAccount, useReadContract } from 'wagmi'
+import { useAccount, useReadContract, useWaitForTransactionReceipt } from 'wagmi'
 import { Search, Filter, TrendingUp, Clock } from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
-import { WalletConnectButton } from "@/components/wallet-connect-button"
 import { eventTicketingAbi, eventTicketingAddress } from "@/lib/addressAndAbi"
 import { formatEther } from "viem"
 import { EventCard } from "@/components/event-card"
 import { Card } from "@/components/ui/card"
 import { useRouter } from "next/navigation"
-import { Skeleton } from "@/components/ui/skeleton"
+import { toast } from "react-toastify"
+import { useEventRegistration } from "@/hooks/use-event-registration"
 
 interface TicketData {
   id: number
@@ -59,19 +57,32 @@ export default function Marketplace() {
   const [loading, setLoading] = useState(true)
 
   // Read contract data
-  const { data: totalTickets } = useReadContract({
+  const { data: totalTickets, error: totalTicketsError } = useReadContract({
     address: eventTicketingAddress,
     abi: eventTicketingAbi,
     functionName: 'getTotalTickets',
   })
 
-  const { data: recentTickets } = useReadContract({
+  const { data: recentTickets, error: recentTicketsError } = useReadContract({
     address: eventTicketingAddress,
     abi: eventTicketingAbi,
     functionName: 'getRecentTickets',
   })
 
+  // Show success toast when events are loaded
+  useEffect(() => {
+    if (events.length > 0 && !loading) {
+      toast.success(`Loaded ${events.length} events successfully!`)
+    }
+  }, [events.length, loading])
 
+  // Handle contract errors
+  useEffect(() => {
+    if (totalTicketsError) {
+      toast.error(`Failed to load tickets: ${totalTicketsError.message}`)
+      console.error('Total tickets error:', totalTicketsError)
+    }
+  }, [totalTicketsError])
 
   // Transform blockchain data to marketplace format
   useEffect(() => {
@@ -130,11 +141,11 @@ export default function Marketplace() {
     }
   }, [recentTickets])
 
-
-
   // Redirect to landing page if wallet is not connected
   if (!isConnected) {
+    toast.error("Please connect your wallet to access the marketplace")
     router.push("/")
+    return null
   }
 
   const getEventsByTab = () => {
@@ -177,19 +188,6 @@ export default function Marketplace() {
     return filteredEvents
   }
 
-
-
-  // if (loading) {
-  //   return (
-  //     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center">
-  //       <div className="text-center p-8 bg-slate-800/50 rounded-lg border border-purple-500/30 backdrop-blur-sm">
-  //         <div className="w-8 h-8 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-  //         <p className="text-slate-300">Loading events from blockchain...</p>
-  //       </div>
-  //     </div>
-  //   )
-  // }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 text-foreground">
       <div className="pb-16 px-4 pt-12">
@@ -216,7 +214,24 @@ export default function Marketplace() {
                 <Input
                   placeholder="Search events..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    const newSearchTerm = e.target.value
+                    setSearchTerm(newSearchTerm)
+                    
+                    // Show search feedback
+                    if (newSearchTerm.length > 2) {
+                      const filteredCount = events.filter(
+                        (event) =>
+                          event.eventTitle.toLowerCase().includes(newSearchTerm.toLowerCase()) ||
+                          event.location.toLowerCase().includes(newSearchTerm.toLowerCase()) ||
+                          event.category.toLowerCase().includes(newSearchTerm.toLowerCase())
+                      ).length
+                      
+                      // if (filteredCount === 0) {
+                      //   toast.info(`No events found matching "${newSearchTerm}"`)
+                      // }
+                    }
+                  }}
                   className="pl-10 h-10 bg-slate-800/50 border-slate-700 focus:border-purple-500 text-white text-md"
                 />
               </div>
@@ -224,7 +239,10 @@ export default function Marketplace() {
             <div className="flex gap-2">
               <Button
                 variant={sortBy === "trending" ? "default" : "outline"}
-                onClick={() => setSortBy("trending")}
+                onClick={() => {
+                  setSortBy("trending")
+                  toast.info("Showing trending events (most popular)")
+                }}
                 className={`h-10 text-sm
                   ${sortBy === "trending"
                     ? "bg-purple-600 hover:bg-purple-700"
@@ -237,7 +255,10 @@ export default function Marketplace() {
               </Button>
               <Button
                 variant={sortBy === "recent" ? "default" : "outline"}
-                onClick={() => setSortBy("recent")}
+                onClick={() => {
+                  setSortBy("recent")
+                  toast.info("Showing most recent events")
+                }}
                 className={`h-10 text-sm
                   ${sortBy === "recent"
                     ? "bg-purple-600 hover:bg-purple-700"
@@ -250,7 +271,10 @@ export default function Marketplace() {
               </Button>
               <Button
                 variant={sortBy === "all" ? "default" : "outline"}
-                onClick={() => setSortBy("all")}
+                onClick={() => {
+                  setSortBy("all")
+                  toast.info("Showing all events")
+                }}
                 className={`h-10 text-sm 
                   ${sortBy === "all"
                     ? "bg-purple-600 hover:bg-purple-700"
@@ -269,7 +293,10 @@ export default function Marketplace() {
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-1 border border-slate-700">
               <Button
                 variant={activeTab === "upcoming" ? "default" : "ghost"}
-                onClick={() => setActiveTab("upcoming")}
+                onClick={() => {
+                  setActiveTab("upcoming")
+                  const count = events.filter(event => event.status === "upcoming").length
+                }}
                 className={`h-10 text-sm
                   ${activeTab === "upcoming"
                     ? "bg-purple-600 hover:bg-purple-700"
@@ -281,7 +308,10 @@ export default function Marketplace() {
               </Button>
               <Button
                 variant={activeTab === "passed" ? "default" : "ghost"}
-                onClick={() => setActiveTab("passed")}
+                onClick={() => {
+                  setActiveTab("passed")
+                  const count = events.filter(event => event.status === "passed").length
+                }}
                 className={`h-10 text-sm
                   ${activeTab === "passed"
                     ? "bg-green-600 hover:bg-green-700"
@@ -293,7 +323,10 @@ export default function Marketplace() {
               </Button>
               <Button
                 variant={activeTab === "canceled" ? "default" : "ghost"}
-                onClick={() => setActiveTab("canceled")}
+                onClick={() => {
+                  setActiveTab("canceled")
+                  const count = events.filter(event => event.status === "canceled").length
+                }}
                 className={`h-10 text-sm
                   ${activeTab === "canceled"
                     ? "bg-gray-600 hover:bg-gray-700"
@@ -305,10 +338,13 @@ export default function Marketplace() {
               </Button>
               <Button
                 variant={activeTab === "closed" ? "default" : "ghost"}
-                onClick={() => setActiveTab("closed")}
+                onClick={() => {
+                  setActiveTab("closed")
+                  const count = events.filter(event => event.status === "closed" || event.status === "sold_out").length
+                }}
                 className={`h-10 text-sm
                   ${activeTab === "closed"
-                    ? "bg-slate-600 hover:bg-slate-700"
+                    ? "bg-slate-600 hover:bg-gray-700"
                     : "border-slate-600 text-slate-300 hover:border-purple-500"
                   }
                 `}
@@ -343,11 +379,18 @@ export default function Marketplace() {
               </p>
               {searchTerm && (
                 <Button
-                  onClick={() => setSearchTerm("")}
+                  onClick={() => {
+                    setSearchTerm("")
+                  }}
                   className="bg-purple-600 hover:bg-purple-700"
                 >
                   Clear Search
                 </Button>
+              )}
+              {!searchTerm && events.length === 0 && (
+                <div className="mt-4">
+                  <p className="text-sm text-slate-500">No events have been created yet</p>
+                </div>
               )}
             </div>
           )}
