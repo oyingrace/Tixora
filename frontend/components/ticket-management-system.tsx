@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Calendar, QrCode, Send, ExternalLink, Copy, Search, MoreVertical, Download, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,18 +17,21 @@ import {
 import { Label } from "@/components/ui/label"
 import { useAccount } from 'wagmi'
 import { WalletConnectButton } from "@/components/wallet-connect-button"
+import { useUserTickets, useNFTTokenDetails, useTransferTicket } from "@/hooks/use-contracts"
 import Link from "next/link"
 import Image from "next/image"
 
-interface NFTTicket {
-  id: number
-  eventId: number
+interface NFTTicketDisplay {
+  id: string
+  tokenId: bigint
   eventTitle: string
+  eventTimestamp: bigint
+  location: string
+  status: "upcoming" | "past"
+  qrCode: string
   price: string
   purchaseDate: string
   txHash: string
-  status: string
-  qrCode: string
 }
 
 type TicketAction = "view" | "transfer" | "qr" | null
@@ -36,50 +39,77 @@ type TicketAction = "view" | "transfer" | "qr" | null
 export function TicketManagementSystem() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
-  const [selectedTicket, setSelectedTicket] = useState<NFTTicket | null>(null)
+  const [selectedTicket, setSelectedTicket] = useState<NFTTicketDisplay | null>(null)
   const [currentAction, setCurrentAction] = useState<TicketAction>(null)
   const [transferAddress, setTransferAddress] = useState("")
-  const [isTransferring, setIsTransferring] = useState(false)
-  const [purchasedTickets, setPurchasedTickets] = useState<NFTTicket[]>([])
 
   const { isConnected, address } = useAccount()
+  const { ticketCount } = useUserTickets(address)
+  const { transferTicket, isPending: isTransferring, isConfirmed } = useTransferTicket()
 
-  // Load purchased tickets from localStorage
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const tickets = JSON.parse(localStorage.getItem("purchasedTickets") || "[]")
-      setPurchasedTickets(tickets)
+  // Generate array of token IDs to fetch (assuming sequential minting)
+  const tokenIds = useMemo(() => {
+    if (!ticketCount) return []
+    return Array.from({ length: ticketCount }, (_, i) => BigInt(i + 1))
+  }, [ticketCount])
+
+  // Fetch NFT details for user's tickets (simplified - in production you'd use events/indexing)
+  const userTickets = useMemo(() => {
+    const tickets: NFTTicketDisplay[] = []
+    // This is a simplified approach - in production, you'd use The Graph or event logs
+    // to efficiently get user's tokens
+    for (let i = 0; i < Math.min(ticketCount, 10); i++) {
+      const tokenId = BigInt(i + 1)
+      tickets.push({
+        id: tokenId.toString(),
+        tokenId,
+        eventTitle: `Event ${i + 1}`, // Would be fetched from contract
+        eventTimestamp: BigInt(Date.now() / 1000 + i * 86400), // Mock future dates
+        location: `Location ${i + 1}`,
+        status: "upcoming" as const,
+        qrCode: tokenId.toString(),
+        price: "25 CELO",
+        purchaseDate: new Date(Date.now() - i * 86400000).toISOString(),
+        txHash: `0x${tokenId.toString().padStart(64, '0')}`
+      })
     }
-  }, [])
+    return tickets
+  }, [ticketCount])
+
+  // Handle transfer completion
+  useEffect(() => {
+    if (isConfirmed) {
+      setCurrentAction(null)
+      setTransferAddress("")
+    }
+  }, [isConfirmed])
 
   const categories = ["all", "upcoming", "past"]
 
-  const filteredTickets = purchasedTickets.filter((ticket) => {
+  const filteredTickets = userTickets.filter((ticket) => {
     const matchesSearch = ticket.eventTitle.toLowerCase().includes(searchQuery.toLowerCase())
 
     const matchesCategory =
       selectedCategory === "all" ||
-      (selectedCategory === "upcoming" && ticket.status === "confirmed") ||
-      (selectedCategory === "past" && ticket.status === "used")
+      (selectedCategory === "upcoming" && ticket.status === "upcoming") ||
+      (selectedCategory === "past" && ticket.status === "past")
 
     return matchesSearch && matchesCategory
   })
 
-  const handleTicketAction = (ticket: NFTTicket, action: TicketAction) => {
+  const handleTicketAction = (ticket: NFTTicketDisplay, action: TicketAction) => {
     setSelectedTicket(ticket)
     setCurrentAction(action)
   }
 
   const handleTransfer = async () => {
-    if (!selectedTicket || !transferAddress) return
+    if (!selectedTicket || !transferAddress || !address) return
 
-    setIsTransferring(true)
-    // Simulate transfer transaction
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    setIsTransferring(false)
-    setCurrentAction(null)
-    setTransferAddress("")
-    // In real app, update ticket ownership
+    try {
+      await transferTicket(address, transferAddress as `0x${string}`, selectedTicket.tokenId)
+    } catch (error) {
+      console.error('Transfer failed:', error)
+    }
   }
 
   const copyToClipboard = (text: string) => {
@@ -88,9 +118,9 @@ export function TicketManagementSystem() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "confirmed":
+      case "upcoming":
         return "bg-green-500 text-white"
-      case "used":
+      case "past":
         return "bg-gray-500 text-white"
       default:
         return "bg-purple-500 text-white"
@@ -200,7 +230,7 @@ export function TicketManagementSystem() {
                     <QrCode className="w-5 h-5 text-purple-400" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-white">{purchasedTickets.length}</p>
+                    <p className="text-2xl font-bold text-white">{userTickets.length}</p>
                     <p className="text-sm text-slate-400">Total Tickets</p>
                   </div>
                 </div>
@@ -214,7 +244,7 @@ export function TicketManagementSystem() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-white">
-                      {purchasedTickets.filter((t) => t.status === "confirmed").length}
+                      {userTickets.filter((t: NFTTicketDisplay) => t.status === "upcoming").length}
                     </p>
                     <p className="text-sm text-slate-400">Upcoming Events</p>
                   </div>
@@ -228,7 +258,7 @@ export function TicketManagementSystem() {
                     <ExternalLink className="w-5 h-5 text-blue-400" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-white">{purchasedTickets.length}</p>
+                    <p className="text-2xl font-bold text-white">{userTickets.length}</p>
                     <p className="text-sm text-slate-400">Transferable</p>
                   </div>
                 </div>
@@ -299,7 +329,7 @@ export function TicketManagementSystem() {
                     <QrCode className="w-16 h-16 text-purple-400" />
                   </div>
                   <Badge className={`absolute top-3 right-3 ${getStatusColor(ticket.status)}`}>
-                    {ticket.status === "confirmed" ? "Valid" : "Used"}
+                    {ticket.status === "upcoming" ? "Valid" : "Used"}
                   </Badge>
                   <div className="absolute bottom-3 right-3">
                     <DropdownMenu>
@@ -413,7 +443,7 @@ export function TicketManagementSystem() {
                     <div className="flex justify-between">
                       <span className="text-slate-400">Status</span>
                       <Badge className={getStatusColor(selectedTicket.status)}>
-                        {selectedTicket.status === "confirmed" ? "Valid" : "Used"}
+                        {selectedTicket.status === "upcoming" ? "Valid" : "Used"}
                       </Badge>
                     </div>
                   </div>
