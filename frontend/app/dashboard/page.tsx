@@ -9,7 +9,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { WalletConnectButton } from "@/components/wallet-connect-button"
 import { useRecentTickets, useUserTickets, formatPrice } from "@/hooks/use-contracts"
-import { useMemo } from "react"
+import { useMemo, useEffect } from "react"
 
 export default function Dashboard() {
   const { address, isConnected } = useAccount()
@@ -23,12 +23,38 @@ export default function Dashboard() {
 
   // Calculate real stats from contract data
   const stats = useMemo(() => {
-    if (!recentTickets || !address) {
+    if (!address) {
       return [
         { label: "Total Events Attended", value: "0", change: "Connect wallet to view" },
         { label: "Total Spent", value: "0 CELO", change: "Connect wallet to view" },
         { label: "Events Created", value: "0", change: "Connect wallet to view" },
         { label: "Revenue Earned", value: "0 CELO", change: "Connect wallet to view" },
+      ]
+    }
+
+    // If wallet is connected but data is still loading or empty
+    if (!recentTickets || recentTickets.length === 0) {
+      return [
+        { 
+          label: "Total Events Attended", 
+          value: ticketCount.toString(), 
+          change: ticketCount > 0 ? `${ticketCount} NFT tickets owned` : "No events attended yet"
+        },
+        { 
+          label: "Total Spent", 
+          value: ticketCount > 0 ? `${ticketCount * 25} CELO` : "0 CELO", 
+          change: ticketCount > 0 ? "Estimated from ticket purchases" : "No purchases yet"
+        },
+        { 
+          label: "Events Created", 
+          value: "0", 
+          change: "No events created yet" 
+        },
+        { 
+          label: "Revenue Earned", 
+          value: "0 CELO", 
+          change: "No revenue yet" 
+        },
       ]
     }
 
@@ -48,22 +74,22 @@ export default function Dashboard() {
       { 
         label: "Total Events Attended", 
         value: ticketCount.toString(), 
-        change: `${ticketCount} NFT tickets owned` 
+        change: ticketCount > 0 ? `${ticketCount} NFT tickets owned` : "No events attended yet"
       },
       { 
         label: "Total Spent", 
-        value: `${ticketCount * 25} CELO`, // Estimated based on average ticket price
-        change: "Based on ticket purchases" 
+        value: ticketCount > 0 ? `${ticketCount * 25} CELO` : "0 CELO", 
+        change: ticketCount > 0 ? "Estimated from ticket purchases" : "No purchases yet"
       },
       { 
         label: "Events Created", 
         value: userCreatedEvents.length.toString(), 
-        change: `${userCreatedEvents.filter(t => !t.closed).length} active events` 
+        change: userCreatedEvents.length > 0 ? `${userCreatedEvents.filter(t => !t.closed).length} active events` : "No events created yet"
       },
       { 
         label: "Revenue Earned", 
         value: `${formatPrice(totalRevenue)} CELO`, 
-        change: `From ${userCreatedEvents.length} events` 
+        change: userCreatedEvents.length > 0 ? `From ${userCreatedEvents.length} events` : "No revenue yet"
       },
     ]
   }, [recentTickets, address, ticketCount])
@@ -87,9 +113,11 @@ export default function Dashboard() {
   const router = useRouter()
 
   // Redirect to landing page if wallet is not connected
-  if (!isConnected) {
-    router.push("/")
-  }
+  useEffect(() => {
+    if (!isConnected) {
+      router.push("/")
+    }
+  }, [isConnected, router])
 
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ""
 
@@ -116,6 +144,21 @@ export default function Dashboard() {
       gradient: "from-purple-600 to-pink-500",
     },
   ]
+
+  // Show loading or redirect message if not connected
+  if (!isConnected) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 text-foreground flex items-center justify-center">
+        <Card className="bg-gradient-to-br from-slate-800/80 to-purple-900/30 border-purple-500/30 p-8">
+          <CardContent className="text-center">
+            <h2 className="text-2xl font-bold text-white mb-4">Connect Your Wallet</h2>
+            <p className="text-slate-300 mb-6">Please connect your wallet to access the dashboard</p>
+            <WalletConnectButton />
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 text-foreground">
@@ -182,9 +225,16 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Referral Dashboard Section */}
+          {/* Referral Dashboard Section - Coming Soon */}
           <div className="mb-12">
-            <ReferralDashboard className="bg-gradient-to-br from-slate-800/80 to-purple-900/30 border-purple-500/30" />
+            <Card className="bg-gradient-to-br from-slate-800/80 to-purple-900/30 border-purple-500/30">
+              <CardHeader>
+                <CardTitle className="text-white text-2xl">Referral Program</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-300">Referral dashboard coming soon! Earn rewards by inviting friends to Tixora.</p>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Recent Activity Section */}
