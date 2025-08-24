@@ -21,7 +21,6 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useAccount } from 'wagmi'
-import { WalletConnectButton } from "@/components/wallet-connect-button"
 
 interface EventData {
   id: string
@@ -117,29 +116,14 @@ export function TicketPurchaseFlow({ eventId }: { eventId: string }) {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={() => window.history.back()}>
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Events
-              </Button>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-primary-foreground" />
-                </div>
-                <h1 className="text-2xl md:text-4xl font-bold text-foreground">Tixora</h1>
-              </div>
-            </div>
-            <WalletConnectButton />
-          </div>
-        </div>
-      </header>
-
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
+          <div className="flex items-center gap-4 mb-4">
+            <Button variant="ghost" size="sm" onClick={() => window.history.back()}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Events
+            </Button>
+          </div>
           {currentStep === "details" && (
             <div className="grid lg:grid-cols-3 gap-8">
               {/* Event Details */}

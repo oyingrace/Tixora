@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { toast } from "sonner"
+import { toast } from "react-toastify"
 import Image from "next/image"
 import Link from "next/link"
 import { Upload } from "lucide-react"
@@ -30,25 +30,35 @@ export default function CreateEvent() {
     bannerImage: null as File | null,
   })
 
-  // Contract write hook
   const { writeContract, data: hash, isPending: isSubmitting, error: writeError } = useWriteContract()
 
-  // Wait for transaction receipt
   const { isLoading: isTransactionPending, isSuccess: isTransactionSuccess, error: transactionError } = useWaitForTransactionReceipt({
     hash,
   })
 
-  // Handle successful transaction and errors
+  useEffect(() => {
+    if (isSubmitting) {
+      toast.info("Creating event on blockchain...")
+    }
+  }, [isSubmitting]) 
+
+  useEffect(() => {
+    if (isTransactionPending) {
+      toast.info("Transaction is being processed...")
+    }
+  }, [isTransactionPending])
+
   useEffect(() => {
     if (isTransactionSuccess) {
       toast.success("🎉 Event created successfully on blockchain!")
       router.push("/marketplace")
+      toast.success(`Ticket hash is: ${hash}`)
     }
   }, [isTransactionSuccess, router])
 
   useEffect(() => {
     if (writeError) {
-      toast.error(`Contract write error: ${writeError.message}`)
+      toast.error(`Transaction denied`)
     }
   }, [writeError])
 
@@ -64,7 +74,6 @@ export default function CreateEvent() {
       return
     }
 
-    // Validate price and total supply
     const price = parseFloat(formData.price)
     const totalSupply = parseInt(formData.totalSupply)
     
@@ -73,7 +82,7 @@ export default function CreateEvent() {
       return
     }
     
-    if (isNaN(totalSupply) || totalSupply <= 0 || totalSupply >= 100) {
+    if (isNaN(totalSupply) || totalSupply <= 0) {
       toast.error("Please enter a valid total supply greater than 0")
       return
     }
@@ -98,17 +107,8 @@ export default function CreateEvent() {
     })
   }
 
-  // Redirect to landing page if wallet is not connected
   if (!isConnected) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center">
-        <div className="text-center p-8 bg-slate-800/50 rounded-lg border border-purple-500/30 backdrop-blur-sm">
-          <h1 className="text-2xl font-bold text-white mb-4">Wallet Connection Required</h1>
-          <p className="text-slate-300 mb-6">Please connect your wallet to create events.</p>
-          <WalletConnectButton className="mx-auto" />
-        </div>
-      </div>
-    )
+    router.push("/")
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -121,53 +121,9 @@ export default function CreateEvent() {
       ? (Number.parseFloat(formData.price) * Number.parseInt(formData.totalSupply)).toFixed(2)
       : "0"
 
-  const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ""
-
-  // Show loading state while transaction is pending
-  if (isTransactionPending) {
-    return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <div className="text-center p-8 bg-slate-800/50 rounded-lg border border-purple-500/30 backdrop-blur-sm">
-          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <h1 className="text-2xl font-bold text-white mb-4">Creating Event on Blockchain</h1>
-          <p className="text-slate-300 mb-2">Transaction Hash: {hash}</p>
-          <p className="text-slate-300">Please wait while your transaction is being processed...</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <Image src="/tixora-logo.png" alt="Tixora" width={40} height={40} />
-            <span className="text-2xl font-bold gradient-text">Tixora</span>
-          </Link>
-
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/dashboard" className="text-muted-foreground hover:text-primary transition-colors">
-              Dashboard
-            </Link>
-            <Link href="/marketplace" className="text-muted-foreground hover:text-primary transition-colors">
-              Marketplace
-            </Link>
-            <Link href="/tickets" className="text-muted-foreground hover:text-primary transition-colors">
-              Tickets
-            </Link>
-            <Link href="/create-event" className="text-primary">
-              Create Event
-            </Link>
-          </nav>
-
-          <div className="flex items-center space-x-4">
-            <WalletConnectButton />
-          </div>
-        </div>
-      </header>
-
-      <div className="pb-16 px-4">
+      <div className="pb-16 px-4 pt-12">
         <div className="container mx-auto max-w-4xl">
           <div className="mb-8">
             <h1 className="text-4xl font-bold gradient-text">Create Event</h1>
@@ -204,7 +160,7 @@ export default function CreateEvent() {
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       placeholder="Describe your event..."
-                      rows={4}
+                      rows={8}
                       required
                       className="bg-slate-800/80 border-purple-500/30 text-white focus:border-purple-400 focus:ring-purple-400/20"
                     />
@@ -221,7 +177,7 @@ export default function CreateEvent() {
                         value={formData.date}
                         onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                         required
-                        className="bg-slate-800/80 border-purple-500/30 text-white focus:border-purple-400 focus:ring-purple-400/20"
+                        className="bg-slate-800/80 border-purple-500/30 text-white focus:border-purple-400 focus:ring-purple-400/20 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:ml-auto [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                       />
                     </div>
                     <div>
@@ -234,7 +190,7 @@ export default function CreateEvent() {
                         value={formData.time}
                         onChange={(e) => setFormData({ ...formData, time: e.target.value })}
                         required
-                        className="bg-slate-800/80 border-purple-500/30 text-white focus:border-purple-400 focus:ring-purple-400/20"
+                        className="bg-slate-800/80 border-purple-500/30 text-white focus:border-purple-400 focus:ring-purple-400/20 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:ml-auto [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                       />
                     </div>
                   </div>
@@ -279,7 +235,7 @@ export default function CreateEvent() {
 
                   <div>
                     <Label htmlFor="totalSupply" className="text-cyan-200">
-                      Total Tickets to Mint
+                      Total Tickets to Mint (Total Supply)
                     </Label>
                     <Input
                       id="totalSupply"

@@ -12,6 +12,8 @@ import { eventTicketingAbi, eventTicketingAddress } from "@/lib/addressAndAbi"
 import { formatEther } from "viem"
 import { EventCard } from "@/components/event-card"
 import { Card } from "@/components/ui/card"
+import { useRouter } from "next/navigation"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface TicketData {
   id: number
@@ -48,6 +50,7 @@ interface MarketplaceEvent {
 }
 
 export default function Marketplace() {
+  const router = useRouter()
   const { address, isConnected } = useAccount()
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("trending")
@@ -131,15 +134,7 @@ export default function Marketplace() {
 
   // Redirect to landing page if wallet is not connected
   if (!isConnected) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center">
-        <div className="text-center p-8 bg-slate-800/50 rounded-lg border border-purple-500/30 backdrop-blur-sm">
-          <h1 className="text-2xl font-bold text-white mb-4">Wallet Connection Required</h1>
-          <p className="text-slate-300 mb-6">Please connect your wallet to access the marketplace.</p>
-          <WalletConnectButton className="mx-auto" />
-        </div>
-      </div>
-    )
+    router.push("/")
   }
 
   const getEventsByTab = () => {
@@ -184,61 +179,30 @@ export default function Marketplace() {
 
 
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center">
-        <div className="text-center p-8 bg-slate-800/50 rounded-lg border border-purple-500/30 backdrop-blur-sm">
-          <div className="w-8 h-8 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-300">Loading events from blockchain...</p>
-        </div>
-      </div>
-    )
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center">
+  //       <div className="text-center p-8 bg-slate-800/50 rounded-lg border border-purple-500/30 backdrop-blur-sm">
+  //         <div className="w-8 h-8 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+  //         <p className="text-slate-300">Loading events from blockchain...</p>
+  //       </div>
+  //     </div>
+  //   )
+  // }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 text-foreground">
-      {/* Dashboard Header */}
-      <header className="bg-slate-900/80 backdrop-blur-md border-b border-purple-500/20">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <Image src="/tixora-logo.png" alt="Tixora" width={40} height={40} />
-            <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-              Tixora
-            </span>
-          </Link>
-
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/dashboard" className="text-slate-300 hover:text-purple-400 transition-colors font-medium">
-              Dashboard
-            </Link>
-            <Link href="/marketplace" className="text-purple-400 font-medium">
-              Marketplace
-            </Link>
-            <Link href="/tickets" className="text-slate-300 hover:text-blue-400 transition-colors font-medium">
-              My Tickets
-            </Link>
-            <Link href="/create-event" className="text-slate-300 hover:text-purple-400 transition-colors font-medium">
-              Create Event
-            </Link>
-          </nav>
-
-          <div className="flex items-center space-x-4">
-            <WalletConnectButton />
-          </div>
-        </div>
-      </header>
-
-      <div className="pb-16 px-4">
+      <div className="pb-16 px-4 pt-12">
         <div className="container mx-auto">
           {/* Hero Section */}
           <div className="text-center mb-12">
-            <h1 className="text-6xl font-bold mb-6">
+            <h1 className="text-5xl font-bold mb-6">
               Event{" "}
               <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
                 Marketplace
               </span>
             </h1>
-            <p className="text-xl text-slate-300 max-w-3xl mx-auto">
+            <p className="text-lg text-slate-300 max-w-3xl mx-auto">
               Discover amazing events and secure your NFT tickets on the blockchain. All transactions are verified and
               fraud-proof.
             </p>
@@ -248,12 +212,12 @@ export default function Marketplace() {
           <div className="flex flex-col lg:flex-row gap-4 mb-8">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <Input
                   placeholder="Search events..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-12 bg-slate-800/50 border-slate-700 focus:border-purple-500 text-white"
+                  className="pl-10 h-10 bg-slate-800/50 border-slate-700 focus:border-purple-500 text-white text-md"
                 />
               </div>
             </div>
@@ -261,37 +225,40 @@ export default function Marketplace() {
               <Button
                 variant={sortBy === "trending" ? "default" : "outline"}
                 onClick={() => setSortBy("trending")}
-                className={
-                  sortBy === "trending"
+                className={`h-10 text-sm
+                  ${sortBy === "trending"
                     ? "bg-purple-600 hover:bg-purple-700"
                     : "border-slate-600 text-slate-300 hover:border-purple-500"
-                }
+                  }
+                `}
               >
-                <TrendingUp className="w-4 h-4 mr-2" />
+                <TrendingUp className="w-4 h-4 mr-0" />
                 Trending
               </Button>
               <Button
                 variant={sortBy === "recent" ? "default" : "outline"}
                 onClick={() => setSortBy("recent")}
-                className={
-                  sortBy === "recent"
+                className={`h-10 text-sm
+                  ${sortBy === "recent"
                     ? "bg-purple-600 hover:bg-purple-700"
                     : "border-slate-600 text-slate-300 hover:border-purple-500"
-                }
+                  }
+                `}
               >
-                <Clock className="w-4 h-4 mr-2" />
+                <Clock className="w-4 h-4 mr-0" />
                 Recent
               </Button>
               <Button
                 variant={sortBy === "all" ? "default" : "outline"}
                 onClick={() => setSortBy("all")}
-                className={
-                  sortBy === "all"
+                className={`h-10 text-sm 
+                  ${sortBy === "all"
                     ? "bg-purple-600 hover:bg-purple-700"
                     : "border-slate-600 text-slate-300 hover:border-purple-500"
-                }
+                  }
+                `}
               >
-                <Filter className="w-4 h-4 mr-2" />
+                <Filter className="w-4 h-4 mr-0" />
                 All Events
               </Button>
             </div>
@@ -303,28 +270,48 @@ export default function Marketplace() {
               <Button
                 variant={activeTab === "upcoming" ? "default" : "ghost"}
                 onClick={() => setActiveTab("upcoming")}
-                className={activeTab === "upcoming" ? "bg-purple-600 text-white" : "text-slate-300 hover:text-white"}
+                className={`h-10 text-sm
+                  ${activeTab === "upcoming"
+                    ? "bg-purple-600 hover:bg-purple-700"
+                    : "border-slate-600 text-slate-300 hover:border-purple-500"
+                  }
+                `}
               >
                 Upcoming Events
               </Button>
               <Button
                 variant={activeTab === "passed" ? "default" : "ghost"}
                 onClick={() => setActiveTab("passed")}
-                className={activeTab === "passed" ? "bg-green-600 text-white" : "text-slate-300 hover:text-white"}
+                className={`h-10 text-sm
+                  ${activeTab === "passed"
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "border-slate-600 text-slate-300 hover:border-purple-500"
+                  }
+                `}
               >
                 Passed
               </Button>
               <Button
                 variant={activeTab === "canceled" ? "default" : "ghost"}
                 onClick={() => setActiveTab("canceled")}
-                className={activeTab === "canceled" ? "bg-gray-600 text-white" : "text-slate-300 hover:text-white"}
+                className={`h-10 text-sm
+                  ${activeTab === "canceled"
+                    ? "bg-gray-600 hover:bg-gray-700"
+                    : "border-slate-600 text-slate-300 hover:border-purple-500"
+                  }
+                `}
               >
                 Canceled
               </Button>
               <Button
                 variant={activeTab === "closed" ? "default" : "ghost"}
                 onClick={() => setActiveTab("closed")}
-                className={activeTab === "closed" ? "bg-slate-600 text-white" : "text-slate-300 hover:text-white"}
+                className={`h-10 text-sm
+                  ${activeTab === "closed"
+                    ? "bg-slate-600 hover:bg-slate-700"
+                    : "border-slate-600 text-slate-300 hover:border-purple-500"
+                  }
+                `}
               >
                 Closed
               </Button>
@@ -332,11 +319,18 @@ export default function Marketplace() {
           </div>
 
           {/* Events Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {getEventsByTab().map((event, index) => (
-              <EventCard key={event.id} event={event} userAddress={address} />
-            ))}
-          </div>
+          {loading ? (
+              <div className="text-center p-8 bg-slate-800/50 rounded-lg border border-purple-500/30 backdrop-blur-sm">
+                <div className="w-8 h-8 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-slate-300">Loading events from blockchain...</p>
+              </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {getEventsByTab().map((event, index) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </div>
+          )}
 
           {/* Empty State */}
           {getEventsByTab().length === 0 && (
