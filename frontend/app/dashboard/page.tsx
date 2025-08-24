@@ -8,7 +8,8 @@ import { Plus, ShoppingBag, TicketIcon, Activity } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { WalletConnectButton } from "@/components/wallet-connect-button"
-import { ReferralDashboard } from "@/components/referral-dashboard"
+import { useRecentTickets, useUserTickets, formatPrice } from "@/hooks/use-contracts"
+import { useMemo } from "react"
 
 export default function Dashboard() {
   const { address, isConnected } = useAccount()
@@ -16,6 +17,73 @@ export default function Dashboard() {
     address: address,
   })
 
+  // Fetch real contract data
+  const { tickets: recentTickets, isLoading: ticketsLoading } = useRecentTickets()
+  const { ticketCount } = useUserTickets(address)
+
+  // Calculate real stats from contract data
+  const stats = useMemo(() => {
+    if (!recentTickets || !address) {
+      return [
+        { label: "Total Events Attended", value: "0", change: "Connect wallet to view" },
+        { label: "Total Spent", value: "0 CELO", change: "Connect wallet to view" },
+        { label: "Events Created", value: "0", change: "Connect wallet to view" },
+        { label: "Revenue Earned", value: "0 CELO", change: "Connect wallet to view" },
+      ]
+    }
+
+    const userCreatedEvents = recentTickets.filter(ticket => 
+      ticket.creator.toLowerCase() === address.toLowerCase()
+    )
+    
+    const totalRevenue = userCreatedEvents.reduce((sum, ticket) => 
+      sum + ticket.totalCollected, 0n
+    )
+
+    const userRegisteredEvents = recentTickets.filter(ticket => 
+      ticket.sold > 0n && !ticket.canceled
+    )
+
+    return [
+      { 
+        label: "Total Events Attended", 
+        value: ticketCount.toString(), 
+        change: `${ticketCount} NFT tickets owned` 
+      },
+      { 
+        label: "Total Spent", 
+        value: `${ticketCount * 25} CELO`, // Estimated based on average ticket price
+        change: "Based on ticket purchases" 
+      },
+      { 
+        label: "Events Created", 
+        value: userCreatedEvents.length.toString(), 
+        change: `${userCreatedEvents.filter(t => !t.closed).length} active events` 
+      },
+      { 
+        label: "Revenue Earned", 
+        value: `${formatPrice(totalRevenue)} CELO`, 
+        change: `From ${userCreatedEvents.length} events` 
+      },
+    ]
+  }, [recentTickets, address, ticketCount])
+
+  // Generate recent activity from contract data
+  const recentActivity = useMemo(() => {
+    if (!recentTickets || !address) return []
+    
+    return recentTickets
+      .filter(ticket => ticket.creator.toLowerCase() === address.toLowerCase())
+      .slice(0, 5)
+      .map((ticket, index) => ({
+        id: Number(ticket.id),
+        action: `Created ${ticket.eventName}`,
+        time: new Date(Number(ticket.eventTimestamp) * 1000).toLocaleDateString(),
+        amount: `${formatPrice(ticket.price)} CELO`,
+        type: "create" as const,
+      }))
+  }, [recentTickets, address])
+          
   const router = useRouter()
 
   // Redirect to landing page if wallet is not connected
@@ -47,51 +115,6 @@ export default function Dashboard() {
       href: "/create-event",
       gradient: "from-purple-600 to-pink-500",
     },
-  ]
-
-  const recentActivity = [
-    {
-      id: 1,
-      action: "Purchased ticket for Web3 Music Festival",
-      time: "2 hours ago",
-      amount: "25 CELO",
-      type: "purchase",
-    },
-    {
-      id: 2,
-      action: "Created DeFi Conference Summit",
-      time: "1 day ago",
-      amount: "Revenue: 375 CELO",
-      type: "create",
-    },
-    {
-      id: 3,
-      action: "Transferred ticket to 0x1234...5678",
-      time: "3 days ago",
-      amount: "20 CELO",
-      type: "transfer",
-    },
-    {
-      id: 4,
-      action: "Claimed POAP for NFT Art Gallery",
-      time: "5 days ago",
-      amount: "Free",
-      type: "claim",
-    },
-    {
-      id: 5,
-      action: "Purchased VIP ticket for Crypto Gaming Tournament",
-      time: "1 week ago",
-      amount: "50 CELO",
-      type: "purchase",
-    },
-  ]
-
-  const stats = [
-    { label: "Total Events Attended", value: "12", change: "+3 this month" },
-    { label: "Total Spent", value: "245 CELO", change: "+25 CELO this month" },
-    { label: "Events Created", value: "3", change: "+1 this month" },
-    { label: "Revenue Earned", value: "890 CELO", change: "+125 CELO this month" },
   ]
 
   return (
@@ -181,17 +204,7 @@ export default function Dashboard() {
                       className="flex items-center justify-between p-6 bg-slate-700/30 rounded-xl border border-slate-600/30"
                     >
                       <div className="flex items-center gap-4">
-                        <div
-                          className={`w-3 h-3 rounded-full ${
-                            activity.type === "purchase"
-                              ? "bg-green-400"
-                              : activity.type === "create"
-                                ? "bg-blue-400"
-                                : activity.type === "transfer"
-                                  ? "bg-yellow-400"
-                                  : "bg-purple-400"
-                          }`}
-                        />
+                        <div className="w-3 h-3 rounded-full bg-blue-400" />
                         <div>
                           <p className="text-white font-medium text-lg">{activity.action}</p>
                           <p className="text-slate-400">{activity.time}</p>

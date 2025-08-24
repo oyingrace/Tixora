@@ -319,6 +319,7 @@ export default function Marketplace() {
           </div>
 
           {/* Events Grid */}
+
           {loading ? (
               <div className="text-center p-8 bg-slate-800/50 rounded-lg border border-purple-500/30 backdrop-blur-sm">
                 <div className="w-8 h-8 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -329,6 +330,25 @@ export default function Marketplace() {
               {getEventsByTab().map((event, index) => (
                 <EventCard key={event.id} event={event} />
               ))}
+            </div>
+          )}
+
+          {/* Empty State */}
+          {getEventsByTab().length === 0 && (
+            <div className="text-center py-16">
+              <div className="text-6xl mb-4">🎫</div>
+              <h3 className="text-2xl font-semibold text-white mb-2">No events found</h3>
+              <p className="text-slate-400 mb-6">
+                {searchTerm ? `No events match "${searchTerm}"` : `No ${activeTab} events available`}
+              </p>
+              {searchTerm && (
+                <Button
+                  onClick={() => setSearchTerm("")}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  Clear Search
+                </Button>
+              )}
             </div>
           )}
 
