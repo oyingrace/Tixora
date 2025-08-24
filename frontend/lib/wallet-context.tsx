@@ -2,6 +2,11 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from 'react-toastify'
+import { createConfig, http, useAccount, useConnect, useDisconnect, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi';
+// import { mainnet, celoAlfajores, celo } from 'wagmi/chains';
+// import { InjectedConnector } from 'wagmi/connectors/injected';
+import { parseEther } from 'viem';
 
 interface WalletState {
   isConnected: boolean
@@ -106,13 +111,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }
 
   const connectWallet = async (walletType: WalletType) => {
-    if (walletState.isConnecting || walletState.isConnected) {
-      return
-    }
-
-    setWalletState((prev) => ({ ...prev, isConnecting: true }))
-
     try {
+      setWalletState((prev) => ({ ...prev, isConnecting: true }))
+      
       if (walletType === "metamask") {
         if (typeof window === "undefined") {
           throw new Error("Please use a Web3-enabled browser")
@@ -142,6 +143,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         updateBalance(accounts[0])
 
         router.push("/dashboard")
+        toast.success('Wallet connected successfully!');
       } else {
         // For demo purposes, simulate other wallet connections
         await new Promise((resolve) => setTimeout(resolve, 1500))
@@ -156,10 +158,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         })
 
         router.push("/dashboard")
+        toast.success('Wallet connected successfully!');
       }
     } catch (error) {
       console.error("Error connecting wallet:", error)
       setWalletState((prev) => ({ ...prev, isConnecting: false }))
+      toast.error(error instanceof Error ? error.message : 'Failed to connect wallet');
       throw error
     }
   }
@@ -167,30 +171,33 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const disconnectWallet = () => {
     setWalletState(initialState)
     router.push("/")
+    toast.info('Wallet disconnected');
   }
 
   const switchNetwork = async (chainId: number) => {
-    if (typeof window !== "undefined" && window.ethereum) {
-      try {
+    try {
+      if (typeof window !== "undefined" && window.ethereum) {
         await window.ethereum.request({
           method: "wallet_switchEthereumChain",
           params: [{ chainId: `0x${chainId.toString(16)}` }],
         })
-      } catch (error) {
-        console.error("Error switching network:", error)
-        throw error
+        toast.success(`Switched to network ${chainId}`);
       }
+    } catch (error) {
+      console.error("Error switching network:", error)
+      toast.error('Failed to switch network');
+      throw error
     }
   }
 
   const sendTransaction = async (to: string, value: string, data?: string): Promise<string> => {
-    if (!walletState.isConnected || !walletState.address) {
-      throw new Error("Wallet not connected")
-    }
-
-    setWalletState((prev) => ({ ...prev, isTransacting: true }))
-
     try {
+      setWalletState((prev) => ({ ...prev, isTransacting: true }))
+      
+      if (!walletState.isConnected || !walletState.address) {
+        throw new Error("Wallet not connected")
+      }
+
       if (typeof window !== "undefined" && window.ethereum && window.ethereum.isMetaMask) {
         // Real MetaMask transaction
         const transactionParameters = {
@@ -208,6 +215,14 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         // Simulate transaction confirmation delay
         await new Promise((resolve) => setTimeout(resolve, 2000))
 
+        toast.success('Transaction sent successfully!', {
+          onClick: () => {
+            // Add block explorer URL if available
+            const explorerUrl = `https://explorer.celo.org/tx/${txHash}`;
+            window.open(explorerUrl, '_blank');
+          }
+        });
+        
         return txHash
       } else {
         // Simulate transaction for demo/preview environment
@@ -220,10 +235,19 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         const mockTxHash = "0x" + Math.random().toString(16).substr(2, 64)
         console.log("[v0] Mock transaction hash:", mockTxHash)
 
+        toast.success('Transaction sent successfully!', {
+          onClick: () => {
+            // Add block explorer URL if available
+            const explorerUrl = `https://explorer.celo.org/tx/${mockTxHash}`;
+            window.open(explorerUrl, '_blank');
+          }
+        });
+        
         return mockTxHash
       }
     } catch (error) {
       console.error("Transaction failed:", error)
+      toast.error(error instanceof Error ? error.message : 'Transaction failed');
       throw error
     } finally {
       setWalletState((prev) => ({ ...prev, isTransacting: false }))
@@ -231,45 +255,87 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }
 
   const purchaseTicket = async (eventId: number, price: string, eventTitle: string): Promise<boolean> => {
+    let toastId: string | number = '';
     try {
-      // Show transaction prompt
-      const confirmed = window.confirm(
-        `Purchase ticket for "${eventTitle}"?\n\nPrice: ${price}\nGas fee: ~0.002 CELO\n\nClick OK to approve the transaction in your wallet.`,
-      )
+      setWalletState((prev) => ({ ...prev, isTransacting: true }));
+      
+      // Show initial toast
+      toastId = toast.loading("Preparing transaction...");
+      
+      try {
+        // Convert price to wei for the transaction
+        const value = parseEther(price.replace(" CELO", ""));
+        
+        // Update toast for wallet confirmation
+        toast.update(toastId, { 
+          render: "Please confirm the transaction in your wallet",
+          type: "info",
+          isLoading: true,
+          autoClose: false,
+          closeButton: false
+        });
 
-      if (!confirmed) {
-        return false
+        // Use wagmi's useSendTransaction hook
+        const { sendTransactionAsync } = useSendTransaction();
+        
+        // Contract address and ABI
+        const contractAddress = "YOUR_CONTRACT_ADDRESS_HERE" as `0x${string}`;
+        
+        // Send transaction to purchase ticket
+        const hash = await sendTransactionAsync({
+          to: contractAddress,
+          value,
+          data: "0x", // Add your function data here if needed
+        });
+
+        // On success
+        toast.dismiss(toastId);
+        toast.success(
+          <div 
+            style={{ cursor: 'pointer' }}
+            onClick={() => {
+              const explorerUrl = `https://explorer.celo.org/tx/${hash}`;
+              window.open(explorerUrl, '_blank');
+            }}
+          >
+            <div>Ticket purchased successfully!</div>
+            <div style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>Click to view on explorer</div>
+          </div>,
+          {
+            autoClose: 5000,
+            closeButton: true,
+            closeOnClick: true,
+            pauseOnHover: true
+          }
+        );
+        
+        return true;
+      } catch (error) {
+        console.error("Purchase failed:", error);
+        if (toastId) {
+          toast.dismiss(toastId);
+        }
+        toast.error(error instanceof Error ? error.message : 'Failed to purchase ticket', {
+          autoClose: 5000,
+          closeOnClick: true
+        });
+        return false;
       }
-
-      // Simulate sending transaction to smart contract
-      const contractAddress = "0x1234567890123456789012345678901234567890" // Mock contract address
-      const priceInWei = (Number.parseFloat(price.replace(" CELO", "")) * Math.pow(10, 18)).toString()
-
-      const txHash = await sendTransaction(contractAddress, price.replace(" CELO", ""))
-
-      // Store purchased ticket in localStorage (in real app, this would be handled by smart contract events)
-      const purchasedTickets = JSON.parse(localStorage.getItem("purchasedTickets") || "[]")
-      const newTicket = {
-        id: Date.now(),
-        eventId,
-        eventTitle,
-        price,
-        purchaseDate: new Date().toISOString(),
-        txHash,
-        status: "confirmed",
-        qrCode: `ticket-${eventId}-${Date.now()}`,
-      }
-
-      purchasedTickets.push(newTicket)
-      localStorage.setItem("purchasedTickets", JSON.stringify(purchasedTickets))
-
-      return true
     } catch (error) {
-      console.error("Purchase failed:", error)
-      return false
+      console.error("Purchase error:", error);
+      if (toastId) {
+        toast.dismiss(toastId);
+      }
+      toast.error(error instanceof Error ? error.message : 'An error occurred', {
+        autoClose: 5000,
+        closeOnClick: true
+      });
+      return false;
+    } finally {
+      setWalletState((prev) => ({ ...prev, isTransacting: false }));
     }
   }
-
+  
   return (
     <WalletContext.Provider
       value={{

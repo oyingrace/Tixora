@@ -2,8 +2,11 @@ import type React from "react"
 import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 import "./globals.css"
 import { Providers } from "@/lib/providers"
+import Header from "@/components/header"
 
 export const metadata: Metadata = {
   title: "Tixora - Decentralized Event Ticketing",
@@ -30,7 +33,22 @@ html {
         `}</style>
       </head>
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <Header />
+          {children}
+          <ToastContainer 
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
+        </Providers>
       </body>
     </html>
   )

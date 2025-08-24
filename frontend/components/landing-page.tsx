@@ -51,30 +51,6 @@ export function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2 animate-bounce-in">
-            <Image src="/tixora-logo.png" alt="Tixora" width={40} height={40} className="animate-pulse-glow" />
-            <span className="text-2xl font-bold gradient-text">Tixora</span>
-          </Link>
-
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="https://github.com/DIFoundation/Tixora/blob/main/README.md" className="text-muted-foreground hover:text-primary transition-colors">
-              Docs
-            </Link>
-            <Link href="/resources" className="text-muted-foreground hover:text-primary transition-colors">
-              Resources
-            </Link>
-            <Link href="#how-it-works" className="text-muted-foreground hover:text-primary transition-colors">
-              How It Works
-            </Link>
-          </nav>
-
-          <WalletConnectButton />
-        </div>
-      </header>
-
       {/* Hero Section */}
       <section className="py-16 px-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 animate-gradient" />
