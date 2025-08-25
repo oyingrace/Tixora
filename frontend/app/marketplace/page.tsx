@@ -11,8 +11,6 @@ import { EventCard } from "@/components/event-card"
 import { Card } from "@/components/ui/card"
 import { useRouter } from "next/navigation"
 import { toast } from "react-toastify"
-import { DebugPanel } from "@/components/debug-panel"
-import { ContractTest } from "@/components/contract-test"
 
 interface TicketData {
   id: number
@@ -187,8 +185,6 @@ export default function Marketplace() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 text-foreground">
-      <DebugPanel />
-      <ContractTest />
       <div className="pb-16 px-4 pt-12">
         <div className="container mx-auto">
           {/* Hero Section */}
@@ -203,24 +199,6 @@ export default function Marketplace() {
               Discover amazing events and secure your NFT tickets on the blockchain. All transactions are verified and
               fraud-proof.
             </p>
-            
-            {/* Network Info */}
-            {isConnected && (
-              <div className="mt-6 p-4 bg-slate-800/50 rounded-lg border border-slate-700 max-w-2xl mx-auto">
-                <p className="text-sm text-slate-300 mb-2">
-                  <strong>Network Status:</strong> {isCorrectNetwork ? '✅ Connected to Celo Sepolia' : '❌ Wrong Network'}
-                </p>
-                <p className="text-xs text-slate-400 mb-3">
-                  {isCorrectNetwork 
-                    ? 'You can now purchase tickets!' 
-                    : 'Switch to Celo Sepolia testnet to purchase tickets'
-                  }
-                </p>
-                
-                {/* Contract Status */}
-                
-              </div>
-            )}
           </div>
 
           {/* Search and Filters */}

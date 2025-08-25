@@ -37,11 +37,9 @@ export default function EventDetailPage() {
   const { isConnected, address } = useAccount()
   const [isLoading, setIsLoading] = useState(true)
   const [purchasing, setPurchasing] = useState(false)
-  const { writeContract, isPending, data: hash } = useWriteContract()
+  const { writeContract, isPending, data: hash, error: writeError } = useWriteContract()
   const [events, setEvents] = useState<EventData | null>(null)
-
-  const { isRegistered, isLoading: checkingRegistration } = useEventRegistration(events?.id || 0, address)
-
+  const { isRegistered, isLoading: checkingRegistration } = useEventRegistration(Number(params.id), address)
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash, 
   })
@@ -148,6 +146,7 @@ export default function EventDetailPage() {
           else if (closed) status = 'closed'
           else if (isPassed) status = 'passed'
           else if (ticketsLeft === 0) status = 'sold_out'
+          else if (checkingRegistration && isRegistered) status = 'registered'
           else status = 'active'
 
           console.log('Final Status:', status)
@@ -255,9 +254,7 @@ export default function EventDetailPage() {
       setPurchasing(false)
       toast.success("🎉 Ticket purchased successfully! Your NFT ticket has been minted.")
       // Refresh the page to show updated data after a short delay
-      setTimeout(() => {
-        window.location.reload()
-      }, 2000)
+      router.push("/tickets")
     }
   }, [isSuccess])
 
@@ -268,6 +265,30 @@ export default function EventDetailPage() {
       console.error('Contract error:', contractError)
     }
   }, [contractError])
+
+  useEffect(() => {
+      if (writeError) {
+        console.error("Write contract error:", writeError)
+        setPurchasing(false)
+        
+        // Check for specific error types
+        if (writeError.message.includes("insufficient funds")) {
+          toast.error("Insufficient funds for transaction. Please check your balance.")
+        } else if (writeError.message.includes("rejected")) {
+          toast.error("Transaction was rejected by user.")
+        } else if (writeError.message.includes("network")) {
+          toast.error("Network error. Please check your connection.")
+        } else if (writeError.message.includes("reverted")) {
+          toast.error("Transaction failed: Execution reverted.")
+        } else if (writeError.message.includes("RPC")) {
+          toast.error("Transaction failed: Internal JSON-RPC error. Please try again.")
+        } else {
+          toast.error(`Transaction failed with error: ${writeError.message}`)
+        }
+  
+        setPurchasing(false)
+      }
+    }, [writeError])
 
   const isProcessing = purchasing || isPending || isConfirming
 
@@ -405,15 +426,15 @@ export default function EventDetailPage() {
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           {isPending ? 'Confirming...' : 
-                           isConfirming ? 'Processing...' : 
+                           isConfirming ? 'Processing...' :
                            purchasing ? 'Preparing...' : 'Processing...'}
                         </>
                       ) : (
+                        events?.status === 'registered' ? 'Registered' :
                         events?.status === 'canceled' ? 'Event Canceled' : 
                         events?.status === 'closed' ? 'Sales Ended' :
                         events?.status === 'sold_out' ? 'Sold Out' : 
                         events?.status === 'passed' ? 'Event Ended' : 
-                        events?.status === 'registered' ? 'Registered' :
                         events?.status === 'active' ? 'Buy Ticket' : 'Event Canceled'
                       )}
                     </Button>

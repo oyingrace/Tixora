@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { Calendar, QrCode, Send, ExternalLink, Copy, Search, MoreVertical, Download, Eye } from "lucide-react"
+import { Calendar, QrCode, Send, ExternalLink, Copy, Search, MoreVertical, Download, Eye, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,19 +15,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
-import { useAccount } from 'wagmi'
+import { useAccount, useReadContract, useReadContracts } from 'wagmi'
 import { WalletConnectButton } from "@/components/wallet-connect-button"
 import { useUserTickets, useNFTTokenDetails, useTransferTicket } from "@/hooks/use-contracts"
 import Link from "next/link"
 import Image from "next/image"
+import { eventTicketingAbi, eventTicketingAddress } from "@/lib/addressAndAbi"
+import { Abi, formatEther } from 'viem'
 
 interface NFTTicketDisplay {
   id: string
   tokenId: bigint
   eventTitle: string
-  eventTimestamp: bigint
+  eventTimestamp: number
   location: string
-  status: "upcoming" | "past"
+  status: 'upcoming' | 'past'
   qrCode: string
   price: string
   purchaseDate: string
@@ -44,37 +46,52 @@ export function TicketManagementSystem() {
   const [transferAddress, setTransferAddress] = useState("")
 
   const { isConnected, address } = useAccount()
-  const { ticketCount } = useUserTickets(address)
   const { transferTicket, isPending: isTransferring, isConfirmed } = useTransferTicket()
 
-  // Generate array of token IDs to fetch (assuming sequential minting)
-  const tokenIds = useMemo(() => {
-    if (!ticketCount) return []
-    return Array.from({ length: ticketCount }, (_, i) => BigInt(i + 1))
-  }, [ticketCount])
+  // Fetch all recent tickets
+  const { data: allTickets, refetch: refetchTickets } = useReadContract({
+    address: eventTicketingAddress,
+    abi: eventTicketingAbi,
+    functionName: 'getRecentTickets',
+  }) as { data: Array<{ id: number, eventName: string, eventTimestamp: number, location: string, price: bigint }> | undefined }
 
-  // Fetch NFT details for user's tickets (simplified - in production you'd use events/indexing)
+  // Check registration status for each ticket
+  const registrationChecks = useReadContracts({
+    contracts: (allTickets || []).map((ticket) => ({
+      address: eventTicketingAddress as `0x${string}`,
+      abi: eventTicketingAbi as Abi,
+      functionName: 'isRegistered',
+      args: [BigInt(ticket.id), address],
+    })),
+    query: {
+      enabled: !!allTickets && allTickets.length > 0 && !!address,
+    },
+  })
+
+  // Filter tickets to only include those registered by the user
   const userTickets = useMemo(() => {
-    const tickets: NFTTicketDisplay[] = []
-    // This is a simplified approach - in production, you'd use The Graph or event logs
-    // to efficiently get user's tokens
-    for (let i = 0; i < Math.min(ticketCount, 10); i++) {
-      const tokenId = BigInt(i + 1)
-      tickets.push({
-        id: tokenId.toString(),
-        tokenId,
-        eventTitle: `Event ${i + 1}`, // Would be fetched from contract
-        eventTimestamp: BigInt(Date.now() / 1000 + i * 86400), // Mock future dates
-        location: `Location ${i + 1}`,
-        status: "upcoming" as const,
-        qrCode: tokenId.toString(),
-        price: "25 CELO",
-        purchaseDate: new Date(Date.now() - i * 86400000).toISOString(),
-        txHash: `0x${tokenId.toString().padStart(64, '0')}`
+    if (!allTickets || !registrationChecks.data) return []
+
+    return allTickets
+      .filter((_, index) => registrationChecks.data?.[index]?.result === true)
+      .map((ticket) => {
+        const now = Math.floor(Date.now() / 1000)
+        const isPast = Number(ticket.eventTimestamp) < now
+
+        return {
+          id: ticket.id.toString(),
+          tokenId: BigInt(ticket.id),
+          eventTitle: ticket.eventName,
+          eventTimestamp: Number(ticket.eventTimestamp),
+          location: ticket.location,
+          status: isPast ? "past" as const : "upcoming" as const,
+          qrCode: ticket.id.toString(),
+          price: formatEther(ticket.price) + " CELO",
+          purchaseDate: new Date(Number(ticket.eventTimestamp) * 1000).toISOString(),
+          txHash: "0x" + ticket.id.toString(16).padStart(64, '0')
+        } satisfies NFTTicketDisplay
       })
-    }
-    return tickets
-  }, [ticketCount])
+  }, [allTickets, registrationChecks.data])
 
   // Handle transfer completion
   useEffect(() => {
@@ -106,7 +123,9 @@ export function TicketManagementSystem() {
     if (!selectedTicket || !transferAddress || !address) return
 
     try {
-      await transferTicket(address, transferAddress as `0x${string}`, selectedTicket.tokenId)
+      await transferTicket(address, transferAddress as `0x${string}`, BigInt(selectedTicket.tokenId))
+      setCurrentAction(null)
+      setTransferAddress("")
     } catch (error) {
       console.error('Transfer failed:', error)
     }
@@ -129,41 +148,14 @@ export function TicketManagementSystem() {
 
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ""
 
+  const handleRefresh = async () => {
+    await refetchTickets()
+    // refetch()
+  }
+
   if (!isConnected) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 text-foreground">
-        {/* Dashboard Header */}
-        <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-purple-500/20">
-          <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-            <Link href="/dashboard" className="flex items-center space-x-2">
-              <Image src="/tixora-logo.png" alt="Tixora" width={40} height={40} />
-              <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                Tixora
-              </span>
-            </Link>
-
-            <nav className="hidden md:flex items-center space-x-8">
-              <Link href="/dashboard" className="text-slate-300 hover:text-purple-400 transition-colors font-medium">
-                Dashboard
-              </Link>
-              <Link href="/marketplace" className="text-slate-300 hover:text-blue-400 transition-colors font-medium">
-                Marketplace
-              </Link>
-              <Link href="/tickets" className="text-purple-400 font-medium">
-                Tickets
-              </Link>
-              <Link href="/create-event" className="text-slate-300 hover:text-purple-400 transition-colors font-medium">
-                Create Event
-              </Link>
-            </nav>
-
-            <div className="flex items-center space-x-4">
-              <WalletConnectButton />
-            </div>
-          </div>
-        </header>
-
-        {/* Connect Wallet Prompt */}
         <div className="container mx-auto px-4 py-16 pt-24">
           <div className="max-w-md mx-auto text-center space-y-6">
             <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto">
@@ -182,43 +174,22 @@ export function TicketManagementSystem() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 text-foreground">
-      {/* Dashboard Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-purple-500/20">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/dashboard" className="flex items-center space-x-2">
-            <Image src="/tixora-logo.png" alt="Tixora" width={40} height={40} />
-            <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-              Tixora
-            </span>
-          </Link>
-
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/dashboard" className="text-slate-300 hover:text-purple-400 transition-colors font-medium">
-              Dashboard
-            </Link>
-            <Link href="/marketplace" className="text-slate-300 hover:text-blue-400 transition-colors font-medium">
-              Marketplace
-            </Link>
-            <Link href="/tickets" className="text-purple-400 font-medium">
-              Tickets
-            </Link>
-            <Link href="/create-event" className="text-slate-300 hover:text-purple-400 transition-colors font-medium">
-              Create Event
-            </Link>
-          </nav>
-
-          <div className="flex items-center space-x-4">
-            <WalletConnectButton />
-          </div>
-        </div>
-      </header>
 
       <div className="container mx-auto px-4 py-8 pt-24">
         <div className="max-w-6xl mx-auto space-y-6">
-          <div className="mb-8">
+          <div className="flex justify-between items-center mb-8">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
               Tickets
             </h1>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={handleRefresh}
+              className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50"
+              title="Refresh tickets"
+            >
+              <RefreshCw className="h-5 w-5 text-purple-400" />
+            </Button>
           </div>
 
           {/* Stats Overview */}

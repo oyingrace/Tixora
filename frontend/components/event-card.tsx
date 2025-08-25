@@ -133,17 +133,19 @@ export function EventCard({ event }: EventCardProps) {
       // Check for specific error types
       if (writeError.message.includes("insufficient funds")) {
         toast.error("Insufficient funds for transaction. Please check your balance.")
-      } else if (writeError.message.includes("user rejected")) {
+      } else if (writeError.message.includes("rejected")) {
         toast.error("Transaction was rejected by user.")
       } else if (writeError.message.includes("network")) {
         toast.error("Network error. Please check your connection.")
-      } else if (writeError.message.includes("execution reverted")) {
+      } else if (writeError.message.includes("reverted")) {
         toast.error("Transaction failed: Execution reverted.")
-      } else if (writeError.message.includes("Internal JSON-RPC error")) {
+      } else if (writeError.message.includes("RPC")) {
         toast.error("Transaction failed: Internal JSON-RPC error. Please try again.")
       } else {
-        toast.error(`Transaction failed`)
+        toast.error(`Transaction failed with error: ${writeError.message}`)
       }
+
+      setPurchasing(false)
     }
   }, [writeError])
 
