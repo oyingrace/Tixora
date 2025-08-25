@@ -11,7 +11,8 @@ import { EventCard } from "@/components/event-card"
 import { Card } from "@/components/ui/card"
 import { useRouter } from "next/navigation"
 import { toast } from "react-toastify"
-import { useEventRegistration } from "@/hooks/use-event-registration"
+import { DebugPanel } from "@/components/debug-panel"
+import { ContractTest } from "@/components/contract-test"
 
 interface TicketData {
   id: number
@@ -49,12 +50,15 @@ interface MarketplaceEvent {
 
 export default function Marketplace() {
   const router = useRouter()
-  const { address, isConnected } = useAccount()
+  const { address, isConnected, chainId } = useAccount()
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("trending")
   const [activeTab, setActiveTab] = useState("upcoming")
   const [events, setEvents] = useState<MarketplaceEvent[]>([])
   const [loading, setLoading] = useState(true)
+  
+  // Check if user is on the correct network
+  const isCorrectNetwork = chainId === 11142220 // Celo Sepolia testnet
 
   // Read contract data
   const { data: totalTickets, error: totalTicketsError } = useReadContract({
@@ -68,13 +72,6 @@ export default function Marketplace() {
     abi: eventTicketingAbi,
     functionName: 'getRecentTickets',
   })
-
-  // Show success toast when events are loaded
-  useEffect(() => {
-    if (events.length > 0 && !loading) {
-      toast.success(`Loaded ${events.length} events successfully!`)
-    }
-  }, [events.length, loading])
 
   // Handle contract errors
   useEffect(() => {
@@ -190,6 +187,8 @@ export default function Marketplace() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 text-foreground">
+      <DebugPanel />
+      <ContractTest />
       <div className="pb-16 px-4 pt-12">
         <div className="container mx-auto">
           {/* Hero Section */}
@@ -204,6 +203,24 @@ export default function Marketplace() {
               Discover amazing events and secure your NFT tickets on the blockchain. All transactions are verified and
               fraud-proof.
             </p>
+            
+            {/* Network Info */}
+            {isConnected && (
+              <div className="mt-6 p-4 bg-slate-800/50 rounded-lg border border-slate-700 max-w-2xl mx-auto">
+                <p className="text-sm text-slate-300 mb-2">
+                  <strong>Network Status:</strong> {isCorrectNetwork ? '✅ Connected to Celo Sepolia' : '❌ Wrong Network'}
+                </p>
+                <p className="text-xs text-slate-400 mb-3">
+                  {isCorrectNetwork 
+                    ? 'You can now purchase tickets!' 
+                    : 'Switch to Celo Sepolia testnet to purchase tickets'
+                  }
+                </p>
+                
+                {/* Contract Status */}
+                
+              </div>
+            )}
           </div>
 
           {/* Search and Filters */}
@@ -394,26 +411,7 @@ export default function Marketplace() {
               )}
             </div>
           )}
-
-          {/* Empty State */}
-          {getEventsByTab().length === 0 && (
-            <div className="text-center py-16">
-              <div className="text-6xl mb-4">🎫</div>
-              <h3 className="text-2xl font-semibold text-white mb-2">No events found</h3>
-              <p className="text-slate-400 mb-6">
-                {searchTerm ? `No events match "${searchTerm}"` : `No ${activeTab} events available`}
-              </p>
-              {searchTerm && (
-                <Button
-                  onClick={() => setSearchTerm("")}
-                  className="bg-purple-600 hover:bg-purple-700"
-                >
-                  Clear Search
-                </Button>
-              )}
-            </div>
-          )}
-
+          
           {/* Stats Section */}
           <div className="mt-16 grid grid-cols-1 md:grid-cols-4 gap-8">
             <Card className="text-center p-6 bg-slate-800/50 border-slate-700">

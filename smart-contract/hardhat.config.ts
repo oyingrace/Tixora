@@ -17,14 +17,14 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
-    celo: {
+    celo_sepolia: {
       url: "https://rpc.ankr.com/celo_sepolia",
       accounts: [PRIVATE_KEY],
     },
   },
   etherscan: {
     apiKey: {
-      celo: API_KEY,
+      "celo-sepolia": API_KEY,
     },
     customChains: [
       {

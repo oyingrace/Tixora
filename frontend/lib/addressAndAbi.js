@@ -1,4 +1,4 @@
-export const ticketNftAddress = "0xc88229Ab87658823580E500aA4E4d5b48c10a604";
+export const ticketNftAddress = "0x3C4603b75EaB1dccC581Eefc2ac8A9FD99bFFb88";
 export const ticketNftAbi = [
     {
       "inputs": [
@@ -122,6 +122,11 @@ export const ticketNftAbi = [
         }
       ],
       "name": "ERC721NonexistentToken",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidImageUri",
       "type": "error"
     },
     {
@@ -338,54 +343,16 @@ export const ticketNftAbi = [
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "",
+          "name": "tokenId",
           "type": "uint256"
         }
       ],
-      "name": "descriptionOfToken",
+      "name": "getApproved",
       "outputs": [
         {
-          "internalType": "string",
+          "internalType": "address",
           "name": "",
-          "type": "string"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "eventNameOfToken",
-      "outputs": [
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "eventTimestampOfToken",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
+          "type": "address"
         }
       ],
       "stateMutability": "view",
@@ -399,12 +366,39 @@ export const ticketNftAbi = [
           "type": "uint256"
         }
       ],
-      "name": "getApproved",
+      "name": "getTicketMetadata",
       "outputs": [
         {
-          "internalType": "address",
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "ticketId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "string",
+              "name": "eventName",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "description",
+              "type": "string"
+            },
+            {
+              "internalType": "uint256",
+              "name": "eventTimestamp",
+              "type": "uint256"
+            },
+            {
+              "internalType": "string",
+              "name": "location",
+              "type": "string"
+            }
+          ],
+          "internalType": "struct TicketNft.TicketMetadata",
           "name": "",
-          "type": "address"
+          "type": "tuple"
         }
       ],
       "stateMutability": "view",
@@ -450,25 +444,6 @@ export const ticketNftAbi = [
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "locationOfToken",
-      "outputs": [
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
           "internalType": "address",
           "name": "to",
           "type": "address"
@@ -503,7 +478,7 @@ export const ticketNftAbi = [
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "",
+          "name": "newTokenId",
           "type": "uint256"
         }
       ],
@@ -706,25 +681,6 @@ export const ticketNftAbi = [
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "ticketOfToken",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
           "name": "tokenId",
           "type": "uint256"
         }
@@ -778,7 +734,7 @@ export const ticketNftAbi = [
     }
   ];
 
-export const eventTicketingAddress = "0xA48c69773a797bE0a799237f2389ebf42551EF20";
+export const eventTicketingAddress = "0xA4488a88Bc2508Ea3B80f262C35b886B6f99A5f6";
 export const eventTicketingAbi = [
     {
       "inputs": [
@@ -800,6 +756,118 @@ export const eventTicketingAbi = [
       ],
       "stateMutability": "nonpayable",
       "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "AlreadyRegistered",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "EventCanceled",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "EventClosed",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "EventNotCanceled",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "EventNotFound",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "EventNotPassed",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "EventStarted",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidCall",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidDescription",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "feeBps",
+          "type": "uint256"
+        }
+      ],
+      "name": "InvalidFee",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidLocation",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidMaxSupply",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidName",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "expected",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "actual",
+          "type": "uint256"
+        }
+      ],
+      "name": "InvalidPaymentAmount",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidPrice",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidTimestamp",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotAuthorized",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NothingToRefund",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "OnlyCreator",
+      "type": "error"
     },
     {
       "inputs": [
@@ -825,7 +893,22 @@ export const eventTicketingAbi = [
     },
     {
       "inputs": [],
+      "name": "ProceedsAlreadyWithdrawn",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "ReentrancyGuardReentrantCall",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "SoldOut",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ZeroAddress",
       "type": "error"
     },
     {
@@ -1176,7 +1259,7 @@ export const eventTicketingAbi = [
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "",
+          "name": "newId",
           "type": "uint256"
         }
       ],
@@ -1455,7 +1538,7 @@ export const eventTicketingAbi = [
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "",
+          "name": "nftTokenId",
           "type": "uint256"
         }
       ],
@@ -1707,7 +1790,7 @@ export const eventTicketingAbi = [
     }
   ];
 
-export const resaleMarketAddress = "0x9f7ABE0e663fA89506A2d227A7321a5dCb89D5E5";
+export const resaleMarketAddress = "0x1a5CBd231304DED72beDe6edaf06c00C25011f4e";
 export const resaleMarketAbi = [
     {
       "inputs": [
@@ -1737,7 +1820,22 @@ export const resaleMarketAbi = [
     },
     {
       "inputs": [],
+      "name": "InvalidRoyalty",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotOwner",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "ReentrancyGuardReentrantCall",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ZeroAddress",
       "type": "error"
     },
     {
@@ -1940,27 +2038,27 @@ export const resaleMarketAbi = [
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "",
+          "name": "ticketId_",
           "type": "uint256"
         },
         {
           "internalType": "uint256",
-          "name": "",
+          "name": "tokenId_2",
           "type": "uint256"
         },
         {
           "internalType": "address",
-          "name": "",
+          "name": "seller",
           "type": "address"
         },
         {
           "internalType": "uint256",
-          "name": "",
+          "name": "price",
           "type": "uint256"
         },
         {
           "internalType": "bool",
-          "name": "",
+          "name": "active",
           "type": "bool"
         }
       ],
