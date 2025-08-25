@@ -387,7 +387,7 @@ export default function EventDetailPage() {
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="text-slate-300">Price per ticket</p>
-                      <p className="text-2xl font-bold text-white">{events?.price} ETH</p>
+                      <p className="text-2xl font-bold text-white">{events?.price} CELO</p>
                     </div>
                     <div className="text-right">
                       <p className="text-slate-300">Available</p>

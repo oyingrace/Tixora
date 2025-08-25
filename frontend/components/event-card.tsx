@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -33,14 +33,14 @@ interface EventCardProps {
 
 export function EventCard({ event }: EventCardProps) {
   const router = useRouter()
-  const { writeContract, isPending, data: hash } = useWriteContract()
+  const { writeContract, isPending, data: hash , error: writeError} = useWriteContract()
   const [purchasing, setPurchasing] = useState(false)
-  const { address, isConnected } = useAccount()
+  const { address, isConnected, chainId } = useAccount()
   
   const { isRegistered, isLoading: checkingRegistration } = useEventRegistration(event.id, address)
   
   // Wait for transaction receipt
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+  const { isLoading: isConfirming, isSuccess, error: receiptError } = useWaitForTransactionReceipt({
     hash,
   })
 
@@ -76,27 +76,38 @@ export function EventCard({ event }: EventCardProps) {
     setPurchasing(true)
 
     try {
-      // Show transaction prompt
-      // const confirmed = window.confirm(
-      //   `Purchase ticket for "${event.eventTitle}"?\n\nPrice: ${event.price}\nGas fee: ~0.002 CELO\n\nClick OK to approve the transaction in your wallet.`,
-      // )
-
-      const confirmed = true
-      toast.info(`Purchasing ticket for \"${event.eventTitle}\", click Confirm in your wallet to approve the transaction...`)
-
-      if (!confirmed) {
+      // Check if user has enough balance
+      const balance = await window.ethereum.request({
+        method: 'eth_getBalance',
+        params: [address, 'latest']
+      })
+      
+      const requiredAmount = event.originalPrice
+      const userBalance = BigInt(balance)
+      
+      if (userBalance < requiredAmount) {
+        toast.error(`Insufficient balance. You need ${event.price} CELO to purchase this ticket.`)
         setPurchasing(false)
         return
       }
 
+      toast.info(`Purchasing ticket for \"${event.eventTitle}\", click Confirm in your wallet to approve the transaction...`)
       // Call the smart contract to register for the event
-      writeContract({
-        address: eventTicketingAddress,
-        abi: eventTicketingAbi,
-        functionName: 'register',
-        args: [BigInt(event.id)],
-        value: event.originalPrice,
-      })
+      try {
+        const result = writeContract({
+          address: eventTicketingAddress,
+          abi: eventTicketingAbi,
+          functionName: 'register',
+          args: [BigInt(event.id)],
+          value: event.originalPrice,
+        })
+        
+        console.log('Write contract result:', result)
+      } catch (contractError) {
+        console.error('Contract call error:', contractError)
+        toast.error(`Contract call failed`)
+        setPurchasing(false)
+      }
 
     } catch (error) {
       console.error("Purchase error:", error)
@@ -112,6 +123,41 @@ export function EventCard({ event }: EventCardProps) {
     window.location.reload()
     toast.success("Ticket purchased successfully!")
   }
+
+  // Handle write contract errors
+  useEffect(() => {
+    if (writeError) {
+      console.error("Write contract error:", writeError)
+      setPurchasing(false)
+      
+      // Check for specific error types
+      if (writeError.message.includes("insufficient funds")) {
+        toast.error("Insufficient funds for transaction. Please check your balance.")
+      } else if (writeError.message.includes("user rejected")) {
+        toast.error("Transaction was rejected by user.")
+      } else if (writeError.message.includes("network")) {
+        toast.error("Network error. Please check your connection.")
+      } else if (writeError.message.includes("execution reverted")) {
+        toast.error("Transaction failed: Execution reverted.")
+      } else if (writeError.message.includes("Internal JSON-RPC error")) {
+        toast.error("Transaction failed: Internal JSON-RPC error. Please try again.")
+      } else {
+        toast.error(`Transaction failed`)
+      }
+    }
+  }, [writeError])
+
+  // Handle transaction receipt errors
+  useEffect(() => {
+    if (receiptError) {
+      console.error("Transaction receipt error:", receiptError)
+      setPurchasing(false)
+      toast.error(`Transaction failed: ${receiptError.message}`)
+    }
+  }, [receiptError])
+
+  // Check if user is on the correct network
+  const isCorrectNetwork = chainId === 11142220 // Celo Sepolia testnet
 
   const isProcessing = purchasing || isPending || isConfirming
 
@@ -176,6 +222,15 @@ export function EventCard({ event }: EventCardProps) {
                   <Ticket className="h-3 w-3" />
                   Already Registered
                 </Button>
+                              ) : !isCorrectNetwork ? (
+                                <Button 
+                                  className="bg-red-600 hover:bg-red-700 text-white"
+                                  onClick={() => {
+                                    toast.error("Please switch to Celo Sepolia testnet (Chain ID: 11142220) to purchase tickets")
+                                  }}
+                                >
+                                  Wrong Network
+                                </Button>
               ) : (
                 <Button
                   className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"

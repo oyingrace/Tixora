@@ -1,33 +1,69 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./library/EventTicketingLib.sol";
+import { ITicketNft } from "./interfaces/Interface.sol";
+import "./library/Error.sol";
 
-interface ITicketNft {
-    function mintForRegistrant(address to, uint256 ticketId, string memory eventName, string memory description, uint256 eventTimestamp, string memory location) external returns (uint256);
-}
-
+/**
+ * @title EventTicketing
+ * @notice Create and manage ticketed events; users register by paying the price and receive an ERC721 ticket.
+ * @dev Uses a dedicated Ticket NFT contract for minting and a library for accounting helpers.
+ */
 contract EventTicketing is Ownable, ReentrancyGuard {
     using EventTicketingLib for *;
 
-    // ---- Types ----
+    // -------- Types --------
+
+    /// @notice Lifecycle status for an event/ticket
     enum Status { Upcoming, Passed, Canceled, Closed }
 
+    // -------- Storage --------
 
     ITicketNft public ticketNft;
 
+    /// @notice ticketId => Ticket data
     mapping(uint256 => EventTicketingLib.Ticket) public tickets;
+
+    /// @notice ticketId => list of registrants
     mapping(uint256 => address[]) private registrants;
+
+    /// @notice ticketId => (registrant => registered?)
     mapping(uint256 => mapping(address => bool)) public isRegistered;
+
+    /// @notice ticketId => (registrant => amount paid)
     mapping(uint256 => mapping(address => uint256)) public paidAmount;
 
+    /// @notice Incremental ticket id counter
     uint256 private _ticketIds;
+
+    /// @notice Platform fee in basis points (1e4 = 100%)
     uint16 public platformFeeBps;
+
+    /// @notice Platform fee recipient
     address payable public feeRecipient;
 
-    event TicketCreated(uint256 indexed ticketId, address indexed creator, uint256 price, string eventName, string description, uint256 eventTimestamp, uint256 maxSupply);
+    /// @dev Refund batching cursor to prevent OOG on cancellation
+    /// @dev ticketId => next index in registrants[ticketId] to refund
+    mapping(uint256 => uint256) private _refundCursor;
+
+    /// @dev Max refunds processed per cancelTicket() call to avoid gas griefing
+    uint256 private constant _REFUND_BATCH_SIZE = 150;
+
+    // -------- Events (names preserved) --------
+
+    event TicketCreated(
+        uint256 indexed ticketId,
+        address indexed creator,
+        uint256 price,
+        string eventName,
+        string description,
+        uint256 eventTimestamp,
+        uint256 maxSupply
+    );
+
     event Registered(uint256 indexed ticketId, address indexed registrant, uint256 nftTokenId);
     event TicketUpdated(uint256 indexed ticketId, uint256 newPrice, uint256 newTimestamp, string newLocation);
     event TicketClosed(uint256 indexed ticketId, address indexed closedBy);
@@ -38,35 +74,79 @@ contract EventTicketing is Ownable, ReentrancyGuard {
     event ServiceFeeUpdated(uint16 newFeeBps);
     event FeeRecipientUpdated(address indexed newRecipient);
 
-    // ---- Constructor ----
+    // -------- Constructor --------
+
+    /**
+     * @param ticketNftAddress Address of the Ticket NFT contract
+     * @param feeRecipient_ Platform fee recipient
+     * @param feeBps Platform fee in basis points (<= 10_000)
+     */
     constructor(address ticketNftAddress, address payable feeRecipient_, uint16 feeBps) Ownable(msg.sender) {
-        require(ticketNftAddress != address(0), "TicketNft address required");
-        require(feeRecipient_ != address(0), "feeRecipient required");
-        require(feeBps <= 10_000, "fee too high");
+        if (ticketNftAddress == address(0)) {
+            revert EventTicketingErrors.ZeroAddress();
+        }
+        if (feeRecipient_ == address(0)) {
+            revert EventTicketingErrors.ZeroAddress();
+        }
+        if (feeBps > 10_000) {
+            revert EventTicketingErrors.InvalidFee(feeBps);
+        }
+        
         ticketNft = ITicketNft(ticketNftAddress);
         feeRecipient = feeRecipient_;
         platformFeeBps = feeBps;
     }
 
-    // ---- Admin ----
+    // -------- Admin --------
+
+    /**
+     * @notice Update the ticket NFT contract address
+     * @param ticketNftAddress New NFT contract address
+     */
     function setTicketNft(address ticketNftAddress) external onlyOwner {
-        require(ticketNftAddress != address(0), "zero addr");
+        if (ticketNftAddress == address(0)) {
+            revert EventTicketingErrors.ZeroAddress();
+        }
         ticketNft = ITicketNft(ticketNftAddress);
     }
 
+    /**
+     * @notice Update platform fee
+     * @param feeBps New fee in basis points (<= 10_000)
+     */
     function setServiceFee(uint16 feeBps) external onlyOwner {
-        require(feeBps <= 10_000, "fee too high");
+        if (feeBps > 10_000) {
+            revert EventTicketingErrors.InvalidFee(feeBps);
+        }
         platformFeeBps = feeBps;
         emit ServiceFeeUpdated(feeBps);
     }
 
+    /**
+     * @notice Update platform fee recipient
+     * @param newRecipient Address of new recipient
+     */
     function setFeeRecipient(address payable newRecipient) external onlyOwner {
-        require(newRecipient != address(0), "zero addr");
+        if (newRecipient == address(0)) {
+            revert EventTicketingErrors.ZeroAddress();
+        }
         feeRecipient = newRecipient;
         emit FeeRecipientUpdated(newRecipient);
     }
 
-    // ---- Ticket Lifecycle ----
+    // -------- Ticket Lifecycle --------
+
+    /**
+     * @notice Create a new event
+     * @param price Price in wei (native token)
+     * @param eventName Name of the event
+     * @param description Event description
+     * @param eventTimestamp Unix timestamp in the future
+     * @param maxSupply Maximum number of seats
+     * @param metadata Arbitrary metadata string (e.g., IPFS CID)
+     * @param location Event location
+     * @return newId The newly created ticket/event id
+     */
     function createTicket(
         uint256 price,
         string calldata eventName,
@@ -75,21 +155,34 @@ contract EventTicketing is Ownable, ReentrancyGuard {
         uint256 maxSupply,
         string calldata metadata,
         string calldata location
-    ) external returns (uint256) {
-        require(eventTimestamp > block.timestamp, "eventTimestamp must be future");
-        require(maxSupply > 0, "maxSupply must be > 0");
-        require(bytes(eventName).length > 0, "eventName required");
-        require(bytes(description).length > 0, "description required");
+    ) external returns (uint256 newId) {
+        if (eventTimestamp <= block.timestamp) {
+            revert EventTicketingErrors.InvalidTimestamp();
+        }
+        if (maxSupply == 0) {
+            revert EventTicketingErrors.InvalidMaxSupply();
+        }
+        if (bytes(eventName).length == 0) {
+            revert EventTicketingErrors.InvalidName();
+        }
+        if (bytes(description).length == 0) {
+            revert EventTicketingErrors.InvalidDescription();
+        }
+        // Price can be zero if you want free events; keep your original semantics:
+        // If you want to forbid free events, uncomment the next line:
+        // require(price > 0, "EventTicketing: price > 0");
 
-        _ticketIds++;
-        uint256 newId = _ticketIds;
+        unchecked { _ticketIds++; }
+        newId = _ticketIds;
 
         _createTicket(newId, price, eventName, description, eventTimestamp, maxSupply, metadata, location);
 
         emit TicketCreated(newId, msg.sender, price, eventName, description, eventTimestamp, maxSupply);
-        return newId;
     }
 
+    /**
+     * @dev Internal helper to write the ticket struct
+     */
     function _createTicket(
         uint256 newId,
         uint256 price,
@@ -117,30 +210,69 @@ contract EventTicketing is Ownable, ReentrancyGuard {
             totalRefunded: 0,
             proceedsWithdrawn: false
         });
+        // refund cursor implicitly 0 for newId
     }
 
-    function register(uint256 ticketId) external payable nonReentrant returns (uint256) {
+    /**
+     * @notice Register for an event by paying the exact price, and receive an NFT
+     * @param ticketId The event id
+     * @return nftTokenId The minted NFT token id
+     */
+    function register(uint256 ticketId) external payable nonReentrant returns (uint256 nftTokenId) {
         EventTicketingLib.Ticket storage t = tickets[ticketId];
-        require(t.id != 0, "ticket not found");
-        require(!t.closed, "ticket closed");
-        require(!t.canceled, "ticket canceled");
-        require(block.timestamp < t.eventTimestamp, "event passed");
-        require(!isRegistered[ticketId][msg.sender], "already registered");
-        require(t.sold < t.maxSupply, "sold out");
-        require(msg.value == t.price, "incorrect CELO amount");
+        if (t.id == 0) {
+            revert EventTicketingErrors.EventNotFound();
+        }
+        if (t.closed) {
+            revert EventTicketingErrors.EventClosed();
+        }
+        if (t.canceled) {
+            revert EventTicketingErrors.EventCanceled();
+        }
+        if (block.timestamp >= t.eventTimestamp) {
+            revert EventTicketingErrors.EventNotPassed();
+        }
+        if (isRegistered[ticketId][msg.sender]) {
+            revert EventTicketingErrors.AlreadyRegistered();
+        }
+        if (t.sold >= t.maxSupply) {
+            revert EventTicketingErrors.SoldOut();
+        }
+        if (msg.value != t.price) {
+            revert EventTicketingErrors.InvalidPaymentAmount(t.price, msg.value);
+        }
 
+        // Effects
         EventTicketingLib.escrowFunds(paidAmount, tickets, ticketId, msg.value);
         EventTicketingLib.recordRegistration(registrants, isRegistered, ticketId, msg.sender);
-        uint256 nftTokenId = _mintNFT(msg.sender, ticketId, t.eventName, t.description, t.eventTimestamp, t.location);
+
+        // Interactions (after effects)
+        nftTokenId = _mintNFT(msg.sender, ticketId, t.eventName, t.description, t.eventTimestamp, t.location);
 
         emit Registered(ticketId, msg.sender, nftTokenId);
-        return nftTokenId;
     }
 
-    function _mintNFT(address to, uint256 ticketId, string memory eventName, string memory description, uint256 eventTimestamp, string memory location) internal returns (uint256) {
+    /**
+     * @dev Mint via the Ticket NFT contract
+     */
+    function _mintNFT(
+        address to,
+        uint256 ticketId,
+        string memory eventName,
+        string memory description,
+        uint256 eventTimestamp,
+        string memory location
+    ) internal returns (uint256) {
         return ticketNft.mintForRegistrant(to, ticketId, eventName, description, eventTimestamp, location);
     }
 
+    /**
+     * @notice Organizer updates price, location, and timestamp
+     * @param ticketId The event id
+     * @param newPrice New price (wei)
+     * @param newLocation New location
+     * @param newEventTimestamp New future timestamp
+     */
     function updateTicket(
         uint256 ticketId,
         uint256 newPrice,
@@ -148,88 +280,181 @@ contract EventTicketing is Ownable, ReentrancyGuard {
         uint256 newEventTimestamp
     ) external {
         EventTicketingLib.Ticket storage t = tickets[ticketId];
-        require(t.id != 0, "ticket not found");
-        require(msg.sender == t.creator, "only creator");
-        require(!t.canceled, "ticket canceled");
-        require(!t.closed, "ticket closed");
-        require(block.timestamp < t.eventTimestamp, "event started");
-        require(newEventTimestamp > block.timestamp, "must be future");
-        require(newPrice > 0, "price must be > 0");
-        require(bytes(newLocation).length > 0, "description required");
+        if (t.id == 0) {
+            revert EventTicketingErrors.EventNotFound();
+        }
+        if (msg.sender != t.creator) {
+            revert EventTicketingErrors.OnlyCreator();
+        }
+        if (t.canceled) {
+            revert EventTicketingErrors.EventCanceled();
+        }
+        if (t.closed) {
+            revert EventTicketingErrors.EventClosed();
+        }
+        if (block.timestamp >= t.eventTimestamp) {
+            revert EventTicketingErrors.EventStarted();
+        }
+        if (newEventTimestamp <= block.timestamp) {
+            revert EventTicketingErrors.InvalidTimestamp();
+        }
+        if (newPrice == 0) {
+            revert EventTicketingErrors.InvalidPrice();
+        }
+        if (bytes(newLocation).length == 0) {
+            revert EventTicketingErrors.InvalidLocation();
+        }
 
         EventTicketingLib.updateTicketDetails(t, newPrice, newLocation, newEventTimestamp);
 
         emit TicketUpdated(ticketId, newPrice, newEventTimestamp, newLocation);
     }
 
+    /**
+     * @notice Organizer increases/decreases max supply (cannot go below sold)
+     * @param ticketId The event id
+     * @param newMaxSupply New maximum supply
+     */
     function updateMaxSupply(uint256 ticketId, uint256 newMaxSupply) external {
         EventTicketingLib.Ticket storage t = tickets[ticketId];
-        require(t.id != 0, "ticket not found");
-        require(msg.sender == t.creator, "only creator");
-        require(!t.canceled, "ticket canceled");
-        require(!t.closed, "ticket closed");
-        require(newMaxSupply >= t.sold, "below sold");
-        require(newMaxSupply > 0, "zero max");
+        if (t.id == 0) {
+            revert EventTicketingErrors.EventNotFound();
+        }
+        if (msg.sender != t.creator) {
+            revert EventTicketingErrors.OnlyCreator();
+        }
+        if (t.canceled) {
+            revert EventTicketingErrors.EventCanceled();
+        }
+        if (t.closed) {
+            revert EventTicketingErrors.EventClosed();
+        }
+        if (newMaxSupply < t.sold) {
+            revert EventTicketingErrors.InvalidMaxSupply();
+        }
+        if (newMaxSupply == 0) {
+            revert EventTicketingErrors.InvalidMaxSupply();
+        }
 
         t.maxSupply = newMaxSupply;
         emit MaxSupplyUpdated(ticketId, newMaxSupply);
     }
 
+    /**
+     * @notice Close an event (stops new registrations)
+     * @param ticketId The event id
+     */
     function closeTicket(uint256 ticketId) external {
         EventTicketingLib.Ticket storage t = tickets[ticketId];
-        require(t.id != 0, "ticket not found");
-        require(msg.sender == t.creator || msg.sender == owner(), "not authorized");
-        require(!t.closed, "already closed");
-        require(!t.canceled, "ticket canceled");
+        if (t.id == 0) {
+            revert EventTicketingErrors.EventNotFound();
+        }
+        if (msg.sender != t.creator && msg.sender != owner()) {
+            revert EventTicketingErrors.NotAuthorized();
+        }
+        if (t.closed) {
+            revert EventTicketingErrors.EventClosed();
+        }
+        if (t.canceled) {
+            revert EventTicketingErrors.EventCanceled();
+        }
         t.closed = true;
         emit TicketClosed(ticketId, msg.sender);
     }
 
+    /**
+     * @notice Cancel an event and automatically process refunds in batches to avoid OOG.
+     *         Can be called repeatedly by the organizer or owner until all refunds are processed.
+     * @param ticketId The event id
+     */
     function cancelTicket(uint256 ticketId) external nonReentrant {
         EventTicketingLib.Ticket storage t = tickets[ticketId];
-        require(t.id != 0, "ticket not found");
-        require(msg.sender == t.creator || msg.sender == owner(), "not authorized");
-        require(!t.canceled, "already canceled");
+        if (t.id == 0) {
+            revert EventTicketingErrors.EventNotFound();
+        }
+        if (msg.sender != t.creator && msg.sender != owner()) {
+            revert EventTicketingErrors.NotAuthorized();
+        }
 
-        t.canceled = true;
-        t.closed = true;
-        emit TicketCanceled(ticketId, msg.sender);
+        // First call sets canceled/closed; subsequent calls only continue refunds
+        if (!t.canceled) {
+            t.canceled = true;
+            t.closed = true;
+            emit TicketCanceled(ticketId, msg.sender);
+        }
 
-        // Automatically refund all registrants
-        address[] memory regs = registrants[ticketId];
-        for (uint256 i = 0; i < regs.length; i++) {
+        // Process up to _REFUND_BATCH_SIZE refunds per call
+        address[] storage regs = registrants[ticketId];
+        uint256 cursor = _refundCursor[ticketId];
+        uint256 end = cursor + _REFUND_BATCH_SIZE;
+        if (end > regs.length) end = regs.length;
+
+        for (uint256 i = cursor; i < end; i++) {
             address payable refundee = payable(regs[i]);
             uint256 amt = paidAmount[ticketId][refundee];
             if (amt > 0) {
+                // Effects
                 EventTicketingLib.processRefund(paidAmount, tickets, ticketId, refundee, amt);
                 emit RefundClaimed(ticketId, refundee, amt);
             }
         }
+
+        _refundCursor[ticketId] = end;
+        // When end == regs.length, all refunds are processed.
     }
 
-    // ---- Settlement ----
+    // -------- Settlement --------
+
+    /**
+     * @notice Organizer withdraws proceeds after event has passed and not canceled.
+     * @param ticketId The event id
+     */
     function withdrawProceeds(uint256 ticketId) external nonReentrant {
         EventTicketingLib.Ticket storage t = tickets[ticketId];
-        require(t.id != 0, "ticket not found");
-        require(msg.sender == t.creator, "only creator");
-        require(!t.canceled, "ticket canceled");
-        require(block.timestamp >= t.eventTimestamp, "event not passed");
-        require(!t.proceedsWithdrawn, "already withdrawn");
+        if (t.id == 0) {
+            revert EventTicketingErrors.EventNotFound();
+        }
+        if (msg.sender != t.creator) {
+            revert EventTicketingErrors.OnlyCreator();
+        }
+        if (t.canceled) {
+            revert EventTicketingErrors.EventCanceled();
+        }
+        if (block.timestamp < t.eventTimestamp) {
+            revert EventTicketingErrors.EventNotPassed();
+        }
+        if (t.proceedsWithdrawn) {
+            revert EventTicketingErrors.ProceedsAlreadyWithdrawn();
+        }
 
         _settleProceeds(ticketId, t);
     }
 
-    /// @notice Anyone can call to settle proceeds once event has passed and not canceled
+    /**
+     * @notice Anyone can trigger settlement after event passed (not canceled).
+     * @param ticketId The event id
+     */
     function finalizeEvent(uint256 ticketId) external nonReentrant {
         EventTicketingLib.Ticket storage t = tickets[ticketId];
-        require(t.id != 0, "ticket not found");
-        require(!t.canceled, "ticket canceled");
-        require(block.timestamp >= t.eventTimestamp, "event not passed");
-        require(!t.proceedsWithdrawn, "already withdrawn");
+        if (t.id == 0) {
+            revert EventTicketingErrors.EventNotFound();
+        }
+        if (t.canceled) {
+            revert EventTicketingErrors.EventCanceled();
+        }
+        if (block.timestamp < t.eventTimestamp) {
+            revert EventTicketingErrors.EventNotPassed();
+        }
+        if (t.proceedsWithdrawn) {
+            revert EventTicketingErrors.ProceedsAlreadyWithdrawn();
+        }
 
         _settleProceeds(ticketId, t);
     }
 
+    /**
+     * @dev Internal settlement that calculates fee, pays fee, and pays creator.
+     */
     function _settleProceeds(uint256 ticketId, EventTicketingLib.Ticket storage t) internal {
         uint256 net = EventTicketingLib.calculateNetAmount(t);
         uint256 fee = EventTicketingLib.calculateFee(net, platformFeeBps);
@@ -237,26 +462,43 @@ contract EventTicketing is Ownable, ReentrancyGuard {
 
         t.proceedsWithdrawn = true;
 
+        // Interactions after all effects
         EventTicketingLib.transferFee(feeRecipient, fee);
         EventTicketingLib.transferToCreator(t.creator, toCreator);
 
         emit ProceedsWithdrawn(ticketId, t.creator, toCreator, fee);
     }
 
+    /**
+     * @notice Registered users can claim their refund if event is canceled.
+     *         (This complements batched refunds in cancelTicket.)
+     * @param ticketId The event id
+     */
     function claimRefund(uint256 ticketId) external nonReentrant {
         EventTicketingLib.Ticket storage t = tickets[ticketId];
-        require(t.id != 0, "ticket not found");
-        require(t.canceled, "not canceled");
+        if (t.id == 0) {
+            revert EventTicketingErrors.EventNotFound();
+        }
+        if (!t.canceled) {
+            revert EventTicketingErrors.EventNotCanceled();
+        }
 
         uint256 amt = paidAmount[ticketId][msg.sender];
-        require(amt > 0, "nothing to refund");
+        if (amt == 0) {
+            revert EventTicketingErrors.NothingToRefund();
+        }
 
+        // Effects & Interactions
         EventTicketingLib.processRefund(paidAmount, tickets, ticketId, payable(msg.sender), amt);
 
         emit RefundClaimed(ticketId, msg.sender, amt);
     }
 
-    // ---- Views ----
+    // -------- Views --------
+
+    /**
+     * @notice Whether an event is open and has tickets left
+     */
     function isAvailable(uint256 ticketId) public view returns (bool) {
         EventTicketingLib.Ticket storage t = tickets[ticketId];
         if (t.id == 0 || t.closed || t.canceled || block.timestamp >= t.eventTimestamp) return false;
@@ -264,6 +506,9 @@ contract EventTicketing is Ownable, ReentrancyGuard {
         return true;
     }
 
+    /**
+     * @notice Remaining tickets for an event
+     */
     function ticketsLeft(uint256 ticketId) external view returns (uint256) {
         EventTicketingLib.Ticket storage t = tickets[ticketId];
         if (t.id == 0) return 0;
@@ -271,13 +516,19 @@ contract EventTicketing is Ownable, ReentrancyGuard {
         return t.maxSupply - t.sold;
     }
 
+    /**
+     * @notice Get the list of registrants (addresses) for an event
+     */
     function getRegistrants(uint256 ticketId) external view returns (address[] memory) {
         return registrants[ticketId];
     }
 
+    /**
+     * @notice Get the current status of an event
+     */
     function getStatus(uint256 ticketId) public view returns (Status) {
         EventTicketingLib.Ticket storage t = tickets[ticketId];
-        if (t.id == 0) revert("ticket not found");
+        if (t.id == 0) revert EventTicketingErrors.EventNotFound();
         if (t.canceled) return Status.Canceled;
         if (t.closed) {
             if (block.timestamp < t.eventTimestamp) return Status.Closed;
@@ -286,36 +537,41 @@ contract EventTicketing is Ownable, ReentrancyGuard {
         return Status.Upcoming;
     }
 
-    /// @notice Get the most recent tickets (max 100) to prevent gas limit issues
+    /**
+     * @notice Get up to the latest 100 tickets for dashboard views
+     */
     function getRecentTickets() external view returns (EventTicketingLib.Ticket[] memory) {
         uint256 totalTickets = _ticketIds;
         if (totalTickets == 0) {
             return new EventTicketingLib.Ticket[](0);
         }
-        
-        // Return last 100 tickets or all tickets if less than 100
+
         uint256 limit = totalTickets > 100 ? 100 : totalTickets;
         uint256 startIndex = totalTickets > 100 ? totalTickets - 100 + 1 : 1;
-        
+
         EventTicketingLib.Ticket[] memory recentTickets = new EventTicketingLib.Ticket[](limit);
-        
+
         for (uint256 i = 0; i < limit; i++) {
             recentTickets[i] = tickets[startIndex + i];
         }
-        
+
         return recentTickets;
     }
 
-    /// @notice Get total number of tickets created
+    /**
+     * @notice Total number of tickets created (ticketId counter)
+     */
     function getTotalTickets() external view returns (uint256) {
         return _ticketIds;
     }
 
-    // ---- Safety ----
+    // -------- Safety --------
+
     receive() external payable {
-        revert("send CELO via register()");
+        revert EventTicketingErrors.InvalidCall();
     }
+
     fallback() external payable {
-        revert("invalid call");
+        revert EventTicketingErrors.InvalidCall();
     }
 }
