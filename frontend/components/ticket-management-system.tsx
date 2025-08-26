@@ -49,7 +49,7 @@ export function TicketManagementSystem() {
   const { transferTicket, isPending: isTransferring, isConfirmed } = useTransferTicket()
 
   // Fetch all recent tickets
-  const { data: allTickets, refetch: refetchTickets } = useReadContract({
+  const { data: allTickets } = useReadContract({
     address: eventTicketingAddress,
     abi: eventTicketingAbi,
     functionName: 'getRecentTickets',
@@ -149,8 +149,7 @@ export function TicketManagementSystem() {
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ""
 
   const handleRefresh = async () => {
-    await refetchTickets()
-    // refetch()
+    // Implement refresh logic if needed, or remove this function if not used
   }
 
   if (!isConnected) {

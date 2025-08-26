@@ -34,13 +34,13 @@ function Header() {
           </Link>
 
           <nav className="hidden md:flex items-center space-x-8">
-            <Link href="https://github.com/DIFoundation/Tixora/blob/main/README.md" className="text-slate-300 hover:text-purple-400 transition-colors font-medium">
+            <Link href="https://github.com/DIFoundation/Tixora/blob/main/README.md" target='_blank' className="text-slate-300 hover:text-purple-400 transition-colors font-medium">
               Docs
             </Link>
             <Link href="/resources" className="text-slate-300 hover:text-purple-400 transition-colors font-medium">
               Resources
             </Link>
-            <Link href="#how-it-works" className="text-slate-300 hover:text-purple-400 transition-colors font-medium">
+            <Link href="/#how-it-works" className="text-slate-300 hover:text-purple-400 transition-colors font-medium">
               How It Works
             </Link>
           </nav>
