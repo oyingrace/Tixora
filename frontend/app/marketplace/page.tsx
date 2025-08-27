@@ -202,7 +202,7 @@ export default function Marketplace() {
   const filteredEvents = getEventsByTab()
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/10 to-slate-900 text-foreground">
+    <div className="mb-12 min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/10 to-slate-900 text-foreground">
       <div className="pb-16 px-4 pt-8">
         <div className="container mx-auto max-w-7xl">
           {/* Hero Section */}
