@@ -7,7 +7,7 @@ import 'react-toastify/dist/ReactToastify.css'
 import "./globals.css"
 import { Providers } from "@/lib/providers"
 import Header from "@/components/header"
-import RPCMarquee from "@/components/rpcmarquee"
+// import RPCMarquee from "@/components/rpcmarquee"
 
 export const metadata: Metadata = {
   title: "Tixora - Decentralized Event Ticketing",
@@ -37,7 +37,7 @@ html {
         <Providers>
           <Header />
             {children}
-          <RPCMarquee />
+          {/* <RPCMarquee /> */}
           <ToastContainer 
             position="top-right"
             autoClose={5000}
