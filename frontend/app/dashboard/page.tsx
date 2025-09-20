@@ -179,27 +179,27 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 text-foreground pt-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 text-foreground pt-12 px-20">
       <div className="pb-16 px-4">
         <div className="container mx-auto max-w-7xl">
           {/* Welcome Section */}
-          <div className="mb-12">
-            <h1 className="text-6xl font-bold mb-4">
+          <div className="mb-8">
+            <h1 className="text-5xl font-bold mb-3">
               Welcome back,{" "}
-              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
                 {shortAddress}
               </span>
             </h1>
-            <p className="text-slate-300 text-xl">Manage your events and tickets on the decentralized web</p>
+            <p className="text-slate-300 text-base">Manage your events and tickets on the decentralized web</p>
           </div>
 
           {/* Platform Overview */}
           {platformStats && (
-            <div className="mb-12">
-              <h2 className="text-3xl font-semibold mb-6 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+            <div className="mb-10">
+              <h2 className="text-2xl font-semibold mb-3 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
                 Platform Overview
               </h2>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-6 px-6">
                 <Card className="bg-gradient-to-br from-slate-800/80 to-purple-900/30 border-purple-500/30">
                   <CardContent className="p-4 text-center">
                     <p className="text-2xl font-bold text-white">{platformStats.totalEvents}</p>
@@ -229,26 +229,26 @@ export default function Dashboard() {
           )}
 
           {/* Personal Stats */}
-          <div className="mb-12">
-            <h2 className="text-3xl font-semibold mb-6 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+          <div className="mb-10">
+            <h2 className="text-2xl font-semibold mb-3 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
               Your Stats
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-5 px-6">
               {stats.map((stat, index) => {
                 const Icon = stat.icon
                 return (
                   <Card key={index} className="bg-gradient-to-br from-slate-800/80 to-purple-900/30 border-purple-500/30 overflow-hidden relative">
                     <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-10`} />
-                    <CardContent className="p-6 relative z-10">
-                      <div className="flex items-center justify-between mb-4">
-                        <Icon className="h-8 w-8 text-purple-400" />
+                    <CardContent className="py-3 px-6 relative z-10">
+                      <div className="flex items-center justify-between mb-2">
+                        <Icon className="h-6 w-6 text-purple-400" />
                         <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${stat.color}`} />
                       </div>
                       <div>
-                        <p className="text-3xl font-bold text-white mb-2">
+                        <p className="text-2xl font-bold text-white mb-2">
                           {stat.value}
                         </p>
-                        <p className="text-slate-300 font-medium mb-1">{stat.label}</p>
+                        <p className="text-slate-300 font-medium mb-1 text-sm">{stat.label}</p>
                         <p className="text-green-400 text-sm font-medium">{stat.change}</p>
                       </div>
                     </CardContent>
@@ -259,25 +259,25 @@ export default function Dashboard() {
           </div>
 
           {/* Quick Action Cards */}
-          <div className="mb-12">
-            <h2 className="text-3xl font-semibold mb-6 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+          <div className="mb-10">
+            <h2 className="text-2xl font-semibold mb-3 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
               Quick Actions
             </h2>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-3 gap-8 px-6">
               {quickActions.map((action, index) => {
                 const Icon = action.icon
                 return (
                   <Link key={index} href={action.href}>
                     <Card className="group cursor-pointer bg-gradient-to-br from-slate-800/80 to-purple-900/30 border-purple-500/30 overflow-hidden relative hover:border-purple-400/60 transition-all duration-300">
                       <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-5 group-hover:opacity-10 transition-opacity`} />
-                      <CardContent className="p-8 text-center relative z-10">
+                      <CardContent className="p-6 text-center relative z-10">
                         <div
-                          className={`w-20 h-20 rounded-full bg-gradient-to-br ${action.gradient} flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform`}
+                          className={`w-15 h-15 rounded-full bg-gradient-to-br ${action.gradient} flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform`}
                         >
-                          <Icon className="h-10 w-10 text-white" />
+                          <Icon className="h-6 w-6 text-white" />
                         </div>
-                        <h3 className="text-2xl font-bold mb-3 text-white">{action.title}</h3>
-                        <p className="text-slate-300 text-base">{action.description}</p>
+                        <h3 className="text-xl font-bold mb-3 text-white">{action.title}</h3>
+                        <p className="text-slate-300 text-sm">{action.description}</p>
                       </CardContent>
                     </Card>
                   </Link>
@@ -287,10 +287,10 @@ export default function Dashboard() {
           </div>
 
           {/* Recent Activity Section */}
-          <div>
+          <div className="px-6">
             <Card className="bg-gradient-to-br from-slate-800/80 to-purple-900/30 border-purple-500/30">
               <CardHeader>
-                <CardTitle className="flex items-center gap-3 text-white text-2xl">
+                <CardTitle className="flex items-center gap-3 text-white text-xl">
                   <Activity className="h-6 w-6 text-purple-400" />
                   Recent Activity
                 </CardTitle>
@@ -301,16 +301,16 @@ export default function Dashboard() {
                     recentActivity.map((activity, index) => (
                       <div
                         key={activity.id}
-                        className="flex items-center justify-between p-6 bg-slate-700/30 rounded-xl border border-slate-600/30"
+                        className="flex items-center justify-between py-4 px-6 bg-slate-700/30 rounded-xl border border-slate-600/30"
                       >
                         <div className="flex items-center gap-4">
                           <div className={`w-3 h-3 rounded-full ${
                             activity.type === 'cancel' ? 'bg-red-400' : 'bg-blue-400'
                           }`} />
                           <div>
-                            <p className="text-white font-medium text-lg">{activity.action}</p>
-                            <p className="text-slate-400">{activity.time}</p>
-                            <p className="text-slate-500 text-sm">
+                            <p className="text-white font-medium text-md">{activity.action}</p>
+                            <p className="text-slate-400 text-sm">{activity.time}</p>
+                            <p className="text-slate-500 text-xs">
                               {activity.sold}/{activity.maxSupply} tickets sold
                             </p>
                           </div>
@@ -318,7 +318,7 @@ export default function Dashboard() {
                         <div className="flex flex-col items-end gap-2">
                           <Badge
                             variant="outline"
-                            className={`border-purple-500/50 px-4 py-2 ${
+                            className={`border-purple-500/50 px-2 py-1 text-xs ${
                               activity.status === 'Active' 
                                 ? 'text-green-300 bg-green-500/10 border-green-500/50'
                                 : activity.status === 'Canceled'
@@ -328,7 +328,7 @@ export default function Dashboard() {
                           >
                             {activity.status}
                           </Badge>
-                          <span className="text-purple-300 font-mono text-sm">
+                          <span className="text-purple-300 font-mono text-xs">
                             {activity.amount}
                           </span>
                         </div>
