@@ -208,7 +208,7 @@ export function useTransferTicket() {
   })
 
   const transferTicket = async (from: `0x${string}`, to: `0x${string}`, tokenId: bigint) => {
-    writeContract({
+    return writeContract({
       address: ticketNftAddress,
       abi: ticketNftAbi,
       functionName: 'transferFrom',

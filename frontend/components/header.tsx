@@ -21,11 +21,11 @@ function Header() {
       <header className="bg-slate-900/80 backdrop-blur-md border-b border-purple-500/20 sticky top-0 z-50">
         <div className="container mx-auto px-4 h-12 flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
-            <Image 
-              src="/tixora-logo.png" 
-              alt="Tixora" 
-              width={100} 
-              height={100} 
+            <Image
+              src="/tixora-logo.png"
+              alt="Tixora"
+              width={100}
+              height={100}
               className="rounded-full h-12 w-auto"
             />
             <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
@@ -58,11 +58,11 @@ function Header() {
     <header className="bg-slate-900/80 backdrop-blur-md border-b border-purple-500/20 sticky top-0 z-50">
       <div className="container mx-auto px-4 h-12 flex items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
-          <Image 
-            src="/tixora-logo.png" 
-            alt="Tixora" 
-            width={100} 
-            height={100} 
+          <Image
+            src="/tixora-logo.png"
+            alt="Tixora"
+            width={100}
+            height={100}
             className="rounded-full h-12 w-auto"
           />
           <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
@@ -72,18 +72,17 @@ function Header() {
 
         <nav className="hidden text-base md:flex items-center space-x-8">
           {filteredNavLinks.map((link) => {
-            const isActive = pathname === link.path || 
-                           (link.path !== '/' && pathname.startsWith(link.path))
-            
+            const isActive = pathname === link.path ||
+              (link.path !== '/' && pathname.startsWith(link.path))
+
             return (
-              <Link 
+              <Link
                 key={link.path}
                 href={link.path}
-                className={`${
-                  isActive 
-                    ? 'text-purple-400 font-medium' 
+                className={`${isActive
+                    ? 'text-purple-400 font-medium'
                     : 'text-slate-300 hover:text-purple-400 transition-colors font-medium'
-                }`}
+                  }`}
               >
                 {link.name}
               </Link>
