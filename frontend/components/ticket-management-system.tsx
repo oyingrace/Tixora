@@ -172,12 +172,12 @@ export function TicketManagementSystem() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 text-foreground">
+    <div className="px-20 min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 text-foreground">
 
-      <div className="container mx-auto px-4 py-8 pt-24">
+      <div className="container mx-auto px-4 py-8 pt-18">
         <div className="max-w-6xl mx-auto space-y-6">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
               Tickets
             </h1>
             <Button 
@@ -187,14 +187,14 @@ export function TicketManagementSystem() {
               className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50"
               title="Refresh tickets"
             >
-              <RefreshCw className="h-5 w-5 text-purple-400" />
+              <RefreshCw className="h-3 w-3 text-purple-400" />
             </Button>
           </div>
 
           {/* Stats Overview */}
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-3 gap-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardContent className="p-4">
+              <CardContent className="px-4 pt-2">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
                     <QrCode className="w-5 h-5 text-purple-400" />
@@ -207,7 +207,7 @@ export function TicketManagementSystem() {
               </CardContent>
             </Card>
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardContent className="p-4">
+              <CardContent className="px-4 pt-2">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
                     <Calendar className="w-5 h-5 text-green-400" />
@@ -222,7 +222,7 @@ export function TicketManagementSystem() {
               </CardContent>
             </Card>
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardContent className="p-4">
+              <CardContent className="px-4 pt-2">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
                     <ExternalLink className="w-5 h-5 text-blue-400" />
@@ -288,44 +288,44 @@ export function TicketManagementSystem() {
           </div>
 
           {/* Tickets Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredTickets.map((ticket) => (
               <Card
                 key={ticket.id}
                 className="overflow-hidden bg-slate-800/50 border-slate-700 hover:border-purple-500/50"
               >
                 <div className="relative">
-                  <div className="w-full h-48 bg-gradient-to-br from-purple-600/20 to-blue-600/20 flex items-center justify-center">
+                  <div className="w-full h-40 bg-gradient-to-br from-purple-600/20 to-blue-600/20 flex items-center justify-center">
                     <QrCode className="w-16 h-16 text-purple-400" />
                   </div>
-                  <Badge className={`absolute top-3 right-3 ${getStatusColor(ticket.status)}`}>
+                  <Badge className={`absolute top-3 right-3 text-xs ${getStatusColor(ticket.status)}`}>
                     {ticket.status === "upcoming" ? "Valid" : "Used"}
                   </Badge>
                   <div className="absolute bottom-3 right-3">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="secondary" size="sm" className="bg-slate-700 hover:bg-slate-600">
-                          <MoreVertical className="w-4 h-4" />
+                          <MoreVertical className="w-3 h-3" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700">
                         <DropdownMenuItem onClick={() => handleTicketAction(ticket, "view")}>
-                          <Eye className="w-4 h-4 mr-2" />
+                          <Eye className="w-3 h-3 mr-2" />
                           View Details
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleTicketAction(ticket, "qr")}>
-                          <QrCode className="w-4 h-4 mr-2" />
+                          <QrCode className="w-3 h-3 mr-2" />
                           Show QR Code
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleTicketAction(ticket, "transfer")}>
-                          <Send className="w-4 h-4 mr-2" />
+                          <Send className="w-3 h-3 mr-2" />
                           Transfer Ticket
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           onClick={() => window.open(`https://celoscan.io/tx/${ticket.txHash}`, "_blank")}
                         >
-                          <ExternalLink className="w-4 h-4 mr-2" />
+                          <ExternalLink className="w-3 h-3 mr-2" />
                           View on Celoscan
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -339,8 +339,8 @@ export function TicketManagementSystem() {
 
                 <CardContent className="space-y-3">
                   <div className="flex items-center gap-2 text-slate-400">
-                    <Calendar className="w-4 h-4" />
-                    <span className="text-sm">
+                    <Calendar className="w-3 h-3" />
+                    <span className="text-xs">
                       {new Date(ticket.purchaseDate).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
@@ -352,7 +352,7 @@ export function TicketManagementSystem() {
                   <div className="flex items-center justify-between pt-2">
                     <div>
                       <p className="text-xs text-slate-400">Ticket ID</p>
-                      <p className="font-mono text-sm text-purple-300">#{ticket.qrCode}</p>
+                      <p className="font-mono text-xs text-purple-300">#{ticket.qrCode}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-slate-400">Paid</p>
@@ -365,10 +365,10 @@ export function TicketManagementSystem() {
           </div>
 
           {filteredTickets.length === 0 && (
-            <div className="text-center py-16">
-              <QrCode className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">No Tickets Found</h3>
-              <p className="text-slate-400 mb-4">
+            <div className="text-center py-12">
+              <QrCode className="w-12 h-12 text-slate-400 mx-auto mb-2" />
+              <h3 className="text-lg font-bold text-white mb-2">No Tickets Found</h3>
+              <p className="text-sm text-slate-400 mb-4">
                 {searchQuery || selectedCategory !== "all"
                   ? "No tickets match your current filters."
                   : "You don't have any tickets yet. Visit the marketplace to purchase some!"}
@@ -397,7 +397,7 @@ export function TicketManagementSystem() {
                   <div className="w-full h-48 bg-gradient-to-br from-purple-600/20 to-blue-600/20 rounded-lg flex items-center justify-center">
                     <QrCode className="w-16 h-16 text-purple-400" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-slate-400">Ticket ID</span>
                       <span className="font-mono text-purple-300">#{selectedTicket.qrCode}</span>
@@ -420,7 +420,7 @@ export function TicketManagementSystem() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="space-y-2">
+                  <div className="space-y-2 text-sm">
                     <h4 className="font-medium text-white">Transaction Details</h4>
                     <div className="flex items-center gap-2">
                       <code className="text-xs bg-slate-700 p-2 rounded flex-1 truncate text-slate-300">
@@ -432,7 +432,7 @@ export function TicketManagementSystem() {
                         onClick={() => copyToClipboard(selectedTicket.txHash)}
                         className="text-slate-400 hover:text-white"
                       >
-                        <Copy className="w-3 h-3" />
+                        <Copy className="w-2 h-2" />
                       </Button>
                     </div>
                   </div>
@@ -445,14 +445,14 @@ export function TicketManagementSystem() {
                   onClick={() => window.open(`https://celoscan.io/tx/${selectedTicket.txHash}`, "_blank")}
                   className="border-slate-600 text-slate-300 hover:border-purple-500"
                 >
-                  <ExternalLink className="w-4 h-4 mr-2" />
+                  <ExternalLink className="w-3 h-3 mr-1" />
                   View on Celoscan
                 </Button>
                 <Button
                   onClick={() => handleTicketAction(selectedTicket, "qr")}
                   className="bg-purple-600 hover:bg-purple-700"
                 >
-                  <QrCode className="w-4 h-4 mr-2" />
+                  <QrCode className="w-3 h-3 mr-1" />
                   Show QR Code
                 </Button>
               </div>
