@@ -202,18 +202,18 @@ export default function Marketplace() {
   const filteredEvents = getEventsByTab()
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/10 to-slate-900 text-foreground">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/10 to-slate-900 text-foreground px-20">
       <div className="pb-16 px-4 pt-8">
         <div className="container mx-auto max-w-7xl">
           {/* Hero Section */}
-          <div className="text-center mb-12">
-            <h1 className="text-6xl font-bold mb-6">
+          <div className="text-center mb-10">
+            <h1 className="text-4xl font-bold mb-4">
               Event{" "}
-              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r text-5xl from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
                 Marketplace
               </span>
             </h1>
-            <p className="text-xl text-slate-300 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-base text-slate-300 max-w-4xl mx-auto leading-relaxed">
               Discover amazing events and secure your NFT tickets on the blockchain. 
               All transactions are verified, fraud-proof, and powered by smart contracts.
             </p>
@@ -221,14 +221,14 @@ export default function Marketplace() {
 
           {/* Network Warning */}
           {!isCorrectNetwork && (
-            <div className="mb-8">
+            <div className="mb-4">
               <Card className="bg-gradient-to-r from-orange-900/30 to-red-900/30 border-orange-500/50">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <AlertCircle className="h-5 w-5 text-orange-400 flex-shrink-0" />
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-54w-4 text-orange-400 flex-shrink-0" />
                     <div>
-                      <p className="text-orange-200 font-medium">Wrong Network</p>
-                      <p className="text-orange-300 text-sm">Please switch to Celo Sepolia testnet to interact with events.</p>
+                      <p className="text-orange-200 font-medium text-base">Wrong Network</p>
+                      <p className="text-orange-300 text-xs">Please switch to Celo Sepolia testnet to interact with events.</p>
                     </div>
                   </div>
                 </CardContent>
@@ -237,21 +237,21 @@ export default function Marketplace() {
           )}
 
           {/* Search and Filters */}
-          <div className="mb-12">
-            <div className="flex flex-col xl:flex-row gap-6">
+          <div className="mb-8">
+            <div className="flex flex-col xl:flex-row gap-4">
               {/* Search Bar */}
               <div className="flex-1 w-full">
                 <div className="relative group">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 text-slate-400 w-5 h-5 group-focus-within:text-purple-400 transition-colors" />
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 text-slate-400 w-4 h-4 group-focus-within:text-purple-400 transition-colors" />
                   <Input
                     placeholder="Search events by name, location, or category..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 h-12 bg-slate-800/50 border-slate-600 focus:border-purple-400 focus:ring-purple-400/20 text-white text-lg backdrop-blur-sm"
+                    className="pl-12 h-10 text-xs font-mono bg-slate-800/50 border-slate-600 focus:border-purple-400 focus:ring-purple-400/20 text-white backdrop-blur-sm"
                   />
                   {searchTerm && (
                     <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                      <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 border-purple-500/30">
+                      <Badge variant="secondary" className="text-sm font-mono bg-purple-500/20 text-purple-300 border-purple-500/30">
                         {filteredEvents.length} results
                       </Badge>
                     </div>
@@ -264,25 +264,25 @@ export default function Marketplace() {
                 <Button
                   variant={sortBy === "trending" ? "default" : "outline"}
                   onClick={() => setSortBy("trending")}
-                  className={`h-12 px-6 transition-all duration-200 ${
+                  className={`h-10 transition-all duration-200 ${
                     sortBy === "trending"
                       ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-lg"
                       : "border-slate-600 text-slate-300 hover:border-purple-500 hover:text-white"
                   }`}
                 >
-                  <TrendingUp className="w-5 h-5 mr-2" />
+                  <TrendingUp className="w-4 h-4 mr-1" />
                   Trending
                 </Button>
                 <Button
                   variant={sortBy === "recent" ? "default" : "outline"}
                   onClick={() => setSortBy("recent")}
-                  className={`h-12 px-6 transition-all duration-200 ${
+                  className={`h-10 transition-all duration-200 ${
                     sortBy === "recent"
                       ? "bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-lg"
                       : "border-slate-600 text-slate-300 hover:border-blue-500 hover:text-white"
                   }`}
                 >
-                  <Clock className="w-5 h-5 mr-2" />
+                  <Clock className="w-4 h-4 mr-1" />
                   Recent
                 </Button>
               </div>
@@ -290,8 +290,8 @@ export default function Marketplace() {
           </div>
 
           {/* Event Tabs */}
-          <div className="flex justify-center mb-12">
-            <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-2 border border-slate-600/50 shadow-xl">
+          <div className="flex justify-center mb-6">
+            <div className="bg-slate-800/60 backdrop-blur-sm rounded-xl p-2 border border-slate-600/50 shadow-xl">
               <div className="flex flex-wrap gap-1">
                 {[
                   { key: "upcoming", label: "Upcoming", color: "purple" },
@@ -306,7 +306,7 @@ export default function Marketplace() {
                       key={tab.key}
                       variant={isActive ? "default" : "ghost"}
                       onClick={() => setActiveTab(tab.key)}
-                      className={`h-10 px-6 transition-all duration-200 ${
+                      className={`h-8 px-6 transition-all duration-200 ${
                         isActive
                           ? `bg-gradient-to-r ${
                               tab.color === "purple" ? "from-purple-600 to-pink-600" :
@@ -341,9 +341,9 @@ export default function Marketplace() {
           {loading && (
             <div className="text-center p-12">
               <Card className="bg-slate-800/50 border-purple-500/30 backdrop-blur-sm max-w-md mx-auto">
-                <CardContent className="p-8">
-                  <div className="w-12 h-12 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-                  <h3 className="text-xl font-semibold text-white mb-2">Loading Events</h3>
+                <CardContent className="p-4">
+                  <div className="w-8 h-8 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <h3 className="text-lg font-semibold text-white mb-1">Loading Events</h3>
                   <p className="text-slate-300">Fetching latest events from the blockchain...</p>
                 </CardContent>
               </Card>
@@ -352,9 +352,9 @@ export default function Marketplace() {
 
           {/* Events Grid */}
           {!loading && filteredEvents.length > 0 && (
-            <div className="mb-16">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-semibold text-white">
+            <div className="mb-10">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-white">
                   {activeTab === "upcoming" && "Upcoming Events"}
                   {activeTab === "passed" && "Past Events"} 
                   {activeTab === "canceled" && "Canceled Events"}
@@ -380,13 +380,13 @@ export default function Marketplace() {
 
           {/* Empty State */}
           {!loading && filteredEvents.length === 0 && (
-            <div className="text-center py-20">
+            <div className="text-center py-16">
               <div className="mb-8">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 flex items-center justify-center mx-auto mb-6">
-                  <Calendar className="w-12 h-12 text-purple-400" />
+                <div className="w-20 h-20 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="w-10 h-10 text-purple-400" />
                 </div>
-                <h3 className="text-3xl font-bold text-white mb-4">No Events Found</h3>
-                <p className="text-xl text-slate-400 max-w-md mx-auto">
+                <h3 className="text-xl font-bold text-white mb-4">No Events Found</h3>
+                <p className="text-base text-slate-400 max-w-md mx-auto">
                   {searchTerm 
                     ? `No events match your search for "${searchTerm}"`
                     : `No ${activeTab} events are currently available`
@@ -421,52 +421,52 @@ export default function Marketplace() {
           
           {/* Platform Stats */}
           {!loading && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 border-t border-slate-600/50 pt-8">
               <Card className="bg-gradient-to-br from-slate-800/60 to-purple-900/30 border-purple-500/30 backdrop-blur-sm hover:border-purple-400/50 transition-all duration-300">
-                <CardContent className="p-4 text-center">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-4">
-                    <Calendar className="h-8 w-8 text-white" />
+                <CardContent className="p-2 text-center">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-2">
+                    <Calendar className="h-6 w-6 text-white" />
                   </div>
-                  <div className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+                  <div className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
                     {totalTickets ? Number(totalTickets) : 0}
                   </div>
-                  <div className="text-slate-400 font-medium">Total Events Created</div>
+                  <div className="text-slate-400 text-base font-medium">Total Events Created</div>
                 </CardContent>
               </Card>
 
               <Card className="bg-gradient-to-br from-slate-800/60 to-green-900/30 border-green-500/30 backdrop-blur-sm hover:border-green-400/50 transition-all duration-300">
-                <CardContent className="p-4 text-center">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center mx-auto mb-4">
-                    <TrendingUp className="h-8 w-8 text-white" />
+                <CardContent className="p-2 text-center">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center mx-auto mb-2">
+                    <TrendingUp className="h-6 w-6 text-white" />
                   </div>
-                  <div className="text-4xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent mb-2">
+                  <div className="text-2xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent mb-2">
                     {events.filter(e => e.status === "upcoming").length}
                   </div>
-                  <div className="text-slate-400 font-medium">Active Events</div>
+                  <div className="text-slate-400 text-base font-medium">Active Events</div>
                 </CardContent>
               </Card>
 
               <Card className="bg-gradient-to-br from-slate-800/60 to-blue-900/30 border-blue-500/30 backdrop-blur-sm hover:border-blue-400/50 transition-all duration-300">
-                <CardContent className="p-4 text-center">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center mx-auto mb-4">
-                    <Users className="h-8 w-8 text-white" />
+                <CardContent className="p-2 text-center">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center mx-auto mb-2">
+                    <Users className="h-6 w-6 text-white" />
                   </div>
-                  <div className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
+                  <div className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
                     {events.reduce((sum, e) => sum + e.attendees, 0).toLocaleString()}
                   </div>
-                  <div className="text-slate-400 font-medium">Total Capacity</div>
+                  <div className="text-slate-400 text-base font-medium">Total Capacity</div>
                 </CardContent>
               </Card>
 
               <Card className="bg-gradient-to-br from-slate-800/60 to-yellow-900/30 border-yellow-500/30 backdrop-blur-sm hover:border-yellow-400/50 transition-all duration-300">
-                <CardContent className="p-4 text-center">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 flex items-center justify-center mx-auto mb-4">
-                    <Sparkles className="h-8 w-8 text-white" />
+                <CardContent className="p-2 text-center">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 flex items-center justify-center mx-auto mb-2">
+                    <Sparkles className="h-6 w-6 text-white" />
                   </div>
-                  <div className="text-4xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent mb-2">
+                  <div className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent mb-2">
                     Zero
                   </div>
-                  <div className="text-slate-400 font-medium">Fraud Cases</div>
+                  <div className="text-slate-400 text-base font-medium">Fraud Cases</div>
                 </CardContent>
               </Card>
             </div>
