@@ -213,9 +213,9 @@ export function EventCard({ event }: EventCardProps) {
       className="group cursor-pointer bg-slate-800/50 border-slate-700 hover:border-purple-500/50 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/10"
     >
       <CardContent className="p-0 h-full flex flex-col">
-        <div className="relative h-48 overflow-hidden rounded-t-lg">
+        <div className="relative h-40 overflow-hidden rounded-t-lg">
           <Image
-            src={imageError ? "/tixora-logo.png" : event.image || "/tixora-logo.png"}
+            src="/web3-music-festival-lights.png"
             alt={event.eventTitle}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -224,7 +224,7 @@ export function EventCard({ event }: EventCardProps) {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           
-          <Badge className="absolute top-3 left-3 bg-blue-600/90 backdrop-blur-sm border border-blue-500/50">
+          <Badge className="absolute top-3 left-3 text-xs bg-blue-600/90 backdrop-blur-sm border border-blue-500/50">
             {event.category}
           </Badge>
           
@@ -233,18 +233,18 @@ export function EventCard({ event }: EventCardProps) {
           </div>
           
           {event.trending && (
-            <Badge className="absolute bottom-3 left-3 bg-gradient-to-r from-orange-500 to-red-500 text-white animate-pulse">
+            <Badge className="absolute bottom-3 left-3 text-xs bg-gradient-to-r from-orange-500 to-red-500 text-white animate-pulse">
               🔥 Trending
             </Badge>
           )}
         </div>
 
-        <div className="p-6 flex-1 flex flex-col">
-          <h3 className="text-lg font-semibold mb-3 text-white line-clamp-2 group-hover:text-purple-300 transition-colors">
+        <div className="p-4 flex-1 flex flex-col">
+          <h3 className="text-lg font-semibold mb-2 text-white line-clamp-2 group-hover:text-purple-300 transition-colors">
             {event.eventTitle}
           </h3>
 
-          <div className="space-y-2 text-xs text-slate-400 mb-4">
+          <div className="space-y-2 text-xs text-slate-400 mb-2">
             <div className="flex items-center gap-2">
               <Clock className="h-3 w-3 text-purple-400 flex-shrink-0" />
               <span className="truncate">{formatEventDate(event.date)}</span>
@@ -260,14 +260,14 @@ export function EventCard({ event }: EventCardProps) {
           </div>
 
           <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-700/50">
-            <span className="text-lg font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+            <span className="text-base font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
               {event.price}
             </span>
             
             {event.status === "upcoming" && event.ticketsLeft > 0 ? (
               checkingRegistration ? (
                 <Button className="bg-slate-600 text-slate-300" disabled size="sm">
-                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
                   Checking...
                 </Button>
               ) : isRegistered ? (
@@ -292,7 +292,7 @@ export function EventCard({ event }: EventCardProps) {
                 >
                   {isProcessing ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      <Loader2 className="h-3 w-3 animate-spin mr-1" />
                       {isConfirming ? "Confirming..." : "Processing..."}
                     </>
                   ) : (
@@ -305,7 +305,7 @@ export function EventCard({ event }: EventCardProps) {
               )
             ) : (
               <Button
-                className="bg-slate-600 text-slate-300 cursor-not-allowed"
+                className="bg-slate-600 text-slate-300 cursor-not-allowed text-sm"
                 disabled
                 size="sm"
               >

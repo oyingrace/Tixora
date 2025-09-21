@@ -55,7 +55,7 @@ export function WalletConnectButton({ className }: WalletConnectButtonProps = {}
                   <button
                     onClick={openConnectModal}
                     type="button"
-                    className={`px-6 py-3 bg-gradient-to-r from-[var(--color-neon-purple)] to-[var(--color-neon-blue)] text-white rounded-lg font-semibold hover:opacity-90 transition-all duration-200 border border-[var(--color-neon-purple)]/30 flex items-center justify-center ${className || ''}`}
+                    className={`px-4 py-2 text-base bg-gradient-to-r from-[var(--color-neon-purple)] to-[var(--color-neon-blue)] text-white rounded-lg font-semibold hover:opacity-90 transition-all duration-200 border border-[var(--color-neon-purple)]/30 flex items-center justify-center ${className || ''}`}
                   >
                     Connect Wallet
                   </button>
@@ -67,7 +67,7 @@ export function WalletConnectButton({ className }: WalletConnectButtonProps = {}
                   <button
                     onClick={openChainModal}
                     type="button"
-                    className="px-6 py-3 bg-red-500/80 text-white rounded-lg font-semibold hover:bg-red-500 transition-all duration-200 border border-red-400/30"
+                    className="px-4 py-2 text-base bg-red-500/80 text-white rounded-lg font-semibold hover:bg-red-500 transition-all duration-200 border border-red-400/30"
                   >
                     Wrong network
                   </button>
@@ -79,7 +79,7 @@ export function WalletConnectButton({ className }: WalletConnectButtonProps = {}
                   <button
                     onClick={openChainModal}
                     type="button"
-                    className="flex items-center gap-2 px-4 py-2 bg-[var(--color-dark-navy)]/80 border border-[var(--color-neon-purple)]/30 text-white rounded-lg hover:bg-[var(--color-dark-navy)] hover:opacity-90 transition-all duration-200"
+                    className="flex items-center gap-2 px-3 py-1 text-sm bg-[var(--color-dark-navy)]/80 border border-[var(--color-neon-purple)]/30 text-white rounded-lg hover:bg-[var(--color-dark-navy)] hover:opacity-90 transition-all duration-200"
                   >
                     {chain.hasIcon && (
                       <div
@@ -89,13 +89,14 @@ export function WalletConnectButton({ className }: WalletConnectButtonProps = {}
                           height: 16,
                           borderRadius: 999,
                           overflow: 'hidden',
+                          fontSize: '8px',
                         }}
                       >
                         {chain.iconUrl && (
                           <img
                             alt={chain.name ?? 'Chain icon'}
                             src={chain.iconUrl}
-                            style={{ width: 16, height: 16 }}
+                            style={{ width: 16, height: 16, fontSize: '8px' }}
                           />
                         )}
                       </div>
@@ -106,10 +107,10 @@ export function WalletConnectButton({ className }: WalletConnectButtonProps = {}
                   <button
                     onClick={openAccountModal}
                     type="button"
-                    className="flex items-center gap-2 px-4 py-2 bg-[var(--color-dark-navy)]/80 border border-[var(--color-neon-blue)]/30 text-white rounded-lg hover:bg-[var(--color-dark-navy)] hover:opacity-90 transition-all duration-200"
+                    className="flex items-center gap-1 px-3 py-1 text-sm bg-[var(--color-dark-navy)]/80 border border-[var(--color-neon-blue)]/30 text-white rounded-lg hover:bg-[var(--color-dark-navy)] hover:opacity-90 transition-all duration-200"
                   >
                     <div className="flex flex-col items-start">
-                      <span className="text-sm font-medium">{account.displayName}</span>
+                      <span className="text-xs font-medium">{account.displayName}</span>
                       {balance && (
                         <span className="text-xs text-slate-300">
                           {parseFloat(balance.formatted).toFixed(4)} {balance.symbol}

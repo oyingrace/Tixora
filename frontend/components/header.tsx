@@ -19,21 +19,21 @@ function Header() {
   if (!isConnected) {
     return (
       <header className="bg-slate-900/80 backdrop-blur-md border-b border-purple-500/20 sticky top-0 z-50">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="container mx-auto px-4 h-12 flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
             <Image 
               src="/tixora-logo.png" 
               alt="Tixora" 
-              width={40} 
-              height={40} 
-              className="rounded-full"
+              width={100} 
+              height={100} 
+              className="rounded-full h-12 w-auto"
             />
-            <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
               Tixora
             </span>
           </Link>
 
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden text-base md:flex items-center space-x-8">
             <Link href="https://github.com/DIFoundation/Tixora/blob/main/README.md" target='_blank' className="text-slate-300 hover:text-purple-400 transition-colors font-medium">
               Docs
             </Link>
@@ -56,21 +56,21 @@ function Header() {
 
   return (
     <header className="bg-slate-900/80 backdrop-blur-md border-b border-purple-500/20 sticky top-0 z-50">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+      <div className="container mx-auto px-4 h-12 flex items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
           <Image 
             src="/tixora-logo.png" 
             alt="Tixora" 
-            width={40} 
-            height={40} 
-            className="rounded-full"
+            width={100} 
+            height={100} 
+            className="rounded-full h-12 w-auto"
           />
-          <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+          <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
             Tixora
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center space-x-8">
+        <nav className="hidden text-base md:flex items-center space-x-8">
           {filteredNavLinks.map((link) => {
             const isActive = pathname === link.path || 
                            (link.path !== '/' && pathname.startsWith(link.path))
