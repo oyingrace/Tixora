@@ -23,7 +23,6 @@ import Link from "next/link"
 import { eventTicketingAbi, eventTicketingAddress } from "@/lib/addressAndAbi"
 import { Abi, formatEther } from 'viem'
 import QRCode from 'qrcode';
-import Image from "next/image"
 
 interface NFTTicketDisplay {
   id: string

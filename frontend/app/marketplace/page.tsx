@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useAccount, useReadContract, useWaitForTransactionReceipt } from 'wagmi'
-import { Search, Filter, TrendingUp, Clock, Calendar, MapPin, Users, Tag, Sparkles, AlertCircle } from "lucide-react"
+import { useAccount, useReadContract } from 'wagmi'
+import { Search, TrendingUp, Clock, Calendar, Users, Sparkles, AlertCircle } from "lucide-react"
 import { eventTicketingAbi, eventTicketingAddress } from "@/lib/addressAndAbi"
 import { formatEther } from "viem"
 import { EventCard } from "@/components/event-card"
