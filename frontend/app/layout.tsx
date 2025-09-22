@@ -1,13 +1,11 @@
-import type React from "react"
 import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import "./globals.css"
-import { Providers } from "@/lib/providers"
+import { Providers } from "@/app/providers"
 import Header from "@/components/header"
-// import RPCMarquee from "@/components/rpcmarquee"
 
 export const metadata: Metadata = {
   title: "Tixora - Decentralized Event Ticketing",
@@ -23,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <style>{`
 html {
@@ -36,8 +34,7 @@ html {
       <body>
         <Providers>
           <Header />
-            {children}
-          {/* <RPCMarquee /> */}
+          {children}
           <ToastContainer 
             position="top-right"
             autoClose={5000}
