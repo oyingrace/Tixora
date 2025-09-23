@@ -5,13 +5,29 @@ import { useEffect, useState } from "react"
 import FeatureEvents from "../components/FeatureEvents"
 import Link from "next/link"
 import Image from "next/image"
+import { WorkAndBenefits } from "@/components/WorkAndBenefits"
+import { useRouter } from "next/navigation"
+import { useAccount } from "wagmi"
 
 export default function HomePage() {
   const [isVisible, setIsVisible] = useState(false)
+  const router = useRouter();
+  const { isConnected } = useAccount();
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     setIsVisible(true)
   }, [])
+
+  // if (isConnected) {
+  //   router.push('/dashboard')
+  // }
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-hidden mb-3">
@@ -57,7 +73,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Scroll Indicator */}
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 animate-bounce">
             <ChevronDown
               className="h-8 w-8 text-muted-foreground cursor-pointer hover:text-white transition-colors"
@@ -67,11 +82,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Events */}
       <FeatureEvents />
 
+      <WorkAndBenefits />
 
-      {/* Footer */}
       <footer className="py-4 px-4 border-t border-border bg-card/20">
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between text-center mb-2">
@@ -112,10 +126,4 @@ export default function HomePage() {
 
     </div>
   )
-
-
-
-
-
-  // return <LandingPage />
 }

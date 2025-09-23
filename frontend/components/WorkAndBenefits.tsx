@@ -1,56 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Calendar, MapPin, Users, Ticket, Star, Shield, Zap, Globe, RefreshCw, ChevronDown, Play, Pause } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useAccount } from "wagmi"
-import Image from "next/image"
-import Link from "next/link"
+import { Card } from "@/components/ui/card"
+import { Ticket, Shield, Zap, Globe, RefreshCw, Star } from "lucide-react"
 
-export function LandingPage() {
-  const { isConnected } = useAccount()
-  const router = useRouter()
-  const [currentEventIndex, setCurrentEventIndex] = useState(0)
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true)
-  const [imageErrors, setImageErrors] = useState<{ [key: number]: boolean }>({})
-
-  useEffect(() => {
-    if (isConnected) {
-      router.push("/dashboard")
-    }
-  }, [isConnected, router])
-
-  useEffect(() => {
-    if (!isAutoPlaying) return
-    
-    const interval = setInterval(() => {
-      setCurrentEventIndex((prev) => (prev + 1) % featuredEvents.length)
-    }, 4000)
-    return () => clearInterval(interval)
-  }, [isAutoPlaying])
-
-  const handleImageError = (eventId: number) => {
-    setImageErrors(prev => ({ ...prev, [eventId]: true }))
-  }
-
-  const scrollToSection = (sectionId: string) => {
-    document.getElementById(sectionId)?.scrollIntoView({ 
-      behavior: "smooth",
-      block: "start"
-    })
-  }
-
+export function WorkAndBenefits() {
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-hidden mb-3">
-      {/* Hero Section */}
-      
-
-      {/* Featured Events */}
-      
-
+    <div>
       {/* How It Works */}
       <section id="how-it-works" className="py-20 px-15 bg-card/20">
         <div className="container mx-auto">
@@ -153,8 +108,6 @@ export function LandingPage() {
           </div>
         </div>
       </section>
-
-      
     </div>
   )
 }

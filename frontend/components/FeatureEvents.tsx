@@ -25,7 +25,7 @@ function featureEvents() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredEvents.slice(0, 4).map((event, index) => (
+            {/* {featuredEvents.slice(0, 4).map((event, index) => (
               <Card
                 key={event.id}
                 className={`group hover:scale-105 transition-all duration-500 cursor-pointer bg-slate-800/90 border-slate-700 hover:border-primary/50 backdrop-blur-sm hover:shadow-2xl hover:shadow-primary/20 ${
@@ -81,7 +81,7 @@ function featureEvents() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            ))} */}
           </div>
 
           <div className="text-center mt-12">

@@ -4,102 +4,27 @@ import { useAccount, useBalance } from "wagmi"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Plus, ShoppingBag, TicketIcon, Activity, Users, Calendar, DollarSign } from "lucide-react"
+import { Plus, ShoppingBag, TicketIcon, Activity } from "lucide-react"
 import Link from "next/link"
-import { useMemo, useEffect, useState } from "react"
-import { formatEther } from "viem"
-import { eventTicketingAbi, eventTicketingAddress } from "@/lib/addressAndAbi"
-import { useReadContract, useReadContracts } from "wagmi"
+import { useMemo, useEffect } from "react"
+import { Address, formatEther } from "viem"
+import { ChainId, eventTicketingAbi, getContractAddresses } from "@/lib/addressAndAbi"
+import { useReadContract } from "wagmi"
+import Statistics from "@/components/Statistics"
 
 export default function Dashboard() {
-  const { address, isConnected } = useAccount()
+  const { address, isConnected, chain } = useAccount()
   const router = useRouter()
-  const [userStats, setUserStats] = useState({
-    attendedEvents: 0,
-    totalSpent: "0",
-    createdEvents: 0,
-    totalRevenue: "0"
-  })
 
-  // Get total tickets count
-  const { data: totalTickets, isLoading: loadingTotalTickets } = useReadContract({
-    address: eventTicketingAddress,
-    abi: eventTicketingAbi,
-    functionName: 'getTotalTickets',
-  })
+  const chainId = chain?.id || ChainId.CELO_SEPOLIA;
+  const { eventTicketing } = getContractAddresses(chainId)
 
   // Get recent tickets data
-  const { data: recentTicketsData, isLoading: loadingRecentTickets } = useReadContract({
-    address: eventTicketingAddress,
+  const { data: recentTicketsData } = useReadContract({
+    address: eventTicketing as Address,
     abi: eventTicketingAbi,
     functionName: 'getRecentTickets',
   })
-
-  // Calculate user-specific stats
-  useEffect(() => {
-    if (!recentTicketsData || !address) return
-
-    const tickets = recentTicketsData as any[]
-    
-    // Calculate events created by user
-    const createdByUser = tickets.filter(ticket => 
-      ticket.creator.toLowerCase() === address.toLowerCase()
-    )
-    
-    // Calculate total revenue from created events
-    const totalRevenue = createdByUser.reduce((sum, ticket) => 
-      sum + Number(ticket.totalCollected), 0
-    )
-    
-    // Calculate events attended (rough estimation - in real app you'd track registrations)
-    const attendedEvents = tickets.filter(ticket => 
-      ticket.sold > 0 && !ticket.canceled
-    ).length
-    
-    // Calculate estimated spending (this would need actual registration tracking)
-    const estimatedSpent = attendedEvents * 0.01 // Rough estimation
-    
-    setUserStats({
-      attendedEvents: attendedEvents,
-      totalSpent: estimatedSpent.toString(),
-      createdEvents: createdByUser.length,
-      totalRevenue: formatEther(BigInt(totalRevenue))
-    })
-  }, [recentTicketsData, address])
-
-  // Stats cards data
-  const stats = useMemo(() => [
-    {
-      label: "Events Attended",
-      value: userStats.attendedEvents.toString(),
-      change: userStats.attendedEvents > 0 ? "Based on ticket ownership" : "Connect to see your events",
-      icon: Calendar,
-      color: "from-blue-500 to-cyan-500"
-    },
-    {
-      label: "Total Spent",
-      value: `${userStats.totalSpent} CELO`,
-      change: userStats.attendedEvents > 0 ? "Estimated spending" : "No purchases yet",
-      icon: DollarSign,
-      color: "from-green-500 to-emerald-500"
-    },
-    {
-      label: "Events Created",
-      value: userStats.createdEvents.toString(),
-      change: userStats.createdEvents > 0 ? 
-        `${userStats.createdEvents} events launched` : "Create your first event",
-      icon: Plus,
-      color: "from-purple-500 to-pink-500"
-    },
-    {
-      label: "Revenue Earned",
-      value: `${userStats.totalRevenue} CELO`,
-      change: userStats.createdEvents > 0 ? 
-        `From ${userStats.createdEvents} events` : "No revenue yet",
-      icon: Users,
-      color: "from-orange-500 to-red-500"
-    },
-  ], [userStats])
 
   // Generate recent activity from tickets data
   const recentActivity = useMemo(() => {
@@ -121,23 +46,6 @@ export default function Dashboard() {
         maxSupply: Number(ticket.maxSupply)
       }))
   }, [recentTicketsData, address])
-
-  // Platform stats
-  const platformStats = useMemo(() => {
-    if (!recentTicketsData) return null
-    
-    const tickets = recentTicketsData as any[]
-    const activeEvents = tickets.filter(t => !t.closed && !t.canceled).length
-    const totalSold = tickets.reduce((sum, t) => sum + Number(t.sold), 0)
-    const totalRevenue = tickets.reduce((sum, t) => sum + Number(t.totalCollected), 0)
-    
-    return {
-      totalEvents: tickets.length,
-      activeEvents,
-      totalTicketsSold: totalSold,
-      totalPlatformRevenue: formatEther(BigInt(totalRevenue))
-    }
-  }, [recentTicketsData])
 
   // Redirect if not connected
   useEffect(() => {
@@ -191,70 +99,7 @@ export default function Dashboard() {
             <p className="text-slate-300 text-base">Manage your events and tickets on the decentralized web</p>
           </div>
 
-          {/* Platform Overview */}
-          {platformStats && (
-            <div className="mb-10">
-              <h2 className="text-2xl font-semibold mb-3 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                Platform Overview
-              </h2>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-6 px-6">
-                <Card className="bg-gradient-to-br from-slate-800/80 to-purple-900/30 border-purple-500/30">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-2xl font-bold text-white">{platformStats.totalEvents}</p>
-                    <p className="text-slate-300 text-sm">Total Events</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-br from-slate-800/80 to-blue-900/30 border-blue-500/30">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-2xl font-bold text-white">{platformStats.activeEvents}</p>
-                    <p className="text-slate-300 text-sm">Active Events</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-br from-slate-800/80 to-green-900/30 border-green-500/30">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-2xl font-bold text-white">{platformStats.totalTicketsSold}</p>
-                    <p className="text-slate-300 text-sm">Tickets Sold</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-br from-slate-800/80 to-orange-900/30 border-orange-500/30">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-2xl font-bold text-white">{platformStats.totalPlatformRevenue}</p>
-                    <p className="text-slate-300 text-sm">Platform Revenue (CELO)</p>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          )}
-
-          {/* Personal Stats */}
-          <div className="mb-10">
-            <h2 className="text-2xl font-semibold mb-3 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-              Your Stats
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-5 px-6">
-              {stats.map((stat, index) => {
-                const Icon = stat.icon
-                return (
-                  <Card key={index} className="bg-gradient-to-br from-slate-800/80 to-purple-900/30 border-purple-500/30 overflow-hidden relative">
-                    <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-10`} />
-                    <CardContent className="py-3 px-6 relative z-10">
-                      <div className="flex items-center justify-between mb-2">
-                        <Icon className="h-6 w-6 text-purple-400" />
-                        <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${stat.color}`} />
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-white mb-2">
-                          {stat.value}
-                        </p>
-                        <p className="text-slate-300 font-medium mb-1 text-sm">{stat.label}</p>
-                        <p className="text-green-400 text-sm font-medium">{stat.change}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              })}
-            </div>
-          </div>
+          <Statistics />
 
           {/* Quick Action Cards */}
           <div className="mb-10">
