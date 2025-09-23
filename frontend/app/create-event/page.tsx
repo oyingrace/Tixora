@@ -11,8 +11,9 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "react-toastify"
 import { Upload, Calendar, MapPin, Users, DollarSign, Sparkles, ArrowLeft, Clock, Image, FileText, Coins } from "lucide-react"
-import { eventTicketingAddress, eventTicketingAbi } from "@/lib/addressAndAbi"
+import { getContractAddresses, ChainId } from "@/lib/addressAndAbi"
 import Link from "next/link"
+import { useEventTicketingSetters } from '../../hooks/useEventTicketing'
 
 export default function CreateEvent() {
   const { address, isConnected } = useAccount()
@@ -27,44 +28,34 @@ export default function CreateEvent() {
     totalSupply: "",
     bannerImage: null as File | null,
   })
-
-  const { writeContract, data: hash, isPending: isSubmitting, error: writeError } = useWriteContract()
-  const { isLoading: isTransactionPending, isSuccess: isTransactionSuccess, error: transactionError } = useWaitForTransactionReceipt({
-    hash,
-  })
+  const { createTicket, hash, error, isPending, isConfirming, isConfirmed } = useEventTicketingSetters()
 
   useEffect(() => {
-    if (isSubmitting) {
+    if (isPending) {
       toast.info("Creating event on blockchain...")
     }
-  }, [isSubmitting]) 
+  }, [isPending]) 
 
   useEffect(() => {
-    if (isTransactionPending) {
+    if (isConfirming) {
       toast.info("Transaction is being processed...")
     }
-  }, [isTransactionPending])
+  }, [isConfirming])
 
   useEffect(() => {
-    if (isTransactionSuccess) {
+    if (isConfirmed) {
       toast.success("Event created successfully on blockchain!")
       router.push("/marketplace")
     }
-  }, [isTransactionSuccess, router])
+  }, [isConfirmed, router])
 
   useEffect(() => {
-    if (writeError) {
+    if (error) {
       toast.error("Transaction denied")
     }
-  }, [writeError])
+  }, [error])
 
-  useEffect(() => {
-    if (transactionError) {
-      toast.error(`Transaction failed: ${transactionError.message}`)
-    }
-  }, [transactionError])
-
-  const createTicket = () => {
+  const createEvent = () => {
     if (!formData.title || !formData.description || !formData.date || !formData.time || !formData.location || !formData.price || !formData.totalSupply) {
       toast.error("Please fill in all required fields")
       return
@@ -90,11 +81,7 @@ export default function CreateEvent() {
       return
     }
 
-    writeContract({
-      address: eventTicketingAddress as `0x${string}`,
-      abi: eventTicketingAbi,
-      functionName: 'createTicket',
-      args: [
+    createTicket(
         BigInt(Math.floor(price * 10**18)),
         formData.title,
         formData.description,
@@ -106,8 +93,7 @@ export default function CreateEvent() {
           time: formData.time
         }),
         formData.location
-      ],
-    })
+      )
   }
 
   if (!isConnected) {
@@ -117,7 +103,7 @@ export default function CreateEvent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    createTicket()
+    createEvent()
   }
 
   const totalRevenue = formData.price && formData.totalSupply
@@ -371,10 +357,10 @@ export default function CreateEvent() {
                     <Button
                       type="submit"
                       size="lg"
-                      disabled={isSubmitting || isTransactionPending}
+                      disabled={isPending || isConfirming}
                       className="w-full text-lg py-6 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-500 hover:via-pink-500 hover:to-blue-500 text-white font-bold shadow-lg transform hover:scale-[1.02] transition-all duration-200"
                     >
-                      {isSubmitting || isTransactionPending ? (
+                      {isPending || isConfirming ? (
                         <div className="flex items-center gap-3">
                           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                           Creating Event...

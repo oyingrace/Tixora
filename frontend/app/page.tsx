@@ -25,9 +25,9 @@ export default function HomePage() {
     setIsVisible(true)
   }, [])
 
-  // if (isConnected) {
-  //   router.push('/dashboard')
-  // }
+  if (isConnected) {
+    router.push('/dashboard')
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-hidden mb-3">

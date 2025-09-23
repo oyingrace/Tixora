@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge"
 import { Calendar, MapPin, Users, Ticket, Loader2, Clock } from "lucide-react"
 import Image from "next/image"
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { eventTicketingAbi, eventTicketingAddress } from "@/lib/addressAndAbi"
-import { useEventRegistration } from "@/hooks/use-event-registration"
+import { ChainId, eventTicketingAbi, getContractAddresses } from "@/lib/addressAndAbi"
+import { useEventTicketingGetters } from "@/hooks/useEventTicketing"
 import { useAccount } from "wagmi"
 import { toast } from "react-toastify"
+import { Address } from "viem"
 
 interface MarketplaceEvent {
   id: number
@@ -36,9 +37,13 @@ export function EventCard({ event }: EventCardProps) {
   const { writeContract, isPending, data: hash , error: writeError} = useWriteContract()
   const [purchasing, setPurchasing] = useState(false)
   const [imageError, setImageError] = useState(false)
-  const { address, isConnected, chainId } = useAccount()
+  const { address, isConnected, chain } = useAccount()
+  const chainId = chain?.id || ChainId.CELO_SEPOLIA;
+  const { eventTicketing } = getContractAddresses(chainId)
+  const { useGetTotalTickets, useIsRegistered } = useEventTicketingGetters()
   
-  const { isRegistered, isLoading: checkingRegistration } = useEventRegistration(event.id, address)
+  // const { isLoading: checkingRegistration } = useGetTotalTickets()
+  const { isLoading: checkingRegistration, data: isRegistered } = useIsRegistered(BigInt(event.id), address)
   
   // Wait for transaction receipt
   const { isLoading: isConfirming, isSuccess, error: receiptError } = useWaitForTransactionReceipt({
@@ -104,7 +109,7 @@ export function EventCard({ event }: EventCardProps) {
       // Call the smart contract to register for the event
       try {
         const result = writeContract({
-          address: eventTicketingAddress,
+          address: eventTicketing as Address,
           abi: eventTicketingAbi,
           functionName: 'register',
           args: [BigInt(event.id)],

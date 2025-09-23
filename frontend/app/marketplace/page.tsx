@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useAccount, useReadContract } from 'wagmi'
 import { Search, TrendingUp, Clock, Calendar, Users, Sparkles, AlertCircle } from "lucide-react"
-import { eventTicketingAbi, eventTicketingAddress } from "@/lib/addressAndAbi"
-import { formatEther } from "viem"
+import { ChainId, eventTicketingAbi, getContractAddresses } from "@/lib/addressAndAbi"
+import { Address, formatEther } from "viem"
 import { EventCard } from "@/components/event-card"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -49,27 +49,29 @@ interface MarketplaceEvent {
 
 export default function Marketplace() {
   const router = useRouter()
-  const { address, isConnected, chainId } = useAccount()
+  const { address, isConnected, chain } = useAccount()
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("trending")
   const [activeTab, setActiveTab] = useState("upcoming")
   const [events, setEvents] = useState<MarketplaceEvent[]>([])
   const [loading, setLoading] = useState(true)
+  const chainId = chain?.id || ChainId.CELO_SEPOLIA;
+  const { eventTicketing } = getContractAddresses(chainId)
   
   // Check if user is on the correct network
   const isCorrectNetwork = chainId === 11142220 // Celo Sepolia testnet
 
   // Read contract data
   const { data: totalTickets, error: totalTicketsError } = useReadContract({
-    address: eventTicketingAddress,
+    address: eventTicketing as Address,
     abi: eventTicketingAbi,
     functionName: 'getTotalTickets',
   })
 
   const { data: recentTickets, error: recentTicketsError } = useReadContract({
-    address: eventTicketingAddress,
+    address: eventTicketing as Address,
     abi: eventTicketingAbi,
-    functionName: 'getRecentTickets',
+    functionName: 'getRecentTickets', 
   })
 
   // Handle contract errors
