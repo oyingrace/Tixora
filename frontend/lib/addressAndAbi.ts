@@ -22,9 +22,9 @@ export const CONTRACT_ADDRESSES: ContractAddresses = {
   },
   [ChainId.CELO_ALFAJORES]: {
     // Replace with your Alfajores testnet addresses
-    ticketNft: "0x...",
-    eventTicketing: "0x...",
-    resaleMarket: "0x...",
+    ticketNft: "0x6815e76CE475451D42363f4b55533720f19Ebada",
+    eventTicketing: "0xF708183DA2f773c213F93A3220eC5922fd73C720",
+    resaleMarket: "0xaD0299Ef4496d86B1F9CB71dc778F6a660eD4Af8",
   },
   [ChainId.CELO_MAINNET]: {
     ticketNft: "0X...",

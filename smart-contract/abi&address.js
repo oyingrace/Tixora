@@ -1,4 +1,5 @@
-export const ticketNftAddress = "0x3C4603b75EaB1dccC581Eefc2ac8A9FD99bFFb88";
+export const ticketNftAddress = "0x3C4603b75EaB1dccC581Eefc2ac8A9FD99bFFb88";  // celo sepolia
+export const ticketNftAddress2 = "0x6815e76CE475451D42363f4b55533720f19Ebada"; // celo alfajores
 export const ticketNftAbi = [
     {
       "inputs": [
@@ -734,7 +735,8 @@ export const ticketNftAbi = [
     }
   ];
 
-export const eventTicketingAddress = "0xA4488a88Bc2508Ea3B80f262C35b886B6f99A5f6";
+export const eventTicketingAddress = "0xA4488a88Bc2508Ea3B80f262C35b886B6f99A5f6"; // celo sepolia
+export const eventTicketingAddress2 = "0xF708183DA2f773c213F93A3220eC5922fd73C720"; // celo alfajores
 export const eventTicketingAbi = [
     {
       "inputs": [
@@ -1790,7 +1792,8 @@ export const eventTicketingAbi = [
     }
   ];
 
-export const resaleMarketAddress = "0x1a5CBd231304DED72beDe6edaf06c00C25011f4e";
+export const resaleMarketAddress = "0x1a5CBd231304DED72beDe6edaf06c00C25011f4e"; // celo sepolia
+export const resaleMarketAddress2 = "0xaD0299Ef4496d86B1F9CB71dc778F6a660eD4Af8"; // celo alfajores
 export const resaleMarketAbi = [
     {
       "inputs": [
