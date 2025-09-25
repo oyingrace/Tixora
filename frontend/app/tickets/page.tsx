@@ -483,7 +483,14 @@ export default function TicketsPage() {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
-                            onClick={() => ticket.txHash && window.open(`https://celoscan.io/tx/${ticket.txHash}`, "_blank")}
+                            onClick={() => ticket.txHash && window.open(
+                              chain?.id === ChainId.CELO_SEPOLIA
+                              ? `https://celo-sepolia.blockscout.com//tx/${ticket.txHash}`
+                              : chain?.id === ChainId.CELO_ALFAJORES
+                              ? `https://celo-alfajores.blockscout.com//tx/${ticket.txHash}`
+                              : `https://celo.blockscout.com//tx/${ticket.txHash}`
+                            , "_blank" 
+                            )}
                             disabled={!ticket.txHash}
                           >
                             <ExternalLink className="w-4 h-4 mr-2" />
@@ -623,7 +630,15 @@ export default function TicketsPage() {
                 <div className="flex gap-3">
                   <Button
                     variant="outline"
-                    onClick={() => selectedTicket.txHash && window.open(`https://celoscan.io/tx/${selectedTicket.txHash}`, "_blank")}
+                    onClick={() => selectedTicket.txHash && window.open(
+                      chain?.id === ChainId.CELO_SEPOLIA
+                      ? `https://celo-sepolia.blockscout.com//tx/${selectedTicket.txHash}`
+                      : chain?.id === ChainId.CELO_ALFAJORES
+                      ? `https://celo-alfajores.blockscout.com//tx/${selectedTicket.txHash}`
+                      : `https://celo.blockscout.com//tx/${selectedTicket.txHash}`
+                    , "_blank" 
+                  )}
+                        
                     disabled={!selectedTicket.txHash}
                     className="border-slate-600 text-slate-300 hover:border-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
