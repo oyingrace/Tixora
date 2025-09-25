@@ -59,7 +59,7 @@ export default function Marketplace() {
   const { eventTicketing } = getContractAddresses(chainId)
   
   // Check if user is on the correct network
-  const isCorrectNetwork = chainId === 11142220 // Celo Sepolia testnet
+  const isCorrectNetwork = chainId === ChainId.CELO_SEPOLIA || ChainId.CELO_ALFAJORES // Celo Sepolia testnet
 
   // Read contract data
   const { data: totalTickets, error: totalTicketsError } = useReadContract({
