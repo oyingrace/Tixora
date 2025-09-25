@@ -2,8 +2,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi"
-import { eventTicketingAbi, eventTicketingAddress } from "@/lib/addressAndAbi"
-import { Abi, formatEther, parseEther } from "viem"
+import { Abi, Address, formatEther, parseEther } from "viem"
 import { Button } from "@/components/ui/button"
 import { Calendar, MapPin, Users, Ticket, Loader2, ArrowLeft, Shield, Clock, Copy, CheckCircle, AlertTriangle, ExternalLink } from "lucide-react"
 import Image from "next/image"
@@ -11,7 +10,8 @@ import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "react-toastify"
-import { useEventRegistration } from "@/hooks/use-event-registration"
+import { useEventTicketingGetters, useEventTicketingSetters } from "@/hooks/useEventTicketing"
+import { eventTicketingAbi, getContractAddresses, ChainId } from "@/lib/addressAndAbi"
 
 interface EventData {
   id: number
@@ -34,28 +34,28 @@ interface EventData {
 export default function EventDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { isConnected, address, chainId } = useAccount()
+  const { isConnected, address } = useAccount()
   const [isLoading, setIsLoading] = useState(true)
   const [purchasing, setPurchasing] = useState(false)
   const [imageError, setImageError] = useState(false)
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const { writeContract, isPending, data: hash, error: writeError } = useWriteContract()
   const [events, setEvents] = useState<EventData | null>(null)
-  const { isRegistered, isLoading: checkingRegistration } = useEventRegistration(Number(params.id), address)
+  // const { isRegistered, isLoading: checkingRegistration } = useIsRegistered(BigInt(params.id as string || '0'), address)
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash, 
   })
+  const { useIsRegistered, useTickets, useTicketsLeft } = useEventTicketingGetters()
 
-  // Fetch event data
-  const { data: eventData, error: contractError } = useReadContract({
-    address: eventTicketingAddress,
-    abi: eventTicketingAbi,
-    functionName: 'tickets',
-    args: [BigInt(params.id as string || '0')],
-    query: {
-      enabled: !!params.id,
-    },
-  })
+  const { chain } = useAccount();
+  const chainId = chain?.id || ChainId.CELO_SEPOLIA;
+  
+  const { eventTicketing } = getContractAddresses(chainId);
+
+  const ticketId = BigInt((params?.id as string) || '0')
+  const { data: ticketData, error: contractError } = useTickets(ticketId)
+  const { data: ticketsLeftData } = useTicketsLeft(ticketId)
+  const { data: isRegistered } = useIsRegistered(ticketId, address as Address)
 
   const copyToClipboard = async (text: string, field: string) => {
     try {
@@ -94,58 +94,38 @@ export default function EventDetailPage() {
     }
 
     const processEventData = async () => {
-      console.log('Raw eventData:', eventData)  
-      console.log('Type of eventData:', typeof eventData)  
+      console.log('Raw ticketData:', ticketData)
       
-      if (!eventData) {
+      if (!ticketData) {
         console.log('No event data received from contract')
         return
       }
       
       try {
-        // Check if eventData is an object with the expected properties
-        if (typeof eventData === 'object' && eventData !== null) {
-          const [
-            id,
-            creator,
-            price,
-            eventName,
-            description,
-            eventTimestamp,
-            location,
-            closed,
-            canceled,
-            metadata,
-            maxSupply,
-            sold,
-            totalCollected,
-            proceedsWithdrawn
-          ] = eventData as any  
-
-          console.log('Parsed event data:', {
-            id,
-            creator,
-            eventName,
-            eventTimestamp: Number(eventTimestamp),
-            location,
-            closed,
-            canceled,
-            maxSupply: Number(maxSupply),
-            sold: Number(sold)
-          })
+        if (typeof ticketData === 'object' && ticketData !== null) {
+          const id = Number(ticketData.id)
+          const creator = ticketData.creator as string
+          const price = ticketData.price
+          const eventName = ticketData.eventName
+          const description = ticketData.description
+          const eventTimestamp = Number(ticketData.eventTimestamp)
+          const location = ticketData.location
+          const closed = Boolean(ticketData.closed)
+          const canceled = Boolean(ticketData.canceled)
+          const maxSupply = Number(ticketData.maxSupply)
+          const sold = Number(ticketData.sold)
 
           if (!eventName) {
             throw new Error('Event data is incomplete or invalid')
           }
 
-          // Convert timestamp to milliseconds and create Date object
-          const timestampMs = Number(eventTimestamp) * 1000
+          const timestampMs = eventTimestamp * 1000
           const eventDate = new Date(timestampMs)
           const now = new Date()
           
           // Calculate status conditions
           const isPassed = eventDate < now
-          const ticketsLeft = Number(maxSupply) - Number(sold)
+          const ticketsLeft = Math.max(0, maxSupply - sold)
           
           // Format the date for display
           let formattedDate = 'Date not available'
@@ -166,8 +146,8 @@ export default function EventDetailPage() {
             closed,
             canceled,
             ticketsLeft,
-            maxSupply: Number(maxSupply),
-            sold: Number(sold)
+            maxSupply,
+            sold
           })
 
           // Determine status
@@ -176,13 +156,13 @@ export default function EventDetailPage() {
           else if (closed) status = 'closed'
           else if (isPassed) status = 'passed'
           else if (ticketsLeft === 0) status = 'sold_out'
-          else if (checkingRegistration && isRegistered) status = 'registered'
+          else if (isRegistered) status = 'registered'
           else status = 'active'
 
           console.log('Final Status:', status)
 
           setEvents({
-            id: id,
+            id,
             creator,
             price: formatEther(price),
             eventName,
@@ -193,23 +173,23 @@ export default function EventDetailPage() {
             canceled,
             status,
             image: "/metaverse-fashion-show.png",
-            maxSupply: Number(maxSupply),
-            sold: Number(sold),
-            ticketsLeft,
-            eventTimestamp: Number(eventTimestamp)
+            maxSupply,
+            sold,
+            ticketsLeft: ticketsLeftData ? Number(ticketsLeftData) : ticketsLeft,
+            eventTimestamp: eventTimestamp
           })
         } else {
-          console.error('Invalid event data structure:', eventData)
+          console.log('Invalid ticket data structure:', ticketData)
         }
       } catch (err) {
-        console.error("Error parsing event data:", err)
+        console.log("Error parsing event data:", err)
       } finally {
         setIsLoading(false)
       }
     }
 
     processEventData()
-  }, [eventData, isConnected, router, params.id, checkingRegistration, isRegistered])
+  }, [ticketData, isConnected, router, params.id, isRegistered, ticketsLeftData])
 
   if (!isConnected) {
     return (
@@ -259,8 +239,8 @@ export default function EventDetailPage() {
       toast.info(`💰 Purchasing ticket for "${events.eventName}" - Please confirm the transaction in your wallet. Ticket price: ${events.price} CELO`)
       
       writeContract({
-        address: eventTicketingAddress as `0x${string}`,
-        abi: eventTicketingAbi as Abi,
+        address: eventTicketing as Address,
+        abi: eventTicketingAbi,
         functionName: 'register',
         args: [BigInt(events.id)],
         value: priceInWei,
@@ -520,14 +500,9 @@ export default function EventDetailPage() {
                     <Button 
                       onClick={handleBuyTicket}
                       className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-12 text-base transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/25"
-                      disabled={!isCorrectNetwork || events?.status === 'canceled' || events?.status === 'closed' || events?.ticketsLeft === 0 || events?.status === 'passed' || events?.status === 'registered' || isProcessing || checkingRegistration}
+                      disabled={!isCorrectNetwork || events?.status === 'canceled' || events?.status === 'closed' || events?.ticketsLeft === 0 || events?.status === 'passed' || events?.status === 'registered' || isProcessing}
                     >
-                      {checkingRegistration ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Checking registration...
-                        </>
-                      ) : isProcessing ? (
+                      {isProcessing ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           {isPending ? 'Confirming...' : 
@@ -604,12 +579,12 @@ export default function EventDetailPage() {
                   <p className="text-slate-400 text-sm mb-1">Contract Address</p>
                   <div className="flex items-center gap-2">
                     <p className="text-white font-mono text-sm break-all flex-1">
-                      {eventTicketingAddress}
+                      {eventTicketing}
                     </p>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => copyToClipboard(eventTicketingAddress, 'Contract Address')}
+                      onClick={() => copyToClipboard(eventTicketing, 'Contract Address')}
                       className="p-1 h-auto text-slate-400 hover:text-white"
                     >
                       {copiedField === 'Contract Address' ? (
