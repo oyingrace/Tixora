@@ -45,12 +45,19 @@ export default function EventDetailPage() {
   const { useTickets, useIsRegistered } = useEventTicketingGetters()
   const safeChainId = typeof chain?.id === 'number' ? chain.id : ChainId.CELO_SEPOLIA
   const { eventTicketing } = getContractAddresses(safeChainId)
-  const isRegistered = useIsRegistered(BigInt(params.id as string), address)
+  const isRegisteredQuery = useIsRegistered(BigInt(params.id as string), address)
+  const isRegistered = Boolean(isRegisteredQuery?.data)
 
 
   useEffect(() => {
     setCheckingRegistration(true)
+    
   }, [])
+
+  // Reflect hook loading state in local UI state
+  useEffect(() => {
+    setCheckingRegistration(Boolean(isRegisteredQuery?.isLoading))
+  }, [isRegisteredQuery?.isLoading])
 
   // Fetch event data
   const { data: eventData, error: contractError } = useTickets(BigInt(params.id as string || '0'))
@@ -104,23 +111,7 @@ export default function EventDetailPage() {
       try {
         // Check if eventData is an object with the expected properties
         if (typeof eventData === 'object' && eventData !== null) {
-          const [
-            id,
-            creator,
-            price,
-            eventName,
-            description,
-            eventTimestamp,
-            location,
-            closed,
-            canceled,
-            metadata,
-            maxSupply,
-            sold,
-            totalCollected,
-            totalRefunded,
-            proceedsWithdrawn
-          ] = eventData as [
+          const tuple = eventData as unknown as [
             bigint,         // id
             string,         // creator
             bigint,         // price
@@ -137,6 +128,23 @@ export default function EventDetailPage() {
             bigint,         // totalRefunded
             boolean         // proceedsWithdrawn
           ]
+          const [
+            id,
+            creator,
+            price,
+            eventName,
+            description,
+            eventTimestamp,
+            location,
+            closed,
+            canceled,
+            metadata,
+            maxSupply,
+            sold,
+            totalCollected,
+            totalRefunded,
+            proceedsWithdrawn
+          ] = tuple
 
           // Handle bigint conversion properly
           const maxSupplyNum = maxSupply ? Number(maxSupply) : 0
@@ -255,7 +263,7 @@ export default function EventDetailPage() {
     }
 
     // Check network
-    if (chainId !== ChainId.CELO_SEPOLIA || ChainId.CELO_ALFAJORES) {
+    if (![ChainId.CELO_SEPOLIA, ChainId.CELO_ALFAJORES].includes(chainId as number)) {
       toast.error("⚠️ Please switch to Celo Sepolia or Alfajores testnet")
       return
     }
@@ -268,7 +276,7 @@ export default function EventDetailPage() {
       // Convert price from ETH to Wei for the contract call
       const priceInWei = parseEther(events.price)
       
-      toast.info(`💰 Purchasing ticket for "${events.eventName}" - Please confirm the transaction in your wallet. Ticket price: ${events.price} STT`)
+      toast.info(`💰 Purchasing ticket for "${events.eventName}" - Please confirm the transaction in your wallet. Ticket price: ${events.price} CELO`)
       
       register(BigInt(events.id), priceInWei)
     } catch (error) {
@@ -494,7 +502,7 @@ export default function EventDetailPage() {
                     <div>
                       <p className="text-slate-300 text-sm">Price per ticket</p>
                       <p className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                        {events?.price} STT
+                        {events?.price} CELO
                       </p>
                     </div>
                     <div className="text-right">
@@ -517,7 +525,7 @@ export default function EventDetailPage() {
                     <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
                       <p className="text-red-400 text-sm flex items-center gap-2">
                         <AlertTriangle className="w-4 h-4" />
-                        Please switch to Somnia testnet
+                        Please switch to Celo Sepolia or Alfajores testnet
                       </p>
                     </div>
                   )}
@@ -526,7 +534,7 @@ export default function EventDetailPage() {
                     <Button 
                       onClick={handleBuyTicket}
                       className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-12 text-base transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/25"
-                      disabled={!isCorrectNetwork || events?.status === 'canceled' || events?.status === 'closed' || (events?.ticketsLeft ?? 0) <= 0 || events?.status === 'passed' || events?.status === 'registered' || isProcessing || checkingRegistration}
+                      disabled={!isCorrectNetwork || events?.status === 'canceled' || events?.status === 'closed' || (events?.ticketsLeft ?? 0) <= 0 || events?.status === 'passed' || events?.status === 'registered' || isProcessing || checkingRegistration || isRegistered }
                     >
                       {checkingRegistration ? (
                         <>
@@ -607,11 +615,8 @@ export default function EventDetailPage() {
                   <p className="text-white font-mono">{events?.id}</p>
                 </div>
                 <div>
+                  <div className="flex items-center">
                   <p className="text-slate-400 text-sm mb-1">Contract Address</p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-white font-mono text-sm break-all flex-1">
-                      {eventTicketing}
-                    </p>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -625,14 +630,14 @@ export default function EventDetailPage() {
                       )}
                     </Button>
                   </div>
+                    <p className="text-white font-mono text-sm break-all flex-1">
+                      {eventTicketing}
+                    </p>
                 </div>
                 {events?.creator && (
                   <div>
+                    <div className="flex items-center">
                     <p className="text-slate-400 text-sm mb-1">Creator Address</p>
-                    <div className="flex items-center gap-2">
-                      <p className="text-white font-mono text-sm break-all flex-1">
-                        {events.creator}
-                      </p>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -646,6 +651,9 @@ export default function EventDetailPage() {
                         )}
                       </Button>
                     </div>
+                      <p className="text-white font-mono text-sm break-all flex-1">
+                        {events.creator}
+                      </p>
                   </div>
                 )}
               </CardContent>
