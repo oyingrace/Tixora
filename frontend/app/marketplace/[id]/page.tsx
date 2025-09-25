@@ -1,8 +1,9 @@
 "use client"
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi"
-import { Abi, Address, formatEther, parseEther } from "viem"
+import { useAccount } from "wagmi"
+import { getContractAddresses, ChainId } from "@/lib/addressAndAbi"
+import { Abi, formatEther, parseEther } from "viem"
 import { Button } from "@/components/ui/button"
 import { Calendar, MapPin, Users, Ticket, Loader2, ArrowLeft, Shield, Clock, Copy, CheckCircle, AlertTriangle, ExternalLink } from "lucide-react"
 import Image from "next/image"
@@ -10,8 +11,7 @@ import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "react-toastify"
-import { useEventTicketingGetters, useEventTicketingSetters } from "@/hooks/useEventTicketing"
-import { eventTicketingAbi, getContractAddresses, ChainId } from "@/lib/addressAndAbi"
+import { useEventTicketingSetters, useEventTicketingGetters  } from "@/hooks/useEventTicketing"
 
 interface EventData {
   id: number
@@ -34,28 +34,26 @@ interface EventData {
 export default function EventDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { isConnected, address } = useAccount()
+  const { isConnected, address, chainId, chain } = useAccount()
   const [isLoading, setIsLoading] = useState(true)
   const [purchasing, setPurchasing] = useState(false)
   const [imageError, setImageError] = useState(false)
   const [copiedField, setCopiedField] = useState<string | null>(null)
-  const { writeContract, isPending, data: hash, error: writeError } = useWriteContract()
+  const [ checkingRegistration, setCheckingRegistration] = useState(false)
   const [events, setEvents] = useState<EventData | null>(null)
-  // const { isRegistered, isLoading: checkingRegistration } = useIsRegistered(BigInt(params.id as string || '0'), address)
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash, 
-  })
-  const { useIsRegistered, useTickets, useTicketsLeft } = useEventTicketingGetters()
+  const { register, hash, isPending, isConfirming, isConfirmed, error: writeError } = useEventTicketingSetters()
+  const { useTickets, useIsRegistered } = useEventTicketingGetters()
+  const safeChainId = typeof chain?.id === 'number' ? chain.id : ChainId.CELO_SEPOLIA
+  const { eventTicketing } = getContractAddresses(safeChainId)
+  const isRegistered = useIsRegistered(BigInt(params.id as string), address)
 
-  const { chain } = useAccount();
-  const chainId = chain?.id || ChainId.CELO_SEPOLIA;
-  
-  const { eventTicketing } = getContractAddresses(chainId);
 
-  const ticketId = BigInt((params?.id as string) || '0')
-  const { data: ticketData, error: contractError } = useTickets(ticketId)
-  const { data: ticketsLeftData } = useTicketsLeft(ticketId)
-  const { data: isRegistered } = useIsRegistered(ticketId, address as Address)
+  useEffect(() => {
+    setCheckingRegistration(true)
+  }, [])
+
+  // Fetch event data
+  const { data: eventData, error: contractError } = useTickets(BigInt(params.id as string || '0'))
 
   const copyToClipboard = async (text: string, field: string) => {
     try {
@@ -63,7 +61,7 @@ export default function EventDetailPage() {
       setCopiedField(field)
       toast.success(`${field} copied to clipboard!`)
       setTimeout(() => setCopiedField(null), 2000)
-    } catch (err) {
+    } catch {
       toast.error("Failed to copy to clipboard")
     }
   }
@@ -94,38 +92,92 @@ export default function EventDetailPage() {
     }
 
     const processEventData = async () => {
-      console.log('Raw ticketData:', ticketData)
+      console.log('Raw eventData:', eventData)  
+      console.log('Type of eventData:', typeof eventData)  
       
-      if (!ticketData) {
+      if (!eventData) {
         console.log('No event data received from contract')
+        setIsLoading(false)
         return
       }
       
       try {
-        if (typeof ticketData === 'object' && ticketData !== null) {
-          const id = Number(ticketData.id)
-          const creator = ticketData.creator as string
-          const price = ticketData.price
-          const eventName = ticketData.eventName
-          const description = ticketData.description
-          const eventTimestamp = Number(ticketData.eventTimestamp)
-          const location = ticketData.location
-          const closed = Boolean(ticketData.closed)
-          const canceled = Boolean(ticketData.canceled)
-          const maxSupply = Number(ticketData.maxSupply)
-          const sold = Number(ticketData.sold)
+        // Check if eventData is an object with the expected properties
+        if (typeof eventData === 'object' && eventData !== null) {
+          const [
+            id,
+            creator,
+            price,
+            eventName,
+            description,
+            eventTimestamp,
+            location,
+            closed,
+            canceled,
+            metadata,
+            maxSupply,
+            sold,
+            totalCollected,
+            totalRefunded,
+            proceedsWithdrawn
+          ] = eventData as [
+            bigint,         // id
+            string,         // creator
+            bigint,         // price
+            string,         // eventName
+            string,         // description
+            bigint,         // eventTimestamp
+            string,         // location
+            boolean,        // closed
+            boolean,        // canceled
+            string,         // metadata
+            bigint,         // maxSupply
+            bigint,         // sold
+            bigint,         // totalCollected
+            bigint,         // totalRefunded
+            boolean         // proceedsWithdrawn
+          ]
+
+          // Handle bigint conversion properly
+          const maxSupplyNum = maxSupply ? Number(maxSupply) : 0
+          const soldNum = sold ? Number(sold) : 0
+
+          console.log('Parsed event data:', {
+            id,
+            creator,
+            eventName,
+            eventTimestamp: Number(eventTimestamp),
+            location,
+            closed,
+            canceled,
+            metadata,
+            maxSupply: maxSupplyNum,
+            sold: soldNum,
+            totalCollected: Number(totalCollected),
+            totalRefunded: Number(totalRefunded),
+            proceedsWithdrawn
+          })
 
           if (!eventName) {
             throw new Error('Event data is incomplete or invalid')
           }
 
-          const timestampMs = eventTimestamp * 1000
+          // Convert timestamp to milliseconds and create Date object
+          const timestampMs = Number(eventTimestamp) * 1000
           const eventDate = new Date(timestampMs)
           const now = new Date()
           
           // Calculate status conditions
           const isPassed = eventDate < now
-          const ticketsLeft = Math.max(0, maxSupply - sold)
+          
+          const ticketsLeft = Math.max(0, maxSupplyNum - soldNum)
+          
+          console.log('Final calculations:', {
+            maxSupplyNum,
+            soldNum,
+            ticketsLeft,
+            isPassed
+          })
           
           // Format the date for display
           let formattedDate = 'Date not available'
@@ -146,8 +198,8 @@ export default function EventDetailPage() {
             closed,
             canceled,
             ticketsLeft,
-            maxSupply,
-            sold
+            maxSupply: Number(maxSupply),
+            sold: Number(sold)
           })
 
           // Determine status
@@ -155,14 +207,14 @@ export default function EventDetailPage() {
           if (canceled) status = 'canceled'
           else if (closed) status = 'closed'
           else if (isPassed) status = 'passed'
-          else if (ticketsLeft === 0) status = 'sold_out'
-          else if (isRegistered) status = 'registered'
+          else if (ticketsLeft <= 0) status = 'sold_out'
+          else if (checkingRegistration && isRegistered) status = 'registered'
           else status = 'active'
 
           console.log('Final Status:', status)
 
           setEvents({
-            id,
+            id: Number(id),
             creator,
             price: formatEther(price),
             eventName,
@@ -173,43 +225,23 @@ export default function EventDetailPage() {
             canceled,
             status,
             image: "/metaverse-fashion-show.png",
-            maxSupply,
-            sold,
-            ticketsLeft: ticketsLeftData ? Number(ticketsLeftData) : ticketsLeft,
-            eventTimestamp: eventTimestamp
+            maxSupply: maxSupplyNum,
+            sold: soldNum,
+            ticketsLeft,
+            eventTimestamp: Number(eventTimestamp)
           })
         } else {
-          console.log('Invalid ticket data structure:', ticketData)
+          console.error('Invalid event data structure:', eventData)
         }
       } catch (err) {
-        console.log("Error parsing event data:", err)
+        console.error("Error parsing event data:", err)
       } finally {
         setIsLoading(false)
       }
     }
 
     processEventData()
-  }, [ticketData, isConnected, router, params.id, isRegistered, ticketsLeftData])
-
-  if (!isConnected) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center">
-        <div className="text-center p-8 bg-slate-800/50 rounded-xl border border-purple-500/30 backdrop-blur-sm max-w-md mx-4">
-          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Shield className="w-8 h-8 text-red-400" />
-          </div>
-          <h2 className="text-xl font-bold text-white mb-2">Wallet Not Connected</h2>
-          <p className="text-slate-300 mb-4">Please connect your wallet to view event details and purchase tickets.</p>
-          <Button 
-            onClick={() => router.push('/')}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
-          >
-            Go to Home
-          </Button>
-        </div>
-      </div>
-    )
-  }
+  }, [eventData, isConnected, router, params.id, checkingRegistration, isRegistered])
 
   const handleBuyTicket = async () => {
     if (!events) {
@@ -223,8 +255,8 @@ export default function EventDetailPage() {
     }
 
     // Check network
-    if (chainId !== 11142220) {
-      toast.error("⚠️ Please switch to Celo Sepolia testnet")
+    if (chainId !== ChainId.CELO_SEPOLIA || ChainId.CELO_ALFAJORES) {
+      toast.error("⚠️ Please switch to Celo Sepolia or Alfajores testnet")
       return
     }
 
@@ -236,15 +268,9 @@ export default function EventDetailPage() {
       // Convert price from ETH to Wei for the contract call
       const priceInWei = parseEther(events.price)
       
-      toast.info(`💰 Purchasing ticket for "${events.eventName}" - Please confirm the transaction in your wallet. Ticket price: ${events.price} CELO`)
+      toast.info(`💰 Purchasing ticket for "${events.eventName}" - Please confirm the transaction in your wallet. Ticket price: ${events.price} STT`)
       
-      writeContract({
-        address: eventTicketing as Address,
-        abi: eventTicketingAbi,
-        functionName: 'register',
-        args: [BigInt(events.id)],
-        value: priceInWei,
-      })
+      register(BigInt(events.id), priceInWei)
     } catch (error) {
       console.error("Purchase error:", error)
       toast.error("❌ Transaction failed. Please check your wallet and try again.")
@@ -266,7 +292,7 @@ export default function EventDetailPage() {
   }, [isConfirming])
 
   useEffect(() => {
-    if (isSuccess && purchasing) {
+    if (isConfirmed && purchasing) {
       setPurchasing(false)
       toast.success("🎉 Ticket purchased successfully! Your NFT ticket has been minted.")
       // Refresh the page to show updated data after a short delay
@@ -274,7 +300,7 @@ export default function EventDetailPage() {
         router.push("/tickets")
       }, 2000)
     }
-  }, [isSuccess, purchasing, router])
+  }, [isConfirmed, purchasing, router])
 
   // Handle contract errors
   useEffect(() => {
@@ -285,29 +311,29 @@ export default function EventDetailPage() {
   }, [contractError])
 
   useEffect(() => {
-      if (writeError) {
-        console.error("Write contract error:", writeError)
-        setPurchasing(false)
-        
-        // Check for specific error types with enhanced messages
-        if (writeError.message.includes("insufficient funds")) {
-          toast.error("💰 Insufficient funds for transaction. Please check your balance.")
-        } else if (writeError.message.includes("rejected")) {
-          toast.error("❌ Transaction was rejected by user.")
-        } else if (writeError.message.includes("network")) {
-          toast.error("🌐 Network error. Please check your connection.")
-        } else if (writeError.message.includes("reverted")) {
-          toast.error("⚠️ Transaction failed: Execution reverted.")
-        } else if (writeError.message.includes("RPC")) {
-          toast.error("🔄 Transaction failed: Internal JSON-RPC error. Please try again.")
-        } else {
-          toast.error(`❗ Transaction failed: ${writeError.message.slice(0, 100)}...`)
-        }
-      }
-    }, [writeError])
+    if (!writeError) return;
+
+    console.error("Write contract error:", writeError);
+    setPurchasing(false);
+
+    // Check for specific error types with enhanced messages
+    if (writeError.message.includes("insufficient funds")) {
+      toast.error("💰 Insufficient funds for transaction. Please check your balance.");
+    } else if (writeError.message.includes("rejected")) {
+      toast.error("❌ Transaction was rejected by user.");
+    } else if (writeError.message.includes("network")) {
+      toast.error("🌐 Network error. Please check your connection.");
+    } else if (writeError.message.includes("reverted")) {
+      toast.error("⚠️ Transaction failed: Execution reverted.");
+    } else if (writeError.message.includes("RPC")) {
+      toast.error("🔄 Transaction failed: Internal JSON-RPC error. Please try again.");
+    } else {
+      toast.error(`❗ Transaction failed: ${writeError.message.slice(0, 100)}...`);
+    }
+  }, [writeError]);
 
   const isProcessing = purchasing || isPending || isConfirming
-  const isCorrectNetwork = chainId === 11142220
+  const isCorrectNetwork = chainId === ChainId.CELO_SEPOLIA || chainId === ChainId.CELO_ALFAJORES
 
   if (isLoading) {
     return (
@@ -468,19 +494,19 @@ export default function EventDetailPage() {
                     <div>
                       <p className="text-slate-300 text-sm">Price per ticket</p>
                       <p className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                        {events?.price} CELO
+                        {events?.price} STT
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-slate-300 text-sm">Available</p>
                       <p className="text-white font-medium text-lg">
-                        {events?.ticketsLeft} / {events?.maxSupply}
+                        {events?.ticketsLeft ?? 0} / {events?.maxSupply ?? 0}
                       </p>
                       <div className="w-16 h-2 bg-slate-700 rounded-full mt-1">
                         <div 
                           className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full transition-all duration-300"
                           style={{ 
-                            width: `${events?.maxSupply ? (events.sold / events.maxSupply) * 100 : 0}%` 
+                            width: `${events?.maxSupply && events?.maxSupply > 0 ? Math.min(100, (events.sold / events.maxSupply) * 100) : 0}%` 
                           }}
                         />
                       </div>
@@ -491,7 +517,7 @@ export default function EventDetailPage() {
                     <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
                       <p className="text-red-400 text-sm flex items-center gap-2">
                         <AlertTriangle className="w-4 h-4" />
-                        Please switch to Celo Sepolia testnet
+                        Please switch to Somnia testnet
                       </p>
                     </div>
                   )}
@@ -500,9 +526,14 @@ export default function EventDetailPage() {
                     <Button 
                       onClick={handleBuyTicket}
                       className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-12 text-base transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/25"
-                      disabled={!isCorrectNetwork || events?.status === 'canceled' || events?.status === 'closed' || events?.ticketsLeft === 0 || events?.status === 'passed' || events?.status === 'registered' || isProcessing}
+                      disabled={!isCorrectNetwork || events?.status === 'canceled' || events?.status === 'closed' || (events?.ticketsLeft ?? 0) <= 0 || events?.status === 'passed' || events?.status === 'registered' || isProcessing || checkingRegistration}
                     >
-                      {isProcessing ? (
+                      {checkingRegistration ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Checking registration...
+                        </>
+                      ) : isProcessing ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           {isPending ? 'Confirming...' : 
@@ -529,7 +560,7 @@ export default function EventDetailPage() {
                       )}
                     </Button>
                     
-                    {events?.ticketsLeft && events.ticketsLeft < 10 && events.status === 'active' && (
+                    {events?.ticketsLeft !== undefined && events.ticketsLeft < 10 && events.ticketsLeft > 0 && events.status === 'active' && (
                       <div className="mt-3 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg">
                         <p className="text-sm text-amber-400 text-center flex items-center justify-center gap-1">
                           <AlertTriangle className="w-4 h-4" />
