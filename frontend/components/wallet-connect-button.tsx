@@ -1,8 +1,7 @@
 "use client"
 
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { useAccount, useBalance, useDisconnect } from 'wagmi'
-import { LogOut } from 'lucide-react'
+import { useAccount, useBalance } from 'wagmi'
 
 interface WalletConnectButtonProps {
   className?: string
@@ -13,11 +12,6 @@ export function WalletConnectButton({ className }: WalletConnectButtonProps = {}
   const { data: balance } = useBalance({
     address: address,
   })
-  const { disconnect } = useDisconnect()
-
-  const handleDisconnect = () => {
-    disconnect()
-  }
 
   return (
     <ConnectButton.Custom>
