@@ -29,6 +29,7 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: {
       "celo-sepolia": API_KEY,
+      "celo_alfajores": API_KEY,
     },
     customChains: [
       {
