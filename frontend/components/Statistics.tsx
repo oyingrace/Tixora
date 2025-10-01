@@ -132,7 +132,7 @@ function Statistics() {
                         </Card>
                         <Card className="bg-gradient-to-br from-slate-800/80 to-orange-900/30 border-orange-500/30">
                             <CardContent className="p-4 text-center">
-                                <p className="text-2xl font-bold text-white">{platformStats.totalPlatformRevenue}</p>
+                                <p className="text-2xl font-bold text-white">{Number(platformStats.totalPlatformRevenue).toFixed(2)}</p>
                                 <p className="text-slate-300 text-sm">Platform Revenue (CELO)</p>
                             </CardContent>
                         </Card>
