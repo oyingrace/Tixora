@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { WalletConnectButton } from './wallet-connect-button'
 import { useAccount } from 'wagmi'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ChevronDown } from 'lucide-react'
 
 const navLinks = [
@@ -17,6 +17,29 @@ function Header() {
   const pathname = usePathname()
   const { isConnected } = useAccount()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false)
+      }
+    }
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isDropdownOpen])
+
+  // Close dropdown when navigating to a new page
+  useEffect(() => {
+    setIsDropdownOpen(false)
+  }, [pathname])
 
   if (!isConnected) {
     return (
@@ -59,6 +82,14 @@ function Header() {
   // Check if any market page is active
   const isMarketActive = pathname === '/marketplace' || pathname === '/resale-market'
 
+  const toggleDropdown = () => {
+    setIsDropdownOpen(prev => !prev)
+  }
+
+  const handleDropdownLinkClick = () => {
+    setIsDropdownOpen(false)
+  }
+
   return (
     <header className="bg-slate-900/80 backdrop-blur-md border-b border-purple-500/20 sticky top-0 z-50">
       <div className="container mx-auto px-4 h-12 flex items-center justify-between">
@@ -96,11 +127,11 @@ function Header() {
           
           {/* Explore Market Dropdown */}
           <div 
+            ref={dropdownRef}
             className="relative"
-            onClick={() => setIsDropdownOpen(true)}
-            onBlur={() => setIsDropdownOpen(false)}
           >
             <button
+              onClick={toggleDropdown}
               className={`flex items-center space-x-1 ${
                 isMarketActive
                   ? 'text-purple-400 font-medium'
@@ -115,6 +146,7 @@ function Header() {
               <div className="absolute top-full left-0 mt-2 w-48 bg-slate-800/95 backdrop-blur-md border border-purple-500/20 rounded-lg shadow-lg overflow-hidden">
                 <Link
                   href="/marketplace"
+                  onClick={handleDropdownLinkClick}
                   className={`block px-4 py-3 ${
                     pathname === '/marketplace'
                       ? 'bg-purple-500/20 text-purple-400'
@@ -125,6 +157,7 @@ function Header() {
                 </Link>
                 <Link
                   href="/resale-market"
+                  onClick={handleDropdownLinkClick}
                   className={`block px-4 py-3 ${
                     pathname === '/resale-market'
                       ? 'bg-purple-500/20 text-purple-400'
