@@ -97,8 +97,8 @@ function Header() {
           {/* Explore Market Dropdown */}
           <div 
             className="relative"
-            onMouseEnter={() => setIsDropdownOpen(true)}
-            onMouseLeave={() => setIsDropdownOpen(false)}
+            onClick={() => setIsDropdownOpen(true)}
+            onBlur={() => setIsDropdownOpen(false)}
           >
             <button
               className={`flex items-center space-x-1 ${
