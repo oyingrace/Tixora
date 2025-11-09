@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useMemo } from "react"
-import { Calendar, QrCode, Send, ExternalLink, Copy, Search, MoreVertical, Download, Eye, RefreshCw } from "lucide-react"
+import { Calendar, QrCode, Send, ExternalLink, Copy, Search, MoreVertical, Download, Eye, RefreshCw, TrendingUp } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,11 +18,13 @@ import { Label } from "@/components/ui/label"
 import { useAccount, usePublicClient } from 'wagmi'
 import { WalletConnectButton } from "@/components/wallet-connect-button"
 import Link from "next/link"
-import { Abi, formatEther } from 'viem'
+import { Abi, Address, formatEther } from 'viem'
 import QRCode from 'qrcode';
 import { useEventTicketingGetters } from "@/hooks/useEventTicketing"
 import { getContractAddresses, ChainId, eventTicketingAbi } from "@/lib/addressAndAbi"
 import { useResaleMarketSetters } from "@/hooks/useResaleMarket"
+import { ListTicketModal } from "@/components/list-ticket-modal"
+import { TransferTicketModal } from "@/components/transfer-ticket-modal"
 
 interface NFTTicketDisplay {
   id: string
@@ -37,21 +39,20 @@ interface NFTTicketDisplay {
   txHash: string | null
 }
 
-type TicketAction = "view" | "transfer" | "qr" | null
+type TicketAction = "view" | "transfer" | "qr" | "resale" | null
 
 export default function TicketsPage() {
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedCategory, setSelectedCategory] = useState("all")
     const [selectedTicket, setSelectedTicket] = useState<NFTTicketDisplay | null>(null)
     const [currentAction, setCurrentAction] = useState<TicketAction>(null)
-    const [transferAddress, setTransferAddress] = useState("")
     const [ticketTransactions, setTicketTransactions] = useState<Record<string, string>>({})
   
     const { isConnected, address, chain } = useAccount()
     const publicClient = usePublicClient()
     
     const { useGetRecentTickets } = useEventTicketingGetters()
-    const { listTicket, isPending: isListing, isConfirmed } = useResaleMarketSetters()
+    const { listTicket, isPending: isListing, isConfirmed: isListingConfirmed } = useResaleMarketSetters()
     
     // Fetch all recent tickets
     const { data: allTickets = [] } = useGetRecentTickets()
@@ -194,13 +195,15 @@ export default function TicketsPage() {
       fetchTransactionHashes()
     }, [allTickets, registrationMap, publicClient, address, eventTicketingAddress])
   
-    // Handle transfer completion
+    // Handle listing confirmation
     useEffect(() => {
-      if (isConfirmed) {
+      if (isListingConfirmed) {
+        toast.success('Ticket listed for resale!', {
+          description: 'Your ticket is now available on the resale market.',
+        });
         setCurrentAction(null)
-        setTransferAddress("")
       }
-    }, [isConfirmed])
+    }, [isListingConfirmed])
   
   
     const filteredTickets = userTickets.filter((ticket) => {
@@ -217,32 +220,6 @@ export default function TicketsPage() {
     const handleTicketAction = (ticket: NFTTicketDisplay, action: TicketAction) => {
       setSelectedTicket(ticket)
       setCurrentAction(action)
-    }
-  
-    const handleTransfer = async () => {
-      if (!selectedTicket || !transferAddress || !address) {
-        toast.error('Please fill in all required fields');
-        return;
-      }
-  
-      try {
-        const toastId = toast.loading('Initiating ticket transfer...');
-        
-        await listTicket(BigInt(selectedTicket.tokenId), BigInt(selectedTicket.price));
-        
-        toast.success('Ticket transferred successfully!', {
-          id: toastId,
-          description: `Ticket #${selectedTicket.id} has been transferred.`,
-        });
-        
-        setCurrentAction(null);
-        setTransferAddress("");
-      } catch (error) {
-        console.error('Transfer failed:', error);
-        toast.error('Transfer failed', {
-          description: error instanceof Error ? error.message : 'An error occurred during transfer',
-        });
-      }
     }
   
     const copyToClipboard = (text: string) => {
@@ -481,6 +458,10 @@ export default function TicketsPage() {
                             <Send className="w-4 h-4 mr-2" />
                             Transfer Ticket
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleTicketAction(ticket, "resale")}>
+                            <TrendingUp className="w-4 h-4 mr-2" />
+                            List for Resale
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => ticket.txHash && window.open(
@@ -715,74 +696,34 @@ export default function TicketsPage() {
           </DialogContent>
         </Dialog>
   
-        {/* Transfer Dialog */}
-        <Dialog open={currentAction === "transfer"} onOpenChange={() => setCurrentAction(null)}>
-          <DialogContent className="sm:max-w-md bg-slate-800 border-slate-700">
-            {selectedTicket && (
-              <div className="space-y-6">
-                <DialogHeader>
-                  <DialogTitle className="text-white">Transfer Ticket <i>(coming soon)</i></DialogTitle>
-                  <DialogDescription className="text-slate-400">
-                    Transfer your ticket to another wallet address. This action cannot be undone.
-                  </DialogDescription>
-                </DialogHeader>
-  
-                <div className="space-y-4">
-                  <div className="p-4 bg-slate-700 rounded-lg">
-                    <p className="font-medium text-white">{selectedTicket.eventTitle}</p>
-                    <p className="text-sm text-slate-400">Ticket #{selectedTicket.qrCode}</p>
-                  </div>
-  
-                  <div className="space-y-2">
-                    <Label htmlFor="transferAddress" className="text-slate-300">
-                      Recipient Wallet Address
-                    </Label>
-                    <Input
-                      id="transferAddress"
-                      placeholder="0x..."
-                      value={transferAddress}
-                      onChange={(e) => setTransferAddress(e.target.value)}
-                      className="bg-slate-700 border-slate-600 focus:border-purple-500 text-white"
-                    />
-                  </div>
-  
-                  <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                    <p className="text-sm text-yellow-300">
-                      Warning: This action cannot be undone. Make sure the recipient address is correct.
-                    </p>
-                  </div>
-                </div>
-  
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => setCurrentAction(null)}
-                    className="flex-1 border-slate-600 text-slate-300 hover:border-purple-500"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleTransfer}
-                    disabled={!transferAddress || isListing}
-                    className="flex-1 bg-purple-600 hover:bg-purple-700"
-                  >
-                    {isListing ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                        Listing ticket for sale...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4 mr-2" />
-                        List ticket for sale
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
+        {/* Transfer Ticket Modal */}
+        {selectedTicket && (
+          <TransferTicketModal
+            isOpen={currentAction === "transfer"}
+            onClose={() => setCurrentAction(null)}
+            tokenId={selectedTicket.tokenId}
+            eventName={selectedTicket.eventTitle}
+            onTransferSuccess={() => {
+              toast.success('Ticket transferred successfully!')
+              setCurrentAction(null)
+            }}
+          />
+        )}
+
+        {/* List for Resale Modal */}
+        {selectedTicket && (
+          <ListTicketModal
+            isOpen={currentAction === "resale"}
+            onClose={() => setCurrentAction(null)}
+            tokenId={selectedTicket.tokenId}
+            eventName={selectedTicket.eventTitle}
+            originalPrice={BigInt(parseFloat(selectedTicket.price.replace(' CELO', '')) * 1e18)}
+            onListSuccess={() => {
+              // Optionally refresh tickets or show success message
+              toast.success('Ticket listed successfully!')
+            }}
+          />
+        )}
       </div>
     )
   }
