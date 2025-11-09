@@ -104,8 +104,6 @@ export default function Dashboard() {
 
           <Statistics />
 
-          <WalletConnectButton />
-
           {/* Quick Action Cards */}
           <div className="mb-10">
             <h2 className="text-2xl font-semibold mb-3 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
