@@ -156,7 +156,7 @@ export function useResaleMarketSetters() {
     });
   };
 
-  // List ticket for sale
+  // List ticket for sale (handles approval internally in the smart contract)
   const listTicket = (tokenId: bigint, price: bigint) => {
     writeContract({
       address: resaleMarket as Address,
