@@ -12,6 +12,9 @@ import { ChainId, eventTicketingAbi, getContractAddresses } from "@/lib/addressA
 import { useReadContract } from "wagmi"
 import Statistics from "@/components/Statistics"
 
+import { WalletConnectButton } from '../../components/wallet-connect-button'
+
+
 export default function Dashboard() {
   const { address, isConnected, chain } = useAccount()
   const router = useRouter()
@@ -100,6 +103,8 @@ export default function Dashboard() {
           </div>
 
           <Statistics />
+
+          <WalletConnectButton />
 
           {/* Quick Action Cards */}
           <div className="mb-10">
