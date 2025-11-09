@@ -16,10 +16,10 @@ if (!projectId) {
 
 // Set up metadata
 const metadata = {
-  name: 'appkit-example',
-  description: 'AppKit Example',
-  url: 'https://appkitexampleapp.com', // origin must match your domain & subdomain
-  icons: ['https://avatars.githubusercontent.com/u/179229932']
+  name: 'Tixora - Decentralized Event Ticketing',
+  description: 'NFT-based event ticketing platform built on Ethereum',
+  url: 'https://tixora-tickets.vercel.app/',
+  icons: ['/favicon.ico']
 }
 
 // Create the modal
