@@ -128,9 +128,14 @@ export function WalletConnectButton({
     //   }}
     // </ConnectButton.Custom>
     <div className="flex gap-4">
-      <AppKitButton balance="hide" />
+      <AppKitButton 
+        balance="hide" 
+        className="bg-gray-200 px-3 py-2 rounded-lg text-gray-900"
+      />
       
-      <AppKitNetworkButton />
+      <AppKitNetworkButton
+        className="bg-gray-200 px-3 py-2 rounded-lg text-gray-900"
+      />
     </div>
   );
 }
