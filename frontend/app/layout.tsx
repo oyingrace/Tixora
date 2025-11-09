@@ -1,11 +1,15 @@
-import type { Metadata } from "next"
-import { GeistSans } from "geist/font/sans"
-import { GeistMono } from "geist/font/mono"
-import { ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
-import "./globals.css"
-import { Providers } from "@/app/providers"
-import Header from "@/components/header"
+import type { Metadata } from "next";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import { Inter } from "next/font/google";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import "./globals.css";
+import Header from "@/components/header";
+import { headers } from "next/headers"; // added
+import ContextProvider from "@/context";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Tixora - Decentralized Event Ticketing",
@@ -13,29 +17,33 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
-}
+};
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
+  const headersObj = await headers();
+  const cookies = headersObj.get("cookie");
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <style>{`
-html {
-  font-family: ${GeistSans.style.fontFamily};
-  --font-sans: ${GeistSans.variable};
-  --font-mono: ${GeistMono.variable};
-}
+          html {
+            font-family: ${GeistSans.style.fontFamily};
+            --font-sans: ${GeistSans.variable};
+            --font-mono: ${GeistMono.variable};
+            --font-inter: ${inter.className};  
+          }
         `}</style>
       </head>
-      <body>
-        <Providers>
+      <body className={inter.className}>
+        <ContextProvider cookies={cookies}>
           <Header />
           {children}
-          <ToastContainer 
+          <ToastContainer
             position="top-right"
             autoClose={5000}
             hideProgressBar={false}
@@ -47,8 +55,8 @@ html {
             pauseOnHover
             theme="light"
           />
-        </Providers>
+        </ContextProvider>
       </body>
     </html>
-  )
+  );
 }
