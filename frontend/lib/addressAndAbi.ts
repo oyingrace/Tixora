@@ -2,7 +2,7 @@
 export enum ChainId {
   CELO_SEPOLIA = 11142220,
   CELO_MAINNET = 42220,
-  CELO_ALFAJORES = 44787,
+  BASE_SEPOLIA = 84532,
 }
 
 // Contract addresses by chain ID
@@ -20,13 +20,12 @@ export const CONTRACT_ADDRESSES: ContractAddresses = {
     eventTicketing: "0xA4488a88Bc2508Ea3B80f262C35b886B6f99A5f6",
     resaleMarket: "0x1a5CBd231304DED72beDe6edaf06c00C25011f4e",
   },
-  [ChainId.CELO_ALFAJORES]: {
-    // Replace with your Alfajores testnet addresses
-    ticketNft: "0x6815e76CE475451D42363f4b55533720f19Ebada",
-    eventTicketing: "0xF708183DA2f773c213F93A3220eC5922fd73C720",
-    resaleMarket: "0xaD0299Ef4496d86B1F9CB71dc778F6a660eD4Af8",
-  },
   [ChainId.CELO_MAINNET]: {
+    ticketNft: "0X...",
+    eventTicketing: "0X...",
+    resaleMarket: "0X...",
+  },
+  [ChainId.BASE_SEPOLIA]: {
     ticketNft: "0X...",
     eventTicketing: "0X...",
     resaleMarket: "0X...",
