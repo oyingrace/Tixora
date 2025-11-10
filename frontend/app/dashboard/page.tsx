@@ -1,6 +1,6 @@
 "use client"
 
-import { useAccount, useBalance } from "wagmi"
+import { useAccount } from "wagmi"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,9 +11,6 @@ import { Address, formatEther } from "viem"
 import { ChainId, eventTicketingAbi, getContractAddresses } from "@/lib/addressAndAbi"
 import { useReadContract } from "wagmi"
 import Statistics from "@/components/Statistics"
-
-import { WalletConnectButton } from '../../components/wallet-connect-button'
-
 
 export default function Dashboard() {
   const { address, isConnected, chain } = useAccount()

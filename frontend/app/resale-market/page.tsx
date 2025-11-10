@@ -190,7 +190,7 @@ export default function ResaleMarketPage() {
               <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-white mb-2">Wrong Network</h2>
               <p className="text-slate-400 mb-4">
-                Please switch to Celo Sepolia or Alfajores testnet
+                Please switch to Celo Sepolia or Base Sepolia testnet
               </p>
             </CardContent>
           </Card>

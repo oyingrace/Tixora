@@ -263,8 +263,8 @@ export default function EventDetailPage() {
     }
 
     // Check network
-    if (![ChainId.CELO_SEPOLIA, ChainId.CELO_ALFAJORES].includes(chainId as number)) {
-      toast.error("⚠️ Please switch to Celo Sepolia or Alfajores testnet")
+    if (![ChainId.CELO_SEPOLIA, ChainId.BASE_SEPOLIA].includes(chainId as number)) {
+      toast.error("⚠️ Please switch to Celo Sepolia or Base Sepolia testnet")
       return
     }
 
@@ -341,7 +341,7 @@ export default function EventDetailPage() {
   }, [writeError]);
 
   const isProcessing = purchasing || isPending || isConfirming
-  const isCorrectNetwork = chainId === ChainId.CELO_SEPOLIA || chainId === ChainId.CELO_ALFAJORES
+  const isCorrectNetwork = chainId === ChainId.CELO_SEPOLIA || chainId === ChainId.BASE_SEPOLIA
 
   if (isLoading) {
     return (
@@ -525,7 +525,7 @@ export default function EventDetailPage() {
                     <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
                       <p className="text-red-400 text-sm flex items-center gap-2">
                         <AlertTriangle className="w-4 h-4" />
-                        Please switch to Celo Sepolia or Alfajores testnet
+                        Please switch to Celo Sepolia or Base Sepolia testnet
                       </p>
                     </div>
                   )}

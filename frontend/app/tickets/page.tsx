@@ -14,11 +14,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Label } from "@/components/ui/label"
 import { useAccount, usePublicClient } from 'wagmi'
 import { WalletConnectButton } from "@/components/wallet-connect-button"
 import Link from "next/link"
-import { Abi, Address, formatEther } from 'viem'
+import { Abi, formatEther } from 'viem'
 import QRCode from 'qrcode';
 import { useEventTicketingGetters } from "@/hooks/useEventTicketing"
 import { getContractAddresses, ChainId, eventTicketingAbi } from "@/lib/addressAndAbi"
@@ -466,10 +465,10 @@ export default function TicketsPage() {
                           <DropdownMenuItem
                             onClick={() => ticket.txHash && window.open(
                               chain?.id === ChainId.CELO_SEPOLIA
-                              ? `https://celo-sepolia.blockscout.com//tx/${ticket.txHash}`
+                              ? `https://celo-sepolia.blockscout.com/tx/${ticket.txHash}`
                               : chain?.id === ChainId.BASE_SEPOLIA
-                              ? `https://celo-alfajores.blockscout.com//tx/${ticket.txHash}`
-                              : `https://celo.blockscout.com//tx/${ticket.txHash}`
+                              ? `https://base-sepolia.blockscout.com/tx/${ticket.txHash}`
+                              : `https://celo.blockscout.com/tx/${ticket.txHash}`
                             , "_blank" 
                             )}
                             disabled={!ticket.txHash}
@@ -613,10 +612,10 @@ export default function TicketsPage() {
                     variant="outline"
                     onClick={() => selectedTicket.txHash && window.open(
                       chain?.id === ChainId.CELO_SEPOLIA
-                      ? `https://celo-sepolia.blockscout.com//tx/${selectedTicket.txHash}`
+                      ? `https://celo-sepolia.blockscout.com/tx/${selectedTicket.txHash}`
                       : chain?.id === ChainId.BASE_SEPOLIA
-                      ? `https://celo-alfajores.blockscout.com//tx/${selectedTicket.txHash}`
-                      : `https://celo.blockscout.com//tx/${selectedTicket.txHash}`
+                      ? `https://base-sepolia.blockscout.com/tx/${selectedTicket.txHash}`
+                      : `https://celo.blockscout.com/tx/${selectedTicket.txHash}`
                     , "_blank" 
                   )}
                         
