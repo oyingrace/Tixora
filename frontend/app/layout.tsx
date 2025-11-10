@@ -6,7 +6,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 import Header from "@/components/header";
-import { headers } from "next/headers"; // added
+import { headers } from "next/headers";
 import ContextProvider from "@/context";
 
 const inter = Inter({ subsets: ["latin"] });

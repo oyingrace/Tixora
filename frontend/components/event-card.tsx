@@ -8,7 +8,7 @@ import Image from "next/image"
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { ChainId, eventTicketingAbi, getContractAddresses } from "@/lib/addressAndAbi"
 import { useEventTicketingGetters } from "@/hooks/useEventTicketing"
-import { useAccount } from "wagmi"
+import { useAccount, useBalance } from "wagmi"
 import { toast } from "react-toastify"
 import { Address } from "viem"
 
@@ -69,7 +69,7 @@ export function EventCard({ event }: EventCardProps) {
     return <Badge className="bg-purple-500 text-white">{event.ticketsLeft} left</Badge>
   }
 
-  const handlePurchaseTicket = async (e: React.MouseEvent) => {
+  const handlePurchaseTicket = (e: React.MouseEvent) => {
     e.stopPropagation() // Prevent card click navigation
     
     if (!isConnected) {
@@ -91,13 +91,13 @@ export function EventCard({ event }: EventCardProps) {
 
     try {
       // Check if user has enough balance
-      const balance = await window.ethereum.request({
-        method: 'eth_getBalance',
-        params: [address, 'latest']
+      const {data: balance} = useBalance({
+        address,
+        chainId: chainId
       })
       
       const requiredAmount = event.originalPrice
-      const userBalance = BigInt(balance)
+      const userBalance = Number(balance?.value)
       
       if (userBalance < requiredAmount) {
         toast.error(`Insufficient balance. You need ${event.price} CELO to purchase this ticket.`)
@@ -175,7 +175,7 @@ export function EventCard({ event }: EventCardProps) {
   }, [receiptError])
 
   // Check if user is on the correct network
-  const isCorrectNetwork = chainId === ChainId.CELO_SEPOLIA || ChainId.CELO_ALFAJORES // Celo Sepolia testnet
+  const isCorrectNetwork = chainId === ChainId.CELO_SEPOLIA || ChainId.BASE_SEPOLIA // Celo Sepolia testnet
 
   const isProcessing = purchasing || isPending || isConfirming
 

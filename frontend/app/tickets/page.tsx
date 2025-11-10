@@ -467,7 +467,7 @@ export default function TicketsPage() {
                             onClick={() => ticket.txHash && window.open(
                               chain?.id === ChainId.CELO_SEPOLIA
                               ? `https://celo-sepolia.blockscout.com//tx/${ticket.txHash}`
-                              : chain?.id === ChainId.CELO_ALFAJORES
+                              : chain?.id === ChainId.BASE_SEPOLIA
                               ? `https://celo-alfajores.blockscout.com//tx/${ticket.txHash}`
                               : `https://celo.blockscout.com//tx/${ticket.txHash}`
                             , "_blank" 
@@ -614,7 +614,7 @@ export default function TicketsPage() {
                     onClick={() => selectedTicket.txHash && window.open(
                       chain?.id === ChainId.CELO_SEPOLIA
                       ? `https://celo-sepolia.blockscout.com//tx/${selectedTicket.txHash}`
-                      : chain?.id === ChainId.CELO_ALFAJORES
+                      : chain?.id === ChainId.BASE_SEPOLIA
                       ? `https://celo-alfajores.blockscout.com//tx/${selectedTicket.txHash}`
                       : `https://celo.blockscout.com//tx/${selectedTicket.txHash}`
                     , "_blank" 

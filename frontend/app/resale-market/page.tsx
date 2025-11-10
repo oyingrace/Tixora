@@ -62,7 +62,7 @@ export default function ResaleMarketPage() {
   const { data: eventTicketingAddress } = useEventTicketing()
 
   // Check if user is on the correct network
-  const isCorrectNetwork = chainId === ChainId.CELO_SEPOLIA || chainId === ChainId.CELO_ALFAJORES
+  const isCorrectNetwork = chainId === ChainId.CELO_SEPOLIA || chainId === ChainId.BASE_SEPOLIA
 
   // Get total supply of NFTs to iterate through
   const { data: totalSupply } = useReadContract({
