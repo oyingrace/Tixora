@@ -17,6 +17,21 @@ export function NetworkSwitcher() {
 
   const currentNetwork = networks.find((n) => n.id === chainId) || networks[0];
 
+  const handleNetworkSwitch = async (networkId: number) => {
+    try {
+      await switchChain({ chainId: networkId });
+      toast.success(`Switched to ${networkId === ChainId.CELO_SEPOLIA ? 'Celo Sepolia' : 'Base Sepolia'}`);
+    } catch (error) {
+      console.error('Failed to switch network:', error);
+      toast.error(
+        <div>
+          <p>Failed to switch network</p>
+          <p className="text-sm text-gray-300">Please make sure you have the network added to your wallet</p>
+        </div>
+      );
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
