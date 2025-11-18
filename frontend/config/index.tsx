@@ -2,8 +2,8 @@ import { cookieStorage, createStorage } from 'wagmi'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { celoSepolia, baseSepolia } from '@reown/appkit/networks'
 
-// WalletConnect Project ID (from https://dashboard.reown.com)
-export const projectId = process.env.NEXT_PUBLIC_PROJECT_ID
+// WalletConnect Project ID (from https://cloud.walletconnect.com/)
+export const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
 
 if (!projectId) {
   throw new Error('Project ID is not defined')
