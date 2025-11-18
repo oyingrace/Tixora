@@ -3,6 +3,7 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { WalletConnectButton } from './wallet-connect-button'
+import { NetworkSwitcher } from './network-switcher'
 import { useAccount } from 'wagmi'
 import { useState, useEffect, useRef } from 'react'
 import { ChevronDown } from 'lucide-react'
@@ -94,13 +95,16 @@ function Header() {
     <header className="bg-slate-900/80 backdrop-blur-md border-b border-purple-500/20 sticky top-0 z-50">
       <div className="container mx-auto px-4 h-12 flex items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
-          <Image
-            src="/tixora-logo.png"
-            alt="Tixora"
-            width={100}
-            height={100}
-            className="rounded-full h-12 w-auto"
-          />
+          <div className="relative h-12 w-12">
+            <Image
+              src="/tixora-logo.png"
+              alt="Tixora"
+              fill
+              className="rounded-full object-contain"
+              sizes="48px"
+              priority
+            />
+          </div>
           <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
             Tixora
           </span>
@@ -171,7 +175,8 @@ function Header() {
           </div>
         </nav>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3">
+          <NetworkSwitcher />
           <WalletConnectButton />
         </div>
       </div>

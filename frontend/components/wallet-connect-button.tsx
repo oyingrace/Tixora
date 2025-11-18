@@ -15,11 +15,22 @@ export function WalletConnectButton() {
   // Handle wallet connection
   const handleConnect = async () => {
     try {
-      // Connect using the injected connector (MetaMask, etc.)
-      await connect({ connector: connectors[0] });
-      router.refresh();
+      // Check if MetaMask is installed
+      if (window.ethereum?.isMetaMask) {
+        // Request accounts access
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        // Connect using the injected connector
+        await connect({ connector: connectors[0] });
+        router.refresh();
+      } else {
+        // Fallback to WalletConnect if MetaMask is not available
+        await connect({ connector: connectors[0] });
+        router.refresh();
+      }
     } catch (error) {
       console.error('Failed to connect wallet:', error);
+      // Show error toast to user
+      toast.error('Failed to connect wallet. Please try again.');
     }
   };
 

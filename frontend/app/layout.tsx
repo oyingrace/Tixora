@@ -9,7 +9,11 @@ import Header from "@/components/header";
 import { headers } from "next/headers";
 import ContextProvider from "@/context";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ 
+  subsets: ["latin"],
+  display: 'swap',
+  variable: '--font-inter'
+});
 
 export const metadata: Metadata = {
   title: "Tixora - Decentralized Event Ticketing",
@@ -28,18 +32,12 @@ export default async function RootLayout({
   const cookies = headersObj.get("cookie");
 
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <style>{`
-          html {
-            font-family: ${GeistSans.style.fontFamily};
-            --font-sans: ${GeistSans.variable};
-            --font-mono: ${GeistMono.variable};
-            --font-inter: ${inter.className};  
-          }
-        `}</style>
-      </head>
-      <body className={inter.className}>
+    <html 
+      lang="en" 
+      className={`${GeistSans.variable} ${GeistMono.variable} ${inter.variable}`}
+      suppressHydrationWarning
+    >
+      <body className="font-sans bg-background text-foreground">
         <ContextProvider cookies={cookies}>
           <Header />
           {children}
