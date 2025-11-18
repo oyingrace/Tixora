@@ -14,8 +14,13 @@
   --color-dark-navy: #0f172a;
   --color-white: #ffffff;
 
+  /* Font Families */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-inter: var(--font-inter);
+
   /* Updated Design System with Brand Colors */
-  --background: oklch(0.08 0.01 258.34); /* Dark navy background instead of white */
+  --background: oklch(0.08 0.01 258.34); /* Dark navy background */
   --foreground: oklch(0.98 0.005 258.34); /* Light text on dark background */
   --card: oklch(0.12 0.01 258.34);
   --card-foreground: oklch(0.98 0.005 258.34);
