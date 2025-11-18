@@ -702,6 +702,7 @@ export default function TicketsPage() {
             onClose={() => setCurrentAction(null)}
             tokenId={selectedTicket.tokenId}
             eventName={selectedTicket.eventTitle}
+            isActive={selectedTicket.status === 'upcoming'}
             onTransferSuccess={() => {
               toast.success('Ticket transferred successfully!')
               setCurrentAction(null)
