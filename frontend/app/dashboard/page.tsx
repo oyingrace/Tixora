@@ -1,118 +1,53 @@
 "use client"
 
-import { useAccount, useBalance } from "wagmi"
+import { useAccount } from "wagmi"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Plus, ShoppingBag, TicketIcon, Activity } from "lucide-react"
 import Link from "next/link"
-import Image from "next/image"
-import { WalletConnectButton } from "@/components/wallet-connect-button"
-import { useRecentTickets, useUserTickets, formatPrice } from "@/hooks/use-contracts"
 import { useMemo, useEffect } from "react"
+import { Address, formatEther } from "viem"
+import { ChainId, eventTicketingAbi, getContractAddresses } from "@/lib/addressAndAbi"
+import { useReadContract } from "wagmi"
+import Statistics from "@/components/Statistics"
 
 export default function Dashboard() {
-  const { address, isConnected } = useAccount()
-  const { data: balance } = useBalance({
-    address: address,
-  })
-
-  // Fetch real contract data
-  const { tickets: recentTickets, isLoading: ticketsLoading } = useRecentTickets()
-  const { ticketCount } = useUserTickets(address)
-
-  // Calculate real stats from contract data
-  const stats = useMemo(() => {
-    if (!address) {
-      return [
-        { label: "Total Events Attended", value: "0", change: "Connect wallet to view" },
-        { label: "Total Spent", value: "0 CELO", change: "Connect wallet to view" },
-        { label: "Events Created", value: "0", change: "Connect wallet to view" },
-        { label: "Revenue Earned", value: "0 CELO", change: "Connect wallet to view" },
-      ]
-    }
-
-    // If wallet is connected but data is still loading or empty
-    if (!recentTickets || recentTickets.length === 0) {
-      return [
-        { 
-          label: "Total Events Attended", 
-          value: ticketCount.toString(), 
-          change: ticketCount > 0 ? `${ticketCount} NFT tickets owned` : "No events attended yet"
-        },
-        { 
-          label: "Total Spent", 
-          value: ticketCount > 0 ? `${ticketCount * 25} CELO` : "0 CELO", 
-          change: ticketCount > 0 ? "Estimated from ticket purchases" : "No purchases yet"
-        },
-        { 
-          label: "Events Created", 
-          value: "0", 
-          change: "No events created yet" 
-        },
-        { 
-          label: "Revenue Earned", 
-          value: "0 CELO", 
-          change: "No revenue yet" 
-        },
-      ]
-    }
-
-    const userCreatedEvents = recentTickets.filter(ticket => 
-      ticket.creator.toLowerCase() === address.toLowerCase()
-    )
-    
-    const totalRevenue = userCreatedEvents.reduce((sum, ticket) => 
-      sum + ticket.totalCollected, 0n
-    )
-
-    const userRegisteredEvents = recentTickets.filter(ticket => 
-      ticket.sold > 0n && !ticket.canceled
-    )
-
-    return [
-      { 
-        label: "Total Events Attended", 
-        value: ticketCount.toString(), 
-        change: ticketCount > 0 ? `${ticketCount} NFT tickets owned` : "No events attended yet"
-      },
-      { 
-        label: "Total Spent", 
-        value: ticketCount > 0 ? `${ticketCount * 25} CELO` : "0 CELO", 
-        change: ticketCount > 0 ? "Estimated from ticket purchases" : "No purchases yet"
-      },
-      { 
-        label: "Events Created", 
-        value: userCreatedEvents.length.toString(), 
-        change: userCreatedEvents.length > 0 ? `${userCreatedEvents.filter(t => !t.closed).length} active events` : "No events created yet"
-      },
-      { 
-        label: "Revenue Earned", 
-        value: `${formatPrice(totalRevenue)} CELO`, 
-        change: userCreatedEvents.length > 0 ? `From ${userCreatedEvents.length} events` : "No revenue yet"
-      },
-    ]
-  }, [recentTickets, address, ticketCount])
-
-  // Generate recent activity from contract data
-  const recentActivity = useMemo(() => {
-    if (!recentTickets || !address) return []
-    
-    return recentTickets
-      .filter(ticket => ticket.creator.toLowerCase() === address.toLowerCase())
-      .slice(0, 5)
-      .map((ticket, index) => ({
-        id: Number(ticket.id),
-        action: `Created ${ticket.eventName}`,
-        time: new Date(Number(ticket.eventTimestamp) * 1000).toLocaleDateString(),
-        amount: `${formatPrice(ticket.price)} CELO`,
-        type: "create" as const,
-      }))
-  }, [recentTickets, address])
-          
+  const { address, isConnected, chain } = useAccount()
   const router = useRouter()
 
-  // Redirect to landing page if wallet is not connected
+  const chainId = chain?.id || ChainId.CELO_SEPOLIA;
+  const { eventTicketing } = getContractAddresses(chainId)
+
+  // Get recent tickets data
+  const { data: recentTicketsData } = useReadContract({
+    address: eventTicketing as Address,
+    abi: eventTicketingAbi,
+    functionName: 'getRecentTickets',
+  })
+
+  // Generate recent activity from tickets data
+  const recentActivity = useMemo(() => {
+    if (!recentTicketsData || !address) return []
+    
+    const tickets = recentTicketsData as any[]
+    
+    return tickets
+      .filter(ticket => ticket.creator.toLowerCase() === address.toLowerCase())
+      .slice(0, 5)
+      .map((ticket) => ({
+        id: Number(ticket.id),
+        action: ticket.canceled ? `Canceled ${ticket.eventName}` : `Created ${ticket.eventName}`,
+        time: new Date(Number(ticket.eventTimestamp) * 1000).toLocaleDateString(),
+        amount: `${formatEther(ticket.price)} CELO`,
+        type: ticket.canceled ? "cancel" : "create",
+        status: ticket.closed ? "Closed" : ticket.canceled ? "Canceled" : "Active",
+        sold: Number(ticket.sold),
+        maxSupply: Number(ticket.maxSupply)
+      }))
+  }, [recentTicketsData, address])
+
+  // Redirect if not connected
   useEffect(() => {
     if (!isConnected) {
       router.push("/")
@@ -145,78 +80,47 @@ export default function Dashboard() {
     },
   ]
 
-  // Show loading or redirect message if not connected
   if (!isConnected) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 text-foreground flex items-center justify-center">
-        <Card className="bg-gradient-to-br from-slate-800/80 to-purple-900/30 border-purple-500/30 p-8">
-          <CardContent className="text-center">
-            <h2 className="text-2xl font-bold text-white mb-4">Connect Your Wallet</h2>
-            <p className="text-slate-300 mb-6">Please connect your wallet to access the dashboard</p>
-            <WalletConnectButton />
-          </CardContent>
-        </Card>
-      </div>
-    )
+    return null // Will redirect
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 text-foreground">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 text-foreground pt-12 px-4 md:px-8 lg:px-20">
       <div className="pb-16 px-4">
         <div className="container mx-auto max-w-7xl">
           {/* Welcome Section */}
-          <div className="mb-12">
-            <h1 className="text-6xl font-bold mb-4">
-              Welcome back,{" "}
-              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+          <div className="mb-10 p-6 bg-slate-800/30 backdrop-blur-sm rounded-xl border border-slate-700/50 mb-10">
+            <h1 className="text-4xl md:text-5xl font-bold mb-3">
+              Welcome back, {" "}
+              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                 {shortAddress}
               </span>
             </h1>
-            <p className="text-slate-300 text-xl">Manage your events and tickets on the decentralized web</p>
+            <p className="text-slate-300 text-base">Manage your events and tickets on the decentralized web</p>
           </div>
 
-          {/* Stats Overview */}
-          <div className="mb-12">
-            <h2 className="text-3xl font-semibold mb-6 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-              Your Stats
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {stats.map((stat, index) => (
-                <Card key={index} className="bg-gradient-to-br from-slate-800/80 to-purple-900/30 border-purple-500/30">
-                  <CardContent className="p-6">
-                    <div className="text-center">
-                      <p className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
-                        {stat.value}
-                      </p>
-                      <p className="text-slate-300 font-medium mb-1">{stat.label}</p>
-                      <p className="text-green-400 text-sm font-medium">{stat.change}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
+          <Statistics />
 
           {/* Quick Action Cards */}
           <div className="mb-12">
-            <h2 className="text-3xl font-semibold mb-6 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+            <h2 className="text-2xl font-semibold mb-6 text-slate-200">
               Quick Actions
             </h2>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-3 gap-8 px-6">
               {quickActions.map((action, index) => {
                 const Icon = action.icon
                 return (
                   <Link key={index} href={action.href}>
-                    <Card className="group cursor-pointer bg-gradient-to-br from-slate-800/80 to-purple-900/30 border-purple-500/30 overflow-hidden relative">
-                      <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-5`} />
-                      <CardContent className="p-8 text-center relative z-10">
+                    <Card className="group cursor-pointer bg-slate-800/50 border-slate-700/50 overflow-hidden relative hover:border-slate-600/60 transition-all duration-300">
+                      <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-5 transition-opacity`} />
+                      <CardContent className="p-6 text-center relative z-10">
                         <div
-                          className={`w-20 h-20 rounded-full bg-gradient-to-br ${action.gradient} flex items-center justify-center mx-auto mb-6`}
+                          className={`w-15 h-15 rounded-full bg-gradient-to-br ${action.gradient} flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform`}
                         >
-                          <Icon className="h-10 w-10 text-white" />
+                          <Icon className="h-6 w-6 text-white" />
                         </div>
-                        <h3 className="text-2xl font-bold mb-3 text-white">{action.title}</h3>
-                        <p className="text-slate-300 text-base">{action.description}</p>
+                        <h3 className="text-xl font-bold mb-3 text-white">{action.title}</h3>
+                        <p className="text-slate-300 text-sm">{action.description}</p>
                       </CardContent>
                     </Card>
                   </Link>
@@ -225,49 +129,59 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Referral Dashboard Section - Coming Soon */}
-          <div className="mb-12">
-            <Card className="bg-gradient-to-br from-slate-800/80 to-purple-900/30 border-purple-500/30">
-              <CardHeader>
-                <CardTitle className="text-white text-2xl">Referral Program</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-300">Referral dashboard coming soon! Earn rewards by inviting friends to Tixora.</p>
-              </CardContent>
-            </Card>
-          </div>
-
           {/* Recent Activity Section */}
-          <div>
-            <Card className="bg-gradient-to-br from-slate-800/80 to-purple-900/30 border-purple-500/30">
+          <div className="px-6">
+            <Card className="bg-slate-800/50 border-slate-700/50">
               <CardHeader>
-                <CardTitle className="flex items-center gap-3 text-white text-2xl">
+                <CardTitle className="flex items-center gap-3 text-white text-xl">
                   <Activity className="h-6 w-6 text-purple-400" />
                   Recent Activity
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentActivity.map((activity, index) => (
-                    <div
-                      key={activity.id}
-                      className="flex items-center justify-between p-6 bg-slate-700/30 rounded-xl border border-slate-600/30"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-3 h-3 rounded-full bg-blue-400" />
-                        <div>
-                          <p className="text-white font-medium text-lg">{activity.action}</p>
-                          <p className="text-slate-400">{activity.time}</p>
+                  {recentActivity.length > 0 ? (
+                    recentActivity.map((activity, index) => (
+                      <div
+                        key={activity.id}
+                        className="flex items-center justify-between py-4 px-6 bg-slate-700/30 rounded-xl border border-slate-600/30"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={`w-3 h-3 rounded-full ${
+                            activity.type === 'cancel' ? 'bg-red-400' : 'bg-blue-400'
+                          }`} />
+                          <div>
+                            <p className="text-white font-medium text-md">{activity.action}</p>
+                            <p className="text-slate-400 text-sm">{activity.time}</p>
+                            <p className="text-slate-500 text-xs">
+                              {activity.sold}/{activity.maxSupply} tickets sold
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <Badge
+                            variant="outline"
+                            className={`border-purple-500/50 px-2 py-1 text-xs ${
+                              activity.status === 'Active' 
+                                ? 'text-green-300 bg-green-500/10 border-green-500/50'
+                                : activity.status === 'Canceled'
+                                ? 'text-red-300 bg-red-500/10 border-red-500/50'
+                                : 'text-gray-300 bg-gray-500/10 border-gray-500/50'
+                            }`}
+                          >
+                            {activity.status}
+                          </Badge>
+                          <span className="text-purple-300 font-mono text-xs">
+                            {activity.amount}
+                          </span>
                         </div>
                       </div>
-                      <Badge
-                        variant="outline"
-                        className="border-purple-500/50 text-purple-300 bg-purple-500/10 px-4 py-2"
-                      >
-                        {activity.amount}
-                      </Badge>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-slate-400">No recent activity. Create your first event to get started!</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>

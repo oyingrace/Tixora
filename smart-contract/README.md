@@ -12,10 +12,8 @@ npx hardhat ignition deploy ignition/modules/EventTicketing.ts --network lisk_se
 
 Deployed Addresses
 
-EventTicketing#TicketNft - 0xc88229Ab87658823580E500aA4E4d5b48c10a604
-EventTicketing#EventTicketing - 0xA48c69773a797bE0a799237f2389ebf42551EF20
-EventTicketing#TicketResaleMarket - 0x9f7ABE0e663fA89506A2d227A7321a5dCb89D5E5
+EventTicketing#TicketNft - 0x3C4603b75EaB1dccC581Eefc2ac8A9FD99bFFb88
+EventTicketing#EventTicketing - 0xA4488a88Bc2508Ea3B80f262C35b886B6f99A5f6
+EventTicketing#TicketResaleMarket - 0x1a5CBd231304DED72beDe6edaf06c00C25011f4e
 
 ```
-
-Tixora - Where Every Ticket Tells a Story 🌟
