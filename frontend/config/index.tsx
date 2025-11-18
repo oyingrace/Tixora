@@ -3,7 +3,7 @@ import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { celoSepolia, baseSepolia } from '@reown/appkit/networks'
 
 // WalletConnect Project ID (from https://cloud.walletconnect.com/)
-export const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+export const projectId = process.env.NEXT_PUBLIC_PROJECT_ID // incase you experience issue with project ID, use NEXT_PUBLIC_PROJECT_ID as your var name in env
 
 if (!projectId) {
   throw new Error('Project ID is not defined')
