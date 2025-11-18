@@ -34,10 +34,12 @@ export default function Dashboard() {
     
     return tickets
       .filter(ticket => ticket.creator.toLowerCase() === address.toLowerCase())
+      .sort((a, b) => Number(b.eventTimestamp) - Number(a.eventTimestamp)) // Sort by timestamp in descending order
       .slice(0, 5)
       .map((ticket) => ({
         id: Number(ticket.id),
         action: ticket.canceled ? `Canceled ${ticket.eventName}` : `Created ${ticket.eventName}`,
+        timestamp: Number(ticket.eventTimestamp), // Keep timestamp for reference
         time: new Date(Number(ticket.eventTimestamp) * 1000).toLocaleDateString(),
         amount: `${formatEther(ticket.price)} CELO`,
         type: ticket.canceled ? "cancel" : "create",
