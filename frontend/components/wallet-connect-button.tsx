@@ -1,81 +1,31 @@
 "use client";
 
-import { useAccount, useDisconnect } from 'wagmi';
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { Button } from './ui/button';
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createAppKit, useAppKit } from '@reown/appkit/react';
-import { celo } from '@reown/appkit/networks';
-
-type AppKitInstance = ReturnType<typeof createAppKit>;
+import { useAppKit } from '@reown/appkit/react';
 
 export function WalletConnectButton() {
   const { isConnected, address } = useAccount();
+  const { connect, connectors, isLoading: isConnecting } = useConnect();
   const { disconnect } = useDisconnect();
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [appKit, setAppKit] = useState<AppKitInstance | null>(null);
-  const { connect, isConnected: isAppKitConnected } = useAppKit();
-
-  // Initialize AppKit
-  useEffect(() => {
-    // Ensure we're in the browser
-    if (typeof window === 'undefined') return;
-
-    const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
-    if (!projectId) {
-      console.error('WalletConnect project ID is not set');
-      return;
-    }
-
-    const appKitInstance = createAppKit({
-      projectId,
-      networks: [celo],
-      theme: 'dark',
-      appMetadata: {
-        name: 'Tixora',
-        description: 'Decentralized Event Ticketing Platform',
-        url: window.location.origin,
-        icons: [`${window.location.origin}/favicon.ico`],
-      },
-    });
-
-    setAppKit(appKitInstance);
-    setMounted(true);
-
-    // Cleanup on unmount
-    return () => {
-      if (appKitInstance) {
-        appKitInstance.disconnect();
-      }
-    };
-  }, []);
+  const { isConnected: isAppKitConnected } = useAppKit();
 
   // Handle wallet connection
   const handleConnect = async () => {
-    if (!appKit) return;
-    
     try {
-      setIsConnecting(true);
-      const result = await appKit.connect();
-      
-      if (result) {
-        router.refresh();
-      }
+      // Connect using the injected connector (MetaMask, etc.)
+      await connect({ connector: connectors[0] });
+      router.refresh();
     } catch (error) {
       console.error('Failed to connect wallet:', error);
-    } finally {
-      setIsConnecting(false);
     }
   };
 
   // Handle disconnect
   const handleDisconnect = async () => {
     try {
-      if (appKit) {
-        await appKit.disconnect();
-      }
       disconnect();
       router.refresh();
     } catch (error) {
@@ -88,14 +38,6 @@ export function WalletConnectButton() {
     if (!addr) return '';
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
   };
-
-  if (!mounted) {
-    return (
-      <Button disabled className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
-        Loading...
-      </Button>
-    );
-  }
 
   const isWalletConnected = isConnected || isAppKitConnected;
 
@@ -119,7 +61,7 @@ export function WalletConnectButton() {
       ) : (
         <Button
           onClick={handleConnect}
-          disabled={isConnecting || !appKit}
+          disabled={isConnecting}
           className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
         >
           {isConnecting ? 'Connecting...' : 'Connect Wallet'}
