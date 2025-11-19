@@ -311,11 +311,11 @@ export default function Marketplace() {
                       className={`h-8 px-6 transition-all duration-200 ${
                         isActive
                           ? `bg-gradient-to-r ${
-                              tab.color === "purple" ? "from-purple-600 to-pink-600" :
-                              tab.color === "green" ? "from-green-600 to-emerald-600" :
-                              tab.color === "red" ? "from-red-600 to-pink-600" :
-                              "from-gray-600 to-slate-600"
-                            } shadow-lg`
+                              tab.color === "purple" ? "from-purple-800 to-purple-700" :
+                              tab.color === "green" ? "from-green-800 to-green-700" :
+                              tab.color === "red" ? "from-red-800 to-red-700" :
+                              "from-gray-800 to-gray-700"
+                            } shadow-lg text-white`
                           : "text-slate-300 hover:text-white hover:bg-slate-700/50"
                       }`}
                     >
