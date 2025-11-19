@@ -473,9 +473,11 @@ export default function EventDetailPage() {
                     </div>
                     <div className="flex-1">
                       <p className="font-medium text-white">Event Creator</p>
-                      <p className="text-sm text-slate-400 font-mono break-all">
-                        {events?.creator || 'Unknown creator'}
-                      </p>
+                      <div className="relative w-full">
+                        <p className="text-sm text-slate-400 font-mono truncate max-w-[180px] md:max-w-[220px] lg:max-w-[280px] xl:max-w-[320px]" title={events?.creator || 'Unknown creator'}>
+                          {events?.creator || 'Unknown creator'}
+                        </p>
+                      </div>
                     </div>
                     <Badge variant="secondary" className="bg-green-500/20 text-green-400 border-green-500/30">
                       <CheckCircle className="w-3 h-3 mr-1" />
