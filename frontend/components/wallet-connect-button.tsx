@@ -3,16 +3,19 @@
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { Button } from './ui/button';
 import { useRouter } from 'next/navigation';
-import { useAppKit } from '@reown/appkit/react';
+import { useWeb3Modal } from '@/hooks/useWeb3Modal';
+import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 export function WalletConnectButton() {
   const { isConnected, address } = useAccount();
   const { connect, connectors, isLoading: isConnecting } = useConnect();
   const { disconnect } = useDisconnect();
   const router = useRouter();
-  const { isConnected: isAppKitConnected } = useAppKit();
+  const [modal, setModal] = useState(null);
+  const { initializeModal } = useWeb3Modal();
 
-  // Handle wallet connection
+  // Initialize modal only when needed
   const handleConnect = async () => {
     try {
       // Check if MetaMask is installed
@@ -23,13 +26,19 @@ export function WalletConnectButton() {
         await connect({ connector: connectors[0] });
         router.refresh();
       } else {
-        // Fallback to WalletConnect if MetaMask is not available
-        await connect({ connector: connectors[0] });
-        router.refresh();
+        // Use Web3Modal for other wallets
+        if (!modal) {
+          const newModal = initializeModal();
+          if (newModal) {
+            setModal(newModal);
+            newModal.openModal();
+          }
+        } else {
+          modal.openModal();
+        }
       }
     } catch (error) {
       console.error('Failed to connect wallet:', error);
-      // Show error toast to user
       toast.error('Failed to connect wallet. Please try again.');
     }
   };
@@ -38,11 +47,23 @@ export function WalletConnectButton() {
   const handleDisconnect = async () => {
     try {
       disconnect();
+      if (modal) {
+        modal.closeModal();
+      }
       router.refresh();
     } catch (error) {
       console.error('Failed to disconnect wallet:', error);
     }
   };
+
+  // Cleanup modal on unmount
+  useEffect(() => {
+    return () => {
+      if (modal) {
+        modal.closeModal();
+      }
+    };
+  }, [modal]);
 
   // Format wallet address for display
   const formatAddress = (addr: string) => {
@@ -50,11 +71,9 @@ export function WalletConnectButton() {
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
   };
 
-  const isWalletConnected = isConnected || isAppKitConnected;
-
   return (
     <div className="flex items-center gap-2">
-      {isWalletConnected && address ? (
+      {isConnected && address ? (
         <div className="flex items-center gap-3">
           <div className="hidden md:flex items-center px-3 py-1.5 rounded-full bg-slate-800/50 text-sm text-slate-200 border border-slate-700">
             <div className="w-2 h-2 rounded-full bg-green-400 mr-2"></div>
