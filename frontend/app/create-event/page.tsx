@@ -26,7 +26,7 @@ export default function CreateEvent() {
     location: "",
     price: "",
     totalSupply: "",
-    bannerImage: null as File | null,
+    // bannerImage: null as File | null, // Temporarily disabled as per issue #63
   })
   const { createTicket, hash, error, isPending, isConfirming, isConfirmed } = useEventTicketingSetters()
 
@@ -88,7 +88,8 @@ export default function CreateEvent() {
         BigInt(eventDateTime.getTime() / 1000),
         BigInt(totalSupply),
         JSON.stringify({
-          bannerImage: formData.bannerImage ? formData.bannerImage.name : "",
+          // bannerImage: formData.bannerImage ? formData.bannerImage.name : "", // Temporarily disabled as per issue #63
+          bannerImage: "",
           date: formData.date,
           time: formData.time
         }),
@@ -244,6 +245,7 @@ export default function CreateEvent() {
                       <p className="text-slate-400 text-sm">Where will your event take place?</p>
                     </div>
 
+                    {/* Temporarily disabled as per issue #63
                     <div className="space-y-2">
                       <Label htmlFor="banner" className="text-blue-200 font-medium flex items-center gap-2">
                         <Image className="h-4 w-4" />
@@ -267,6 +269,7 @@ export default function CreateEvent() {
                         />
                       </div>
                     </div>
+                    */}
                   </CardContent>
                 </Card>
               </div>
