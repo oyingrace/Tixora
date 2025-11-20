@@ -2,11 +2,11 @@
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import { WalletConnectButton } from "./wallet-connect-button"
+import WalletConnectButton from "./wallet-connect-button"
 import { NetworkSwitcher } from "./network-switcher"
 import { useAccount } from "wagmi"
 import { useState, useEffect, useRef } from "react"
-import { ChevronDown, Menu, X } from "lucide-react"
+import { Menu, X } from "lucide-react"
 
 const navLinks = [
   { name: "Dashboard", path: "/dashboard", requiresAuth: true },

@@ -1,24 +1,28 @@
 import { cookieStorage, createStorage } from 'wagmi'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { celoSepolia, baseSepolia } from '@reown/appkit/networks'
+import type { AppKitNetwork } from '@reown/appkit/networks'
 
 // Get projectId from https://dashboard.reown.com
-export const projectId = process.env.NEXT_PUBLIC_PROJECT_ID
+const projectId = process.env.NEXT_PUBLIC_PROJECT_ID
 
 if (!projectId) {
-  throw new Error('Project ID is not defined')
+  throw new Error('NEXT_PUBLIC_PROJECT_ID is not defined')
 }
 
-export const networks = [celoSepolia, baseSepolia]
+// Define networks with proper typing
+export const networks = [celoSepolia, baseSepolia] as [AppKitNetwork, ...AppKitNetwork[]]
 
-//Set up the Wagmi Adapter (Config)
+// Set up the Wagmi Adapter (Config)
 export const wagmiAdapter = new WagmiAdapter({
   storage: createStorage({
-    storage: cookieStorage
+    storage: cookieStorage,
   }),
   ssr: true,
   projectId,
-  networks
+  networks,
 })
 
+// Export config and projectId for use in other parts of the app
 export const config = wagmiAdapter.wagmiConfig
+export { projectId }
