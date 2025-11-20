@@ -16,10 +16,10 @@ if (!projectId) {
 
 // Set up metadata
 const metadata = {
-  name: 'Tixora - Decentralized Event Ticketing',
-  description: 'NFT-based event ticketing platform built on Ethereum',
-  url: 'https://tixora-tickets.vercel.app/',
-  icons: ['/favicon.ico']
+  name: 'appkit-example',
+  description: 'AppKit Example',
+  url: 'https://appkitexampleapp.com', // origin must match your domain & subdomain
+  icons: ['https://avatars.githubusercontent.com/u/179229932']
 }
 
 // Create the modal
@@ -39,7 +39,9 @@ function ContextProvider({ children, cookies }: { children: ReactNode; cookies: 
 
   return (
     <WagmiProvider config={wagmiAdapter.wagmiConfig as Config} initialState={initialState}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
     </WagmiProvider>
   )
 }

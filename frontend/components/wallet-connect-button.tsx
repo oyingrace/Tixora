@@ -1,48 +1,22 @@
 "use client";
 
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { useAccount, useConnect } from 'wagmi';
 import { Button } from './ui/button';
-import { useRouter } from 'next/navigation';
-import { useAppKitAccount } from '@reown/appkit/react';
-import { toast } from 'react-toastify';
+import { useAppKitAccount, useAppKit } from '@reown/appkit/react';
 
 export function WalletConnectButton() {
   const { isConnected, address } = useAccount();
-  const { connect, connectors, isPending: isConnecting } = useConnect();
-  const { disconnect } = useDisconnect();
-  const router = useRouter();
+  const { open } = useAppKit();
+  const { isPending: isConnecting } = useConnect();
   const { isConnected: isAppKitAccountConnected } = useAppKitAccount();
 
 
   // Handle wallet connection
-  const handleConnect = async () => {
-    try {
-      // Check if MetaMask is installed
-      if (window.ethereum?.isMetaMask) {
-        // Request accounts access
-        await (window.ethereum as any).request({ method: 'eth_requestAccounts' });
-        // Connect using the injected connector
-        await connect({ connector: connectors[0] });
-        router.refresh();
-      } else {
-        // Fallback to WalletConnect if MetaMask is not available
-        await connect({ connector: connectors[0] });
-        router.refresh();
-      }
-    } catch (error) {
-      console.error('Failed to connect wallet:', error);
-      // Show error toast to user
-      toast.error('Failed to connect wallet. Please try again.');
-    }
-  };
-
-  // Handle disconnect
-  const handleDisconnect = async () => {
-    try {
-      disconnect();
-      router.refresh();
-    } catch (error) {
-      console.error('Failed to disconnect wallet:', error);
+  const handleConnect = () => {
+    if (!isConnected && !isAppKitAccountConnected) {
+      open({ view: "Connect" });
+    } else {
+      open({ view: "Account" });
     }
   };
 
@@ -62,14 +36,6 @@ export function WalletConnectButton() {
             <div className="w-2 h-2 rounded-full bg-green-400 mr-2"></div>
             {formatAddress(address)}
           </div>
-          <Button
-            onClick={handleDisconnect}
-            variant="outline"
-            className="border-purple-500 text-purple-400 hover:bg-purple-500/10 hover:text-purple-300"
-            disabled={isConnecting}
-          >
-            Disconnect
-          </Button>
         </div>
       ) : (
         <Button
