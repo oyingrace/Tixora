@@ -21,6 +21,7 @@ interface TransferTicketModalProps {
   onClose: () => void
   tokenId: bigint
   eventName: string
+  isActive: boolean
   onTransferSuccess?: () => void
 }
 
@@ -29,6 +30,7 @@ export function TransferTicketModal({
   onClose,
   tokenId,
   eventName,
+  isActive,
   onTransferSuccess
 }: TransferTicketModalProps) {
   const [recipientAddress, setRecipientAddress] = useState("")
@@ -81,6 +83,11 @@ export function TransferTicketModal({
   }, [error])
 
   const handleTransfer = () => {
+    if (!isActive) {
+      toast.error("Cannot transfer an inactive or expired ticket")
+      return
+    }
+
     if (!recipientAddress || addressError) {
       toast.error("Please enter a valid recipient address")
       return
@@ -115,7 +122,9 @@ export function TransferTicketModal({
         <DialogHeader>
           <DialogTitle className="text-white">Transfer Ticket</DialogTitle>
           <DialogDescription className="text-slate-400">
-            Transfer your ticket for {eventName} to another address
+            {isActive 
+              ? `Transfer your ticket for ${eventName} to another address`
+              : `This ticket for ${eventName} is no longer active and cannot be transferred.`}
           </DialogDescription>
         </DialogHeader>
         
@@ -177,8 +186,9 @@ export function TransferTicketModal({
           </Button>
           <Button
             onClick={handleTransfer}
-            disabled={isPending || isConfirming || !recipientAddress || !!addressError}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+            disabled={!isActive || isPending || isConfirming || !recipientAddress || !!addressError}
+            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white disabled:opacity-50 disabled:pointer-events-none"
+            title={!isActive ? "This ticket is no longer active and cannot be transferred" : undefined}
           >
             {isPending || isConfirming ? (
               <>

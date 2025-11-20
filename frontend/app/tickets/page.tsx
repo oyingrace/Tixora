@@ -364,7 +364,9 @@ export default function TicketsPage() {
                       <ExternalLink className="w-5 h-5 text-blue-400" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-white">{userTickets.length}</p>
+                      <p className="text-2xl font-bold text-white">
+                        {userTickets.filter(t => t.status === "upcoming").length}
+                      </p>
                       <p className="text-sm text-slate-400">Transferable</p>
                     </div>
                   </div>
@@ -702,6 +704,7 @@ export default function TicketsPage() {
             onClose={() => setCurrentAction(null)}
             tokenId={selectedTicket.tokenId}
             eventName={selectedTicket.eventTitle}
+            isActive={selectedTicket.status === 'upcoming'}
             onTransferSuccess={() => {
               toast.success('Ticket transferred successfully!')
               setCurrentAction(null)

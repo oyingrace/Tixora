@@ -87,14 +87,14 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 text-foreground pt-12 px-20">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 text-foreground pt-12 px-4 md:px-8 lg:px-20">
       <div className="pb-16 px-4">
         <div className="container mx-auto max-w-7xl">
           {/* Welcome Section */}
-          <div className="mb-8">
-            <h1 className="text-5xl font-bold mb-3">
-              Welcome back,{" "}
-              <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+          <div className="mb-10 p-6 bg-slate-800/30 backdrop-blur-sm rounded-xl border border-slate-700/50 mb-10">
+            <h1 className="text-4xl md:text-5xl font-bold mb-3">
+              Welcome back, {" "}
+              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                 {shortAddress}
               </span>
             </h1>
@@ -104,8 +104,8 @@ export default function Dashboard() {
           <Statistics />
 
           {/* Quick Action Cards */}
-          <div className="mb-10">
-            <h2 className="text-2xl font-semibold mb-3 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+          <div className="mb-12">
+            <h2 className="text-2xl font-semibold mb-6 text-slate-200">
               Quick Actions
             </h2>
             <div className="grid md:grid-cols-3 gap-8 px-6">
@@ -113,8 +113,8 @@ export default function Dashboard() {
                 const Icon = action.icon
                 return (
                   <Link key={index} href={action.href}>
-                    <Card className="group cursor-pointer bg-gradient-to-br from-slate-800/80 to-purple-900/30 border-purple-500/30 overflow-hidden relative hover:border-purple-400/60 transition-all duration-300">
-                      <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-5 group-hover:opacity-10 transition-opacity`} />
+                    <Card className="group cursor-pointer bg-slate-800/50 border-slate-700/50 overflow-hidden relative hover:border-slate-600/60 transition-all duration-300">
+                      <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-5 transition-opacity`} />
                       <CardContent className="p-6 text-center relative z-10">
                         <div
                           className={`w-15 h-15 rounded-full bg-gradient-to-br ${action.gradient} flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform`}
@@ -133,7 +133,7 @@ export default function Dashboard() {
 
           {/* Recent Activity Section */}
           <div className="px-6">
-            <Card className="bg-gradient-to-br from-slate-800/80 to-purple-900/30 border-purple-500/30">
+            <Card className="bg-slate-800/50 border-slate-700/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-3 text-white text-xl">
                   <Activity className="h-6 w-6 text-purple-400" />

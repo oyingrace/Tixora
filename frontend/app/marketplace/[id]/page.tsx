@@ -66,10 +66,9 @@ export default function EventDetailPage() {
     try {
       await navigator.clipboard.writeText(text)
       setCopiedField(field)
-      toast.success(`${field} copied to clipboard!`)
       setTimeout(() => setCopiedField(null), 2000)
-    } catch {
-      toast.error("Failed to copy to clipboard")
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error)
     }
   }
 
@@ -473,9 +472,11 @@ export default function EventDetailPage() {
                     </div>
                     <div className="flex-1">
                       <p className="font-medium text-white">Event Creator</p>
-                      <p className="text-sm text-slate-400 font-mono break-all">
-                        {events?.creator || 'Unknown creator'}
-                      </p>
+                      <div className="relative w-full">
+                        <p className="text-sm text-slate-400 font-mono truncate max-w-[180px] md:max-w-[220px] lg:max-w-[280px] xl:max-w-[320px]" title={events?.creator || 'Unknown creator'}>
+                          {events?.creator || 'Unknown creator'}
+                        </p>
+                      </div>
                     </div>
                     <Badge variant="secondary" className="bg-green-500/20 text-green-400 border-green-500/30">
                       <CheckCircle className="w-3 h-3 mr-1" />
@@ -533,7 +534,7 @@ export default function EventDetailPage() {
                   <div className="pt-4 border-t border-slate-700">
                     <Button 
                       onClick={handleBuyTicket}
-                      className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-12 text-base transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/25"
+                      className="w-full bg-purple-600 hover:bg-purple-700 h-12 text-base transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/25"
                       disabled={!isCorrectNetwork || events?.status === 'canceled' || events?.status === 'closed' || (events?.ticketsLeft ?? 0) <= 0 || events?.status === 'passed' || events?.status === 'registered' || isProcessing || checkingRegistration || isRegistered }
                     >
                       {checkingRegistration ? (

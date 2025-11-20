@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import { useAccount, useConnect } from 'wagmi';
 import { Button } from './ui/button';
@@ -18,19 +18,28 @@ export function WalletConnectButton() {
     } else {
       open({ view: "Account" });
     }
-  };
+  }, [modal])
+
+  // Cleanup modal on unmount
+  useEffect(() => {
+    return () => {
+      if (modal) {
+        modal.closeModal();
+      }
+    };
+  }, [modal]);
 
   // Format wallet address for display
   const formatAddress = (addr: string) => {
-    if (!addr) return '';
-    return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
-  };
+    if (!addr) return ''
+    return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`
+  }
 
   const isWalletConnected = isConnected || isAppKitAccountConnected;
 
   return (
     <div className="flex items-center gap-2">
-      {isWalletConnected && address ? (
+      {isConnected && address ? (
         <div className="flex items-center gap-3">
           <div className="hidden md:flex items-center px-3 py-1.5 rounded-full bg-slate-800/50 text-sm text-slate-200 border border-slate-700">
             <div className="w-2 h-2 rounded-full bg-green-400 mr-2"></div>
@@ -40,12 +49,23 @@ export function WalletConnectButton() {
       ) : (
         <Button
           onClick={handleConnect}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
           disabled={isConnecting}
-          className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+          className={`bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white ${
+            isTouching ? 'from-purple-700 to-blue-700 scale-95' : ''
+          }`}
+          style={{
+            WebkitTapHighlightColor: 'transparent',
+            touchAction: 'manipulation',
+            minHeight: '44px',
+            minWidth: '44px',
+            padding: '0.5rem 1rem'
+          }}
         >
           {isConnecting ? 'Connecting...' : 'Connect Wallet'}
         </Button>
       )}
     </div>
-  );
+  )
 }

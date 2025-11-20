@@ -311,11 +311,11 @@ export default function Marketplace() {
                       className={`h-8 px-6 transition-all duration-200 ${
                         isActive
                           ? `bg-gradient-to-r ${
-                              tab.color === "purple" ? "from-purple-600 to-pink-600" :
-                              tab.color === "green" ? "from-green-600 to-emerald-600" :
-                              tab.color === "red" ? "from-red-600 to-pink-600" :
-                              "from-gray-600 to-slate-600"
-                            } shadow-lg`
+                              tab.color === "purple" ? "from-purple-800 to-purple-700" :
+                              tab.color === "green" ? "from-green-800 to-green-700" :
+                              tab.color === "red" ? "from-red-800 to-red-700" :
+                              "from-gray-800 to-gray-700"
+                            } shadow-lg text-white`
                           : "text-slate-300 hover:text-white hover:bg-slate-700/50"
                       }`}
                     >
@@ -424,51 +424,51 @@ export default function Marketplace() {
           {/* Platform Stats */}
           {!loading && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 border-t border-slate-600/50 pt-8">
-              <Card className="bg-gradient-to-br from-slate-800/60 to-purple-900/30 border-purple-500/30 backdrop-blur-sm hover:border-purple-400/50 transition-all duration-300">
-                <CardContent className="p-2 text-center">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-2">
-                    <Calendar className="h-6 w-6 text-white" />
+              <Card className="bg-slate-800/80 border-slate-700 hover:border-purple-500 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20">
+                <CardContent className="p-4 text-center">
+                  <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center mx-auto mb-3 group-hover:bg-purple-500/30 transition-colors">
+                    <Calendar className="h-6 w-6 text-purple-400 group-hover:text-purple-300 transition-colors" />
                   </div>
-                  <div className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+                  <div className="text-3xl font-bold text-white mb-2 group-hover:text-purple-300 transition-colors">
                     {totalTickets ? Number(totalTickets) : 0}
                   </div>
-                  <div className="text-slate-400 text-base font-medium">Total Events Created</div>
+                  <div className="text-slate-400 text-sm font-medium group-hover:text-slate-300 transition-colors">Total Events Created</div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-slate-800/60 to-green-900/30 border-green-500/30 backdrop-blur-sm hover:border-green-400/50 transition-all duration-300">
-                <CardContent className="p-2 text-center">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center mx-auto mb-2">
-                    <TrendingUp className="h-6 w-6 text-white" />
+              <Card className="bg-slate-800/80 border-slate-700 hover:border-green-500 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/20">
+                <CardContent className="p-4 text-center">
+                  <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-3 group-hover:bg-green-500/30 transition-colors">
+                    <TrendingUp className="h-6 w-6 text-green-400 group-hover:text-green-300 transition-colors" />
                   </div>
-                  <div className="text-2xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent mb-2">
+                  <div className="text-3xl font-bold text-white mb-2 group-hover:text-green-300 transition-colors">
                     {events.filter(e => e.status === "upcoming").length}
                   </div>
-                  <div className="text-slate-400 text-base font-medium">Active Events</div>
+                  <div className="text-slate-400 text-sm font-medium group-hover:text-slate-300 transition-colors">Active Events</div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-slate-800/60 to-blue-900/30 border-blue-500/30 backdrop-blur-sm hover:border-blue-400/50 transition-all duration-300">
-                <CardContent className="p-2 text-center">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center mx-auto mb-2">
-                    <Users className="h-6 w-6 text-white" />
+              <Card className="bg-slate-800/80 border-slate-700 hover:border-blue-500 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20">
+                <CardContent className="p-4 text-center">
+                  <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto mb-3 group-hover:bg-blue-500/30 transition-colors">
+                    <Users className="h-6 w-6 text-blue-400 group-hover:text-blue-300 transition-colors" />
                   </div>
-                  <div className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
+                  <div className="text-3xl font-bold text-white mb-2 group-hover:text-blue-300 transition-colors">
                     {events.reduce((sum, e) => sum + e.attendees, 0).toLocaleString()}
                   </div>
-                  <div className="text-slate-400 text-base font-medium">Total Capacity</div>
+                  <div className="text-slate-400 text-sm font-medium group-hover:text-slate-300 transition-colors">Total Capacity</div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-slate-800/60 to-yellow-900/30 border-yellow-500/30 backdrop-blur-sm hover:border-yellow-400/50 transition-all duration-300">
-                <CardContent className="p-2 text-center">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 flex items-center justify-center mx-auto mb-2">
-                    <Sparkles className="h-6 w-6 text-white" />
+              <Card className="bg-slate-800/80 border-slate-700 hover:border-yellow-500 transition-all duration-300 hover:shadow-lg hover:shadow-yellow-500/20">
+                <CardContent className="p-4 text-center">
+                  <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-3 group-hover:bg-yellow-500/30 transition-colors">
+                    <Sparkles className="h-6 w-6 text-yellow-400 group-hover:text-yellow-300 transition-colors" />
                   </div>
-                  <div className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent mb-2">
+                  <div className="text-3xl font-bold text-white mb-2 group-hover:text-yellow-300 transition-colors">
                     Zero
                   </div>
-                  <div className="text-slate-400 text-base font-medium">Fraud Cases</div>
+                  <div className="text-slate-400 text-sm font-medium group-hover:text-slate-300 transition-colors">Fraud Cases</div>
                 </CardContent>
               </Card>
             </div>
