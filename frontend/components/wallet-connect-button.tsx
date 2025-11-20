@@ -3,14 +3,16 @@
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { Button } from './ui/button';
 import { useRouter } from 'next/navigation';
-import { useAppKit } from '@reown/appkit/react';
+import { useAppKitAccount } from '@reown/appkit/react';
+import { toast } from 'react-toastify';
 
 export function WalletConnectButton() {
   const { isConnected, address } = useAccount();
-  const { connect, connectors, isLoading: isConnecting } = useConnect();
+  const { connect, connectors, isPending: isConnecting } = useConnect();
   const { disconnect } = useDisconnect();
   const router = useRouter();
-  const { isConnected: isAppKitConnected } = useAppKit();
+  const { isConnected: isAppKitAccountConnected } = useAppKitAccount();
+
 
   // Handle wallet connection
   const handleConnect = async () => {
@@ -18,7 +20,7 @@ export function WalletConnectButton() {
       // Check if MetaMask is installed
       if (window.ethereum?.isMetaMask) {
         // Request accounts access
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        await (window.ethereum as any).request({ method: 'eth_requestAccounts' });
         // Connect using the injected connector
         await connect({ connector: connectors[0] });
         router.refresh();
@@ -50,7 +52,7 @@ export function WalletConnectButton() {
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
   };
 
-  const isWalletConnected = isConnected || isAppKitConnected;
+  const isWalletConnected = isConnected || isAppKitAccountConnected;
 
   return (
     <div className="flex items-center gap-2">
