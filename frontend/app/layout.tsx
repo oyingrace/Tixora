@@ -35,7 +35,7 @@ export default async function RootLayout({
     <html 
       lang="en" 
       className={`${GeistSans.variable} ${GeistMono.variable} ${inter.variable}`}
-      suppressHydrationWarning
+      // suppressHydrationWarning
     >
       <body className="font-sans bg-background text-foreground">
         <ContextProvider cookies={cookies}>

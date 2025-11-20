@@ -1,75 +1,22 @@
 "use client"
 
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { useAccount, useConnect } from 'wagmi';
 import { Button } from './ui/button';
-import { useRouter } from 'next/navigation';
-import { useAppKitAccount } from '@reown/appkit/react';
-import { toast } from 'react-toastify';
+import { useAppKitAccount, useAppKit } from '@reown/appkit/react';
 
 export function WalletConnectButton() {
   const { isConnected, address } = useAccount();
-  const { connect, connectors, isPending: isConnecting } = useConnect();
-  const { disconnect } = useDisconnect();
-  const router = useRouter();
+  const { open } = useAppKit();
+  const { isPending: isConnecting } = useConnect();
   const { isConnected: isAppKitAccountConnected } = useAppKitAccount();
 
 
   // Handle wallet connection
-  const handleConnect = useCallback(async (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
-    try {
-      // Check if MetaMask is installed
-      if (window.ethereum?.isMetaMask) {
-        // Request accounts access
-        await (window.ethereum as any).request({ method: 'eth_requestAccounts' });
-        // Connect using the injected connector
-        await connect({ connector: connectors[0] })
-        router.refresh()
-      } else {
-        // Use Web3Modal for other wallets
-        if (!modal) {
-          const newModal = initializeModal()
-          if (newModal) {
-            setModal({
-              openModal: () => newModal.openModal(),
-              closeModal: () => newModal.closeModal()
-            })
-            newModal.openModal()
-          }
-        } else {
-          modal.openModal()
-        }
-      }
-    } catch (error) {
-      console.error('Failed to connect wallet:', error)
-      toast.error('Failed to connect wallet. Please try again.')
-    }
-  }, [connect, connectors, initializeModal, modal, router])
-
-  // Handle disconnect
-  const handleDisconnect = useCallback(async (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
-    try {
-      disconnect()
-      if (modal) {
-        modal.closeModal()
-      }
-      router.refresh()
-    } catch (error) {
-      console.error('Failed to disconnect wallet:', error)
-    }
-  }, [disconnect, modal, router])
-
-  // Cleanup modal on unmount
-  useEffect(() => {
-    return () => {
-      if (modal) {
-        modal.closeModal()
-      }
+  const handleConnect = () => {
+    if (!isConnected && !isAppKitAccountConnected) {
+      open({ view: "Connect" });
+    } else {
+      open({ view: "Account" });
     }
   }, [modal])
 
@@ -98,18 +45,6 @@ export function WalletConnectButton() {
             <div className="w-2 h-2 rounded-full bg-green-400 mr-2"></div>
             {formatAddress(address)}
           </div>
-          <Button
-            onClick={handleDisconnect}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-            variant="outline"
-            className={`border-purple-500 text-purple-400 hover:bg-purple-500/10 hover:text-purple-300 ${
-              isTouching ? 'bg-purple-500/20' : ''
-            }`}
-            disabled={isConnecting}
-          >
-            Disconnect
-          </Button>
         </div>
       ) : (
         <Button
