@@ -101,6 +101,15 @@ export function WalletConnectButton() {
     }
   }, [modal])
 
+  // Cleanup modal on unmount
+  useEffect(() => {
+    return () => {
+      if (modal) {
+        modal.closeModal();
+      }
+    };
+  }, [modal]);
+
   // Format wallet address for display
   const formatAddress = (addr: string) => {
     if (!addr) return ''
