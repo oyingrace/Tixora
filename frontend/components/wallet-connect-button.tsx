@@ -2,32 +2,22 @@
 
 import { useAccount, useConnect } from 'wagmi';
 import { Button } from './ui/button';
-import { useAppKitAccount, useAppKit } from '@reown/appkit/react';
+import { useAppKit } from '@reown/appkit/react';
 
 export function WalletConnectButton() {
   const { isConnected, address } = useAccount();
   const { open } = useAppKit();
   const { isPending: isConnecting } = useConnect();
-  const { isConnected: isAppKitAccountConnected } = useAppKitAccount();
 
 
   // Handle wallet connection
   const handleConnect = () => {
-    if (!isConnected && !isAppKitAccountConnected) {
+    if (!isConnected) {
       open({ view: "Connect" });
     } else {
       open({ view: "Account" });
     }
-  }, [modal])
-
-  // Cleanup modal on unmount
-  useEffect(() => {
-    return () => {
-      if (modal) {
-        modal.closeModal();
-      }
-    };
-  }, [modal]);
+  }
 
   // Format wallet address for display
   const formatAddress = (addr: string) => {
@@ -35,7 +25,7 @@ export function WalletConnectButton() {
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`
   }
 
-  const isWalletConnected = isConnected || isAppKitAccountConnected;
+  const isWalletConnected = isConnected;
 
   return (
     <div className="flex items-center gap-2">
@@ -49,12 +39,8 @@ export function WalletConnectButton() {
       ) : (
         <Button
           onClick={handleConnect}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
           disabled={isConnecting}
-          className={`bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white ${
-            isTouching ? 'from-purple-700 to-blue-700 scale-95' : ''
-          }`}
+          className={`bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white`}
           style={{
             WebkitTapHighlightColor: 'transparent',
             touchAction: 'manipulation',
