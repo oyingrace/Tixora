@@ -1,46 +1,18 @@
 "use client"
 
-import { useAccount, useConnect, useDisconnect } from 'wagmi'
-import { Button } from './ui/button'
-import { useRouter } from 'next/navigation'
-import { useWeb3Modal } from '@/hooks/useWeb3Modal'
-import { useEffect, useState, useCallback } from 'react'
-import { toast } from 'react-toastify'
-
-// Extend the Window interface to include ethereum
-declare global {
-  interface Window {
-    ethereum?: {
-      isMetaMask?: boolean;
-      request?: (request: { method: string; params?: any[] }) => Promise<any>;
-    };
-  }
-}
-
-interface Web3Modal {
-  openModal: () => void;
-  closeModal: () => void;
-}
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { Button } from './ui/button';
+import { useRouter } from 'next/navigation';
+import { useAppKitAccount } from '@reown/appkit/react';
+import { toast } from 'react-toastify';
 
 export function WalletConnectButton() {
-  const { isConnected, address } = useAccount()
-  const { connect, connectors, isPending: isConnecting } = useConnect()
-  const { disconnect } = useDisconnect()
-  const router = useRouter()
-  const [modal, setModal] = useState<Web3Modal | null>(null)
-  const [isTouching, setIsTouching] = useState(false)
-  const { initializeModal } = useWeb3Modal()
+  const { isConnected, address } = useAccount();
+  const { connect, connectors, isPending: isConnecting } = useConnect();
+  const { disconnect } = useDisconnect();
+  const router = useRouter();
+  const { isConnected: isAppKitAccountConnected } = useAppKitAccount();
 
-  // Handle touch events
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    e.preventDefault()
-    setIsTouching(true)
-  }, [])
-
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    e.preventDefault()
-    setIsTouching(false)
-  }, [])
 
   // Handle wallet connection
   const handleConnect = useCallback(async (e: React.MouseEvent | React.TouchEvent) => {
@@ -51,7 +23,7 @@ export function WalletConnectButton() {
       // Check if MetaMask is installed
       if (window.ethereum?.isMetaMask) {
         // Request accounts access
-        await window.ethereum.request?.({ method: 'eth_requestAccounts' })
+        await (window.ethereum as any).request({ method: 'eth_requestAccounts' });
         // Connect using the injected connector
         await connect({ connector: connectors[0] })
         router.refresh()
@@ -116,78 +88,7 @@ export function WalletConnectButton() {
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`
   }
 
-  // Memoized connect handler
-  const handleConnect = useCallback(async (event) => {
-    event?.preventDefault?.()
-    event?.stopPropagation?.()
-    
-    try {
-      // Check if MetaMask is installed
-      if (window.ethereum?.isMetaMask) {
-        // Request accounts access
-        await window.ethereum.request({ method: 'eth_requestAccounts' })
-        // Connect using the injected connector
-        await connect({ connector: connectors[0] })
-        router.refresh()
-      } else {
-        // Use Web3Modal for other wallets
-        if (!modal) {
-          const newModal = initializeModal()
-          if (newModal) {
-            setModal(newModal)
-            newModal.openModal()
-          }
-        } else {
-          modal.openModal()
-        }
-      }
-    } catch (error) {
-      console.error('Failed to connect wallet:', error)
-      toast.error('Failed to connect wallet. Please try again.')
-    }
-  }, [connect, connectors, initializeModal, modal, router])
-
-  // Handle disconnect
-  const handleDisconnect = useCallback(async (event) => {
-    event?.preventDefault?.()
-    event?.stopPropagation?.()
-    
-    try {
-      disconnect()
-      if (modal) {
-        modal.closeModal()
-      }
-      router.refresh()
-    } catch (error) {
-      console.error('Failed to disconnect wallet:', error)
-    }
-  }, [disconnect, modal, router])
-
-  // Touch event handlers
-  const handleTouchStart = useCallback((e) => {
-    e.preventDefault()
-    setIsTouching(true)
-  }, [])
-
-  const handleTouchEnd = useCallback((e) => {
-    e.preventDefault()
-    setIsTouching(false)
-  }, [])
-
-  // Cleanup modal on unmount
-  useEffect(() => {
-    return () => {
-      if (modal) {
-        modal.closeModal()
-      }
-    }
-  }, [modal])
-
-  // Format wallet address for display
-  const formatAddress = (addr: string) => {
-    if (!addr) return ''
-    return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`
-  }
+  const isWalletConnected = isConnected || isAppKitAccountConnected;
 
   return (
     <div className="flex items-center gap-2">
