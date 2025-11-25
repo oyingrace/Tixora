@@ -5,8 +5,11 @@ import Image from "next/image"
 import WalletConnectButton from "./wallet-connect-button"
 import { NetworkSwitcher } from "./network-switcher"
 import { useAccount } from "wagmi"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, ChevronDown } from "react"
 import { Menu, X } from "lucide-react"
+
+import { CustomConnectButton } from './CustomConnectButton'
+import { CustomNetworkButton } from './CustomNetworkButton'
 
 const navLinks = [
   { name: "Dashboard", path: "/dashboard", requiresAuth: true },
@@ -130,44 +133,82 @@ export default function Header() {
 
         <div className="flex items-center space-x-4">
           <div className="hidden md:block">
-            <NetworkSwitcher />
+            <CustomNetworkButton />
           </div>
-
-          <div ref={dropdownRef} className="relative">
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={toggleDropdown}
+              className="flex items-center space-x-1 text-slate-300 hover:text-purple-400 transition-colors md:hidden"
+            >
+              <span>Menu</span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${
+                isDropdownOpen ? 'transform rotate-180' : ''
+              }`} />
+            </button>
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-slate-800 rounded-md shadow-lg py-2 z-50 flex flex-col space-y-1">
-                {renderLinks(() => setIsDropdownOpen(false))}
+              <div className="absolute right-0 mt-2 w-48 bg-slate-800 rounded-md shadow-lg py-1 z-50">
+                {isConnected && (
+                  <>
+                    <Link
+                      href="/dashboard"
+                      className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
+                      onClick={handleDropdownLinkClick}
+                    >
+                      Dashboard
+                    </Link>
+                    <Link
+                      href="/tickets"
+                      className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
+                      onClick={handleDropdownLinkClick}
+                    >
+                      My Tickets
+                    </Link>
+                    <Link
+                      href="/create-event"
+                      className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
+                      onClick={handleDropdownLinkClick}
+                    >
+                      Create Event
+                    </Link>
+                    <div className="border-t border-slate-700 my-1"></div>
+                  </>
+                )}
+                <div className="px-4 py-2">
+                  <CustomNetworkButton />
+                </div>
+                <Link
+                  href="/marketplace"
+                  className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
+                  onClick={handleDropdownLinkClick}
+                >
+                  Marketplace
+                </Link>
+                <Link
+                  href="https://github.com/DIFoundation/Tixora/blob/main/README.md"
+                  target="_blank"
+                  className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
+                  onClick={handleDropdownLinkClick}
+                >
+                  Docs
+                </Link>
+                <Link
+                  href="/resources"
+                  className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
+                  onClick={handleDropdownLinkClick}
+                >
+                  Resources
+                </Link>
+                <Link
+                  href="/#how-it-works"
+                  className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
+                  onClick={handleDropdownLinkClick}
+                >
+                  How It Works
+                </Link>
               </div>
             )}
           </div>
-
-          <div className="hidden md:block">
-            <WalletConnectButton />
-          </div>
-          <button
-            aria-label="Toggle menu"
-            onClick={mobileToggle}
-            className="md:hidden text-slate-300 hover:text-purple-400"
-          >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-      </div>
-
-      <div
-        ref={mobileRef}
-        className={`md:hidden bg-slate-900/95 backdrop-blur-lg overflow-hidden transition-all duration-300 ${isMobileMenuOpen ? "max-h-96 py-4 border-t border-slate-800" : "max-h-0 py-0"
-          }`}
-      >
-        <div className="container mx-auto px-4 flex flex-col space-y-4">
-          {renderLinks(() => setIsMobileMenuOpen(false))}
-
-          <div className="pt-2 space-y-2">
-            <NetworkSwitcher />
-            <div className="md:hidden">
-              <WalletConnectButton />
-            </div>
-          </div>
+          <CustomConnectButton />
         </div>
       </div>
     </header>
