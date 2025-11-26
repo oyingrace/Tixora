@@ -1,17 +1,19 @@
 import { cookieStorage, createStorage } from 'wagmi'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { celoSepolia, baseSepolia } from '@reown/appkit/networks'
+import type { AppKitNetwork } from '@reown/appkit/networks'
 
-// WalletConnect Project ID (from https://cloud.walletconnect.com/)
-export const projectId = process.env.NEXT_PUBLIC_PROJECT_ID // incase you experience issue with project ID, use NEXT_PUBLIC_PROJECT_ID as your var name in env
+// Get projectId from https://dashboard.reown.com
+const projectId = process.env.NEXT_PUBLIC_PROJECT_ID
 
 if (!projectId) {
-  throw new Error('Project ID is not defined')
+  throw new Error('NEXT_PUBLIC_PROJECT_ID is not defined')
 }
 
-export const networks = [celoSepolia, baseSepolia]
+// Define networks with proper typing
+export const networks = [celoSepolia, baseSepolia] as [AppKitNetwork, ...AppKitNetwork[]]
 
-// ✅ Correctly create the Wagmi Adapter
+// Set up the Wagmi Adapter (Config)
 export const wagmiAdapter = new WagmiAdapter({
   storage: createStorage({
     storage: cookieStorage,
@@ -21,5 +23,6 @@ export const wagmiAdapter = new WagmiAdapter({
   networks,
 })
 
-// Optional convenience export
+// Export config and projectId for use in other parts of the app
 export const config = wagmiAdapter.wagmiConfig
+export { projectId }

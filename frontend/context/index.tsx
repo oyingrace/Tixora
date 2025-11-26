@@ -16,9 +16,9 @@ if (!projectId) {
 
 // Set up metadata
 const metadata = {
-  name: 'Tixora - Decentralized Event Ticketing',
-  description: 'NFT-based event ticketing platform built on Ethereum',
-  url: 'https://tixora-tickets.vercel.app/',
+  name: 'Tixora Tickets',
+  description: 'Decentralized Event Ticketing Platform',
+  url: 'https://tixora-tickets.vercel.app',
   icons: ['/favicon.ico']
 }
 
@@ -30,16 +30,28 @@ const modal = createAppKit({
   defaultNetwork: celoSepolia,
   metadata: metadata,
   features: {
-    analytics: true // Optional - defaults to your Cloud configuration
-  }
+    analytics: true, // Optional - defaults to your Cloud configuration
+    email: false,
+    socials: false
+  },
+  themeMode: 'dark', // or 'light'
+    themeVariables: {
+      '--w3m-accent': '#7c3aed',
+    },
+    // IMPORTANT: Enable all connectors
+    enableInjected: true,
+    enableCoinbase: true,
+    enableWalletConnect: true,
 })
 
 function ContextProvider({ children, cookies }: { children: ReactNode; cookies: string | null }) {
-  const initialState = cookieToInitialState(wagmiAdapter.wagmiConfig as Config, cookies)
+  // const initialState = cookieToInitialState(wagmiAdapter.wagmiConfig as Config, cookies)
 
   return (
-    <WagmiProvider config={wagmiAdapter.wagmiConfig as Config} initialState={initialState}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <WagmiProvider config={wagmiAdapter.wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
     </WagmiProvider>
   )
 }

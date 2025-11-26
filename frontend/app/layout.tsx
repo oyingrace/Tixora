@@ -1,3 +1,5 @@
+'use client';
+
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
@@ -8,6 +10,8 @@ import "./globals.css";
 import Header from "@/components/header";
 import { headers } from "next/headers";
 import ContextProvider from "@/context";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { logError } from "@/lib/error-handler";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -35,25 +39,37 @@ export default async function RootLayout({
     <html 
       lang="en" 
       className={`${GeistSans.variable} ${GeistMono.variable} ${inter.variable}`}
-      suppressHydrationWarning
+      // suppressHydrationWarning
     >
       <body className="font-sans bg-background text-foreground">
-        <ContextProvider cookies={cookies}>
-          <Header />
-          {children}
-          <ToastContainer
-            position="top-right"
-            autoClose={5000}
-            hideProgressBar={false}
-            newestOnTop
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="light"
-          />
-        </ContextProvider>
+        <ErrorBoundary 
+          onError={(error, errorInfo) => {
+            logError({
+              error,
+              componentStack: errorInfo.componentStack,
+              context: { type: 'error-boundary', location: 'root-layout' },
+            });
+          }}
+        >
+          <ContextProvider cookies={cookies}>
+            <Header />
+            <main>
+              {children}
+            </main>
+            <ToastContainer
+              position="top-right"
+              autoClose={5000}
+              hideProgressBar={false}
+              newestOnTop
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="light"
+            />
+          </ContextProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

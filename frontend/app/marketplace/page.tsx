@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useAccount, useReadContract } from 'wagmi'
+import { useConnection, useReadContract } from 'wagmi'
 import { Search, TrendingUp, Clock, Calendar, Users, Sparkles, AlertCircle } from "lucide-react"
 import { ChainId, eventTicketingAbi, getContractAddresses } from "@/lib/addressAndAbi"
 import { Address, formatEther } from "viem"
@@ -49,7 +49,7 @@ interface MarketplaceEvent {
 
 export default function Marketplace() {
   const router = useRouter()
-  const { address, isConnected, chain } = useAccount()
+  const { address, isConnected, chain } = useConnection()
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("trending")
   const [activeTab, setActiveTab] = useState("upcoming")
@@ -204,14 +204,14 @@ export default function Marketplace() {
   const filteredEvents = getEventsByTab()
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/10 to-slate-900 text-foreground px-20">
+    <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900/10 to-slate-900 text-foreground px-20">
       <div className="pb-16 px-4 pt-8">
         <div className="container mx-auto max-w-7xl">
           {/* Hero Section */}
           <div className="text-center mb-10">
             <h1 className="text-4xl font-bold mb-4">
               Event{" "}
-              <span className="bg-gradient-to-r text-5xl from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r text-5xl from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
                 Marketplace
               </span>
             </h1>
@@ -224,10 +224,10 @@ export default function Marketplace() {
           {/* Network Warning */}
           {!isCorrectNetwork && (
             <div className="mb-4">
-              <Card className="bg-gradient-to-r from-orange-900/30 to-red-900/30 border-orange-500/50">
+              <Card className="bg-linear-to-r from-orange-900/30 to-red-900/30 border-orange-500/50">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2">
-                    <AlertCircle className="h-54w-4 text-orange-400 flex-shrink-0" />
+                    <AlertCircle className="h-54w-4 text-orange-400 shrink-0" />
                     <div>
                       <p className="text-orange-200 font-medium text-base">Wrong Network</p>
                       <p className="text-orange-300 text-xs">Please switch to Celo Sepolia testnet to interact with events.</p>
@@ -268,7 +268,7 @@ export default function Marketplace() {
                   onClick={() => setSortBy("trending")}
                   className={`h-10 transition-all duration-200 ${
                     sortBy === "trending"
-                      ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-lg"
+                      ? "bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-lg"
                       : "border-slate-600 text-slate-300 hover:border-purple-500 hover:text-white"
                   }`}
                 >
@@ -280,7 +280,7 @@ export default function Marketplace() {
                   onClick={() => setSortBy("recent")}
                   className={`h-10 transition-all duration-200 ${
                     sortBy === "recent"
-                      ? "bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-lg"
+                      ? "bg-linear-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-lg"
                       : "border-slate-600 text-slate-300 hover:border-blue-500 hover:text-white"
                   }`}
                 >
@@ -310,7 +310,7 @@ export default function Marketplace() {
                       onClick={() => setActiveTab(tab.key)}
                       className={`h-8 px-6 transition-all duration-200 ${
                         isActive
-                          ? `bg-gradient-to-r ${
+                          ? `bg-linear-to-r ${
                               tab.color === "purple" ? "from-purple-800 to-purple-700" :
                               tab.color === "green" ? "from-green-800 to-green-700" :
                               tab.color === "red" ? "from-red-800 to-red-700" :
@@ -384,7 +384,7 @@ export default function Marketplace() {
           {!loading && filteredEvents.length === 0 && (
             <div className="text-center py-16">
               <div className="mb-8">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 flex items-center justify-center mx-auto mb-4">
+                <div className="w-20 h-20 rounded-full bg-linear-to-r from-purple-500/20 to-pink-500/20 flex items-center justify-center mx-auto mb-4">
                   <Calendar className="w-10 h-10 text-purple-400" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-4">No Events Found</h3>
@@ -399,7 +399,7 @@ export default function Marketplace() {
               {searchTerm && (
                 <Button
                   onClick={() => setSearchTerm("")}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
+                  className="bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
                 >
                   Clear Search
                 </Button>
@@ -411,7 +411,7 @@ export default function Marketplace() {
                     <p className="text-slate-400 mb-4">Be the first to create an event!</p>
                     <Button
                       onClick={() => router.push("/create-event")}
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
+                      className="bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
                     >
                       Create Event
                     </Button>
