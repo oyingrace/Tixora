@@ -25,6 +25,8 @@ export default function WalletConnectButton() {
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`
   }
 
+  const isLoading = isConnecting || isConnectingWallet || isDisconnecting;
+
   return (
     <div className="flex items-center gap-2">
       {isConnected && address ? (
@@ -43,11 +45,22 @@ export default function WalletConnectButton() {
             WebkitTapHighlightColor: 'transparent',
             touchAction: 'manipulation',
             minHeight: '44px',
-            minWidth: '44px',
-            padding: '0.5rem 1rem'
+            minWidth: '160px',
+            padding: '0.5rem 1rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem'
           }}
         >
-          {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+          {isLoading ? (
+            <>
+              <LoadingSpinner size="sm" />
+              <span>Connecting...</span>
+            </>
+          ) : (
+            'Connect Wallet'
+          )}
         </Button>
       )}
       <appkit-modal />
