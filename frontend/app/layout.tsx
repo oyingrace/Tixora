@@ -10,6 +10,7 @@ import "./globals.css";
 import Header from "@/components/header";
 import { headers } from "next/headers";
 import ContextProvider from "@/context";
+import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { logError } from "@/lib/error-handler";
 
@@ -41,6 +42,32 @@ export default async function RootLayout({
       className={`${GeistSans.variable} ${GeistMono.variable} ${inter.variable}`}
       // suppressHydrationWarning
     >
+      <body className="min-h-screen bg-background font-sans antialiased">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ContextProvider cookies={cookies}>
+            <Header />
+            <main className="flex-1">
+              {children}
+            </main>
+            <ToastContainer
+              position="top-right"
+              autoClose={5000}
+              hideProgressBar={false}
+              newestOnTop
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="light"
+            />
+          </ThemeProvider>
+        </ContextProvider>
       <body className="font-sans bg-background text-foreground">
         <ErrorBoundary 
           onError={(error, errorInfo) => {
@@ -70,6 +97,8 @@ export default async function RootLayout({
             />
           </ContextProvider>
         </ErrorBoundary>
+          </ContextProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

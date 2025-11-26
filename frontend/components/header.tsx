@@ -1,4 +1,13 @@
 "use client"
+import { usePathname } from 'next/navigation'
+import Link from 'next/link'
+import Image from 'next/image'
+import { WalletConnectButton } from './wallet-connect-button'
+import { NetworkSwitcher } from './network-switcher'
+import { useAccount } from 'wagmi'
+import { useState, useEffect, useRef } from 'react'
+import { ChevronDown } from 'lucide-react'
+import { ThemeToggle } from './theme-toggle'
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
@@ -48,6 +57,10 @@ export default function Header() {
     setIsDropdownOpen(false)
   }, [pathname])
 
+  if (!isConnected) {
+    return (
+      <header className="bg-background/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-50">
+        <div className="container mx-auto px-4 h-14 flex items-center justify-between">
   const mobileToggle = () => setIsMobileMenuOpen((p) => !p)
 
   const renderLinks = (onClick?: () => void) => (
@@ -208,6 +221,12 @@ export default function Header() {
               </div>
             )}
           </div>
+        </nav>
+
+        <div className="flex items-center space-x-2">
+          <ThemeToggle />
+          <NetworkSwitcher />
+          <WalletConnectButton />
           <CustomConnectButton />
         </div>
       </div>
