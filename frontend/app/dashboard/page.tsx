@@ -1,6 +1,6 @@
 "use client"
 
-import { useAccount } from "wagmi"
+import { useConnection } from "wagmi"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -13,7 +13,7 @@ import { useReadContract } from "wagmi"
 import Statistics from "@/components/Statistics"
 
 export default function Dashboard() {
-  const { address, isConnected, chain } = useAccount()
+  const { address, isConnected, chain } = useConnection()
   const router = useRouter()
 
   const chainId = chain?.id || ChainId.CELO_SEPOLIA;
@@ -87,14 +87,14 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 text-foreground pt-12 px-4 md:px-8 lg:px-20">
+    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-900 to-slate-950 text-foreground pt-12 px-4 md:px-8 lg:px-20">
       <div className="pb-16 px-4">
         <div className="container mx-auto max-w-7xl">
           {/* Welcome Section */}
-          <div className="mb-10 p-6 bg-slate-800/30 backdrop-blur-sm rounded-xl border border-slate-700/50 mb-10">
+          <div className="mb-10 p-6 bg-slate-800/30 backdrop-blur-sm rounded-xl border border-slate-700/50">
             <h1 className="text-4xl md:text-5xl font-bold mb-3">
               Welcome back, {" "}
-              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                 {shortAddress}
               </span>
             </h1>
@@ -114,10 +114,10 @@ export default function Dashboard() {
                 return (
                   <Link key={index} href={action.href}>
                     <Card className="group cursor-pointer bg-slate-800/50 border-slate-700/50 overflow-hidden relative hover:border-slate-600/60 transition-all duration-300">
-                      <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-5 transition-opacity`} />
+                      <div className={`absolute inset-0 bg-linear-to-br ${action.gradient} opacity-0 group-hover:opacity-5 transition-opacity`} />
                       <CardContent className="p-6 text-center relative z-10">
                         <div
-                          className={`w-15 h-15 rounded-full bg-gradient-to-br ${action.gradient} flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform`}
+                          className={`w-15 h-15 rounded-full bg-linear-to-br ${action.gradient} flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform`}
                         >
                           <Icon className="h-6 w-6 text-white" />
                         </div>

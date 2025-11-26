@@ -1,11 +1,13 @@
 "use client"
+import { usePathname } from "next/navigation"
+import Link from "next/link"
+import Image from "next/image"
+import WalletConnectButton from "./wallet-connect-button"
+import { NetworkSwitcher } from "./network-switcher"
+import { useAccount } from "wagmi"
+import { useState, useEffect, useRef, ChevronDown } from "react"
+import { Menu, X } from "lucide-react"
 
-import { usePathname } from 'next/navigation'
-import Link from 'next/link'
-import Image from 'next/image'
-import { useAccount } from 'wagmi'
-import { useState, useEffect, useRef } from 'react'
-import { ChevronDown } from 'lucide-react'
 import { CustomConnectButton } from './CustomConnectButton'
 import { CustomNetworkButton } from './CustomNetworkButton'
 

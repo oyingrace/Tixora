@@ -4,7 +4,7 @@ import { useAccount, useConnect } from 'wagmi';
 import { Button } from './ui/button';
 import { useAppKit } from '@reown/appkit/react';
 
-export function WalletConnectButton() {
+export default function WalletConnectButton() {
   const { isConnected, address } = useAccount();
   const { open } = useAppKit();
   const { isPending: isConnecting } = useConnect();
@@ -24,8 +24,6 @@ export function WalletConnectButton() {
     if (!addr) return ''
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`
   }
-
-  const isWalletConnected = isConnected;
 
   return (
     <div className="flex items-center gap-2">
@@ -52,6 +50,7 @@ export function WalletConnectButton() {
           {isConnecting ? 'Connecting...' : 'Connect Wallet'}
         </Button>
       )}
+      <appkit-modal />
     </div>
   )
 }

@@ -7,12 +7,12 @@ import Link from "next/link"
 import Image from "next/image"
 import { WorkAndBenefits } from "@/components/WorkAndBenefits"
 import { useRouter } from "next/navigation"
-import { useAccount } from "wagmi"
+import { useConnection } from "wagmi"
 
 export default function HomePage() {
   const [isVisible, setIsVisible] = useState(false)
   const router = useRouter();
-  const { isConnected } = useAccount();
+  const { isConnected } = useConnection();
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -30,9 +30,9 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-foreground overflow-hidden">
+    <div className="min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-slate-950 text-foreground overflow-hidden">
       <section className="py-20 px-4 relative overflow-hidden min-h-screen flex items-center">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/30 via-slate-900/20 to-cyan-950/30 animate-gradient" />
+        <div className="absolute inset-0 bg-linear-to-br from-blue-950/30 via-slate-900/20 to-cyan-950/30 animate-gradient" />
 
         {/* Enhanced Floating Elements */}
         <div className="absolute top-20 left-10 w-20 h-20 bg-blue-500/10 rounded-full animate-float blur-sm" />
@@ -46,7 +46,7 @@ export default function HomePage() {
             <div className={`transition-all duration-1000 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
               <h1 className="text-2xl md:text-4xl lg:text-6xl font-bold mb-8 leading-tight">
                 The Future of{' '} <br className="mb-5" />
-                <span className="gradient-text text-3xl md:text-4xl lg:text-6xl bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                <span className="gradient-text text-3xl md:text-4xl lg:text-6xl bg-linear-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                   Event Ticketing
                 </span>
               </h1>
@@ -92,7 +92,7 @@ export default function HomePage() {
             <div>
               <div className="flex items-center justify-center space-x-3 mb-4">
                 <Image src="/tixora-logo.png" alt="Tixora" width={40} height={40} className="rounded-lg" />
-                <span className="text-2xl font-bold gradient-text bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                <span className="text-2xl font-bold gradient-text bg-linear-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                   Tixora
                 </span>
               </div>
