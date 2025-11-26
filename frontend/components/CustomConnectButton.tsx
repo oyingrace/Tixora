@@ -1,11 +1,11 @@
 "use client"
 
-import { useAccount } from 'wagmi';
+import { useConnection } from 'wagmi';
 import { Button } from './ui/button';
 import { useAppKit } from '@reown/appkit/react';
 
 export function CustomConnectButton() {
-  const { isConnected, address } = useAccount()
+  const { isConnected, address } = useConnection()
   const { open } = useAppKit();
 
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';

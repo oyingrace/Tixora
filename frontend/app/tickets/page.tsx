@@ -14,8 +14,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useAccount, usePublicClient } from 'wagmi'
-import { WalletConnectButton } from "@/components/wallet-connect-button"
+import { useConnection, usePublicClient } from 'wagmi'
+import { CustomConnectButton } from "@/components/CustomConnectButton"
 import Link from "next/link"
 import { Abi, formatEther } from 'viem'
 import QRCode from 'qrcode';
@@ -47,7 +47,7 @@ export default function TicketsPage() {
     const [currentAction, setCurrentAction] = useState<TicketAction>(null)
     const [ticketTransactions, setTicketTransactions] = useState<Record<string, string>>({})
   
-    const { isConnected, address, chain } = useAccount()
+    const { isConnected, address, chain } = useConnection()
     const publicClient = usePublicClient()
     
     const { useGetRecentTickets } = useEventTicketingGetters()
@@ -290,7 +290,7 @@ export default function TicketsPage() {
   
     if (!isConnected) {
       return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 text-foreground">
+        <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900/20 to-slate-900 text-foreground">
           <div className="container mx-auto px-4 py-16 pt-24">
             <div className="max-w-md mx-auto text-center space-y-6">
               <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto">
@@ -300,7 +300,7 @@ export default function TicketsPage() {
                 <h2 className="text-2xl font-bold text-white mb-2">Connect Your Wallet</h2>
                 <p className="text-slate-300">Connect your Web3 wallet to view and manage your NFT tickets.</p>
               </div>
-              <WalletConnectButton />
+              <CustomConnectButton />
             </div>
           </div>
         </div>
@@ -308,12 +308,12 @@ export default function TicketsPage() {
     }
   
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 text-foreground px-10">
+      <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900/20 to-slate-900 text-foreground px-10">
   
         <div className="container mx-auto px-4 py-8 pt-10">
           <div className="max-w-6xl mx-auto space-y-6">
             <div className="flex justify-between items-center mb-8">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
                 Tickets
               </h1>
               <Button 
@@ -433,7 +433,7 @@ export default function TicketsPage() {
                   className="overflow-hidden bg-slate-800/50 border-slate-700 hover:border-purple-500/50"
                 >
                   <div className="relative">
-                    <div className="w-full h-38 bg-gradient-to-br from-purple-600/20 to-blue-600/20 flex items-center justify-center">
+                    <div className="w-full h-38 bg-linear-to-br from-purple-600/20 to-blue-600/20 flex items-center justify-center">
                       <QrCode className="w-16 h-16 text-purple-400" />
                     </div>
                     <Badge className={`absolute top-3 right-3 ${getStatusColor(ticket.status)}`}>
@@ -524,7 +524,7 @@ export default function TicketsPage() {
                     : "You don't have any tickets yet. Visit the marketplace to purchase some!"}
                 </p>
                 <Link href="/marketplace">
-                  <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
+                  <Button className="bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
                     {searchQuery || selectedCategory !== "all" ? "Clear Filters" : "Discover Events"}
                   </Button>
                 </Link>

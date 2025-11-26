@@ -3,13 +3,12 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useAccount, useReadContract } from 'wagmi'
+import { useConnection, useReadContract } from 'wagmi'
 import { Search, TrendingUp, Filter, RefreshCw, Ticket, AlertCircle, Loader2 } from "lucide-react"
-import { ChainId, eventTicketingAbi, ticketNftAbi, getContractAddresses } from "@/lib/addressAndAbi"
-import { Address, formatEther } from "viem"
+import { ChainId, ticketNftAbi, getContractAddresses } from "@/lib/addressAndAbi"
+import { Address } from "viem"
 import { ResaleTicketCard } from "@/components/resale-ticket-card"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { toast } from "react-toastify"
 import { useResaleMarketGetters } from "@/hooks/useResaleMarket"
 
@@ -45,7 +44,7 @@ interface ResaleTicket {
 }
 
 export default function ResaleMarketPage() {
-  const { address, isConnected, chain } = useAccount()
+  const { address, isConnected, chain } = useConnection()
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("newest")
   const [listings, setListings] = useState<ResaleTicket[]>([])
@@ -165,7 +164,7 @@ export default function ResaleMarketPage() {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-20">
+      <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 pt-20">
         <div className="container mx-auto px-4">
           <Card className="max-w-md mx-auto bg-slate-800/50 border-purple-500/20">
             <CardContent className="p-8 text-center">
@@ -183,7 +182,7 @@ export default function ResaleMarketPage() {
 
   if (!isCorrectNetwork) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-20">
+      <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 pt-20">
         <div className="container mx-auto px-4">
           <Card className="max-w-md mx-auto bg-slate-800/50 border-red-500/20">
             <CardContent className="p-8 text-center">
@@ -200,7 +199,7 @@ export default function ResaleMarketPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900">
       {/* Hero Section */}
       <section className="pt-24 pb-12 px-4">
         <div className="container mx-auto">
