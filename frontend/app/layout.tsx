@@ -97,6 +97,8 @@ export default async function RootLayout({
             />
           </ContextProvider>
         </ErrorBoundary>
+          </ContextProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
