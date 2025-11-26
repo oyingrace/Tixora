@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation'
 import { useWeb3Modal } from '@/hooks/useWeb3Modal'
 import { useEffect, useState, useCallback } from 'react'
 import { toast } from 'react-toastify'
+import { useAsyncOperation } from '@/hooks/use-async-operation'
+import { LoadingSpinner } from './ui/loading-spinner'
 
 // Extend the Window interface to include ethereum
 declare global {
@@ -31,23 +33,9 @@ export function WalletConnectButton() {
   const [isTouching, setIsTouching] = useState(false)
   const { initializeModal } = useWeb3Modal()
 
-  // Handle touch events
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    e.preventDefault()
-    setIsTouching(true)
-  }, [])
-
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    e.preventDefault()
-    setIsTouching(false)
-  }, [])
-
-  // Handle wallet connection
-  const handleConnect = useCallback(async (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
-    try {
+  // Handle wallet connection with loading state and error handling
+  const { execute: handleConnect, isLoading: isConnectingWallet } = useAsyncOperation(
+    async () => {
       // Check if MetaMask is installed
       if (window.ethereum?.isMetaMask) {
         // Request accounts access
@@ -70,100 +58,43 @@ export function WalletConnectButton() {
           modal.openModal()
         }
       }
-    } catch (error) {
-      console.error('Failed to connect wallet:', error)
-      toast.error('Failed to connect wallet. Please try again.')
+    },
+    {
+      loadingMessage: 'Connecting wallet...',
+      successMessage: 'Wallet connected successfully',
+      errorMessage: 'Failed to connect wallet',
+      showToast: true
     }
-  }, [connect, connectors, initializeModal, modal, router])
+  )
 
-  // Handle disconnect
-  const handleDisconnect = useCallback(async (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
-    try {
+  // Handle disconnect with loading state and error handling
+  const { execute: handleDisconnect, isLoading: isDisconnecting } = useAsyncOperation(
+    async () => {
       disconnect()
       if (modal) {
         modal.closeModal()
       }
       router.refresh()
-    } catch (error) {
-      console.error('Failed to disconnect wallet:', error)
+    },
+    {
+      loadingMessage: 'Disconnecting...',
+      successMessage: 'Wallet disconnected',
+      showToast: true
     }
-  }, [disconnect, modal, router])
+  )
 
-  // Cleanup modal on unmount
-  useEffect(() => {
-    return () => {
-      if (modal) {
-        modal.closeModal()
-      }
-    }
-  }, [modal])
-
-  // Format wallet address for display
-  const formatAddress = (addr: string) => {
-    if (!addr) return ''
-    return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`
-  }
-
-  // Memoized connect handler
-  const handleConnect = useCallback(async (event) => {
-    event?.preventDefault?.()
-    event?.stopPropagation?.()
-    
-    try {
-      // Check if MetaMask is installed
-      if (window.ethereum?.isMetaMask) {
-        // Request accounts access
-        await window.ethereum.request({ method: 'eth_requestAccounts' })
-        // Connect using the injected connector
-        await connect({ connector: connectors[0] })
-        router.refresh()
-      } else {
-        // Use Web3Modal for other wallets
-        if (!modal) {
-          const newModal = initializeModal()
-          if (newModal) {
-            setModal(newModal)
-            newModal.openModal()
-          }
-        } else {
-          modal.openModal()
-        }
-      }
-    } catch (error) {
-      console.error('Failed to connect wallet:', error)
-      toast.error('Failed to connect wallet. Please try again.')
-    }
-  }, [connect, connectors, initializeModal, modal, router])
-
-  // Handle disconnect
-  const handleDisconnect = useCallback(async (event) => {
-    event?.preventDefault?.()
-    event?.stopPropagation?.()
-    
-    try {
-      disconnect()
-      if (modal) {
-        modal.closeModal()
-      }
-      router.refresh()
-    } catch (error) {
-      console.error('Failed to disconnect wallet:', error)
-    }
-  }, [disconnect, modal, router])
-
-  // Touch event handlers
-  const handleTouchStart = useCallback((e) => {
+  // Handle touch events
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
     e.preventDefault()
     setIsTouching(true)
   }, [])
 
-  const handleTouchEnd = useCallback((e) => {
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     e.preventDefault()
     setIsTouching(false)
   }, [])
+
+
 
   // Cleanup modal on unmount
   useEffect(() => {
@@ -179,6 +110,24 @@ export function WalletConnectButton() {
     if (!addr) return ''
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`
   }
+
+
+  // Cleanup modal on unmount
+  useEffect(() => {
+    return () => {
+      if (modal) {
+        modal.closeModal()
+      }
+    }
+  }, [modal])
+
+  // Format wallet address for display
+  const formatAddress = (addr: string) => {
+    if (!addr) return ''
+    return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`
+  }
+
+  const isLoading = isConnecting || isConnectingWallet || isDisconnecting;
 
   return (
     <div className="flex items-center gap-2">
@@ -189,36 +138,58 @@ export function WalletConnectButton() {
             {formatAddress(address)}
           </div>
           <Button
-            onClick={handleDisconnect}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleDisconnect(e);
+            }}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             variant="outline"
+            disabled={isLoading}
             className={`border-purple-500 text-purple-400 hover:bg-purple-500/10 hover:text-purple-300 ${
               isTouching ? 'bg-purple-500/20' : ''
-            }`}
-            disabled={isConnecting}
+            } min-w-[120px] h-10 flex items-center justify-center`}
           >
-            Disconnect
+            {isDisconnecting ? (
+              <LoadingSpinner size="sm" className="mr-2" />
+            ) : null}
+            {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
           </Button>
         </div>
       ) : (
         <Button
-          onClick={handleConnect}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleConnect(e);
+          }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
-          disabled={isConnecting}
+          disabled={isLoading}
           className={`bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white ${
             isTouching ? 'from-purple-700 to-blue-700 scale-95' : ''
-          }`}
+          } min-w-[160px] h-10`}
           style={{
             WebkitTapHighlightColor: 'transparent',
             touchAction: 'manipulation',
             minHeight: '44px',
-            minWidth: '44px',
-            padding: '0.5rem 1rem'
+            minWidth: '160px',
+            padding: '0.5rem 1rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem'
           }}
         >
-          {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+          {isLoading ? (
+            <>
+              <LoadingSpinner size="sm" />
+              <span>Connecting...</span>
+            </>
+          ) : (
+            'Connect Wallet'
+          )}
         </Button>
       )}
     </div>
