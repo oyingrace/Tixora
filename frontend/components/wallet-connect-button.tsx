@@ -12,7 +12,7 @@ import { LoadingSpinner } from './ui/loading-spinner'
 // Extend the Window interface to include ethereum
 declare global {
   interface Window {
-    ethereum?: {
+    ethereum?: Record<string, unknown> & {
       isMetaMask?: boolean;
       request?: (request: { method: string; params?: any[] }) => Promise<any>;
     };
@@ -20,8 +20,8 @@ declare global {
 }
 
 interface Web3Modal {
-  openModal: () => void;
-  closeModal: () => void;
+  open: () => void;
+  close: () => void;
 }
 
 export function WalletConnectButton() {
@@ -49,13 +49,13 @@ export function WalletConnectButton() {
           const newModal = initializeModal()
           if (newModal) {
             setModal({
-              openModal: () => newModal.openModal(),
-              closeModal: () => newModal.closeModal()
+              open: () => newModal.open(),
+              close: () => newModal.close()
             })
-            newModal.openModal()
+            newModal.open()
           }
         } else {
-          modal.openModal()
+          modal.open()
         }
       }
     },
@@ -111,22 +111,6 @@ export function WalletConnectButton() {
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`
   }
 
-
-  // Cleanup modal on unmount
-  useEffect(() => {
-    return () => {
-      if (modal) {
-        modal.closeModal()
-      }
-    }
-  }, [modal])
-
-  // Format wallet address for display
-  const formatAddress = (addr: string) => {
-    if (!addr) return ''
-    return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`
-  }
-
   const isLoading = isConnecting || isConnectingWallet || isDisconnecting;
 
   return (
@@ -138,10 +122,8 @@ export function WalletConnectButton() {
             {formatAddress(address)}
           </div>
           <Button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleDisconnect(e);
+            onClick={() => {
+              handleDisconnect();
             }}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
@@ -159,10 +141,8 @@ export function WalletConnectButton() {
         </div>
       ) : (
         <Button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleConnect(e);
+          onClick={() => {
+            handleConnect();
           }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
