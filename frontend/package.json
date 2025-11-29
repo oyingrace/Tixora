@@ -6,7 +6,29 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage"
+  },
+  "jest": {
+    "collectCoverageFrom": [
+      "**/*.{js,jsx,ts,tsx}",
+      "!**/*.d.ts",
+      "!**/node_modules/**",
+      "!**/.next/**",
+      "!**/coverage/**"
+    ],
+    "moduleNameMapper": {
+      "^@/components/(.*)$": "<rootDir>/components/$1",
+      "^@/app/(.*)$": "<rootDir>/app/$1",
+      "^@/lib/(.*)$": "<rootDir>/lib/$1",
+      "^@/hooks/(.*)$": "<rootDir>/hooks/$1",
+      "^@/styles/(.*)$": "<rootDir>/styles/$1"
+    },
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": ["<rootDir>/jest.setup.js"]
   },
   "dependencies": {
     "@divvi/referral-sdk": "^2.3.0",
