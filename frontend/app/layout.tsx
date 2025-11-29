@@ -1,4 +1,4 @@
-'use client';
+// 'use client';
 
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
@@ -14,7 +14,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { logError } from "@/lib/error-handler";
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ["latin"],
   display: 'swap',
   variable: '--font-inter'
@@ -37,10 +37,10 @@ export default async function RootLayout({
   const cookies = headersObj.get("cookie");
 
   return (
-    <html 
-      lang="en" 
+    <html
+      lang="en"
       className={`${GeistSans.variable} ${GeistMono.variable} ${inter.variable}`}
-      // suppressHydrationWarning
+    // suppressHydrationWarning
     >
       <body className="min-h-screen bg-background font-sans antialiased">
         <ThemeProvider
@@ -49,55 +49,34 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ContextProvider cookies={cookies}>
-            <Header />
-            <main className="flex-1">
-              {children}
-            </main>
-            <ToastContainer
-              position="top-right"
-              autoClose={5000}
-              hideProgressBar={false}
-              newestOnTop
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              theme="light"
-            />
-          </ThemeProvider>
-        </ContextProvider>
-      <body className="font-sans bg-background text-foreground">
-        <ErrorBoundary 
-          onError={(error, errorInfo) => {
-            logError({
-              error,
-              componentStack: errorInfo.componentStack,
-              context: { type: 'error-boundary', location: 'root-layout' },
-            });
-          }}
-        >
-          <ContextProvider cookies={cookies}>
-            <Header />
-            <main>
-              {children}
-            </main>
-            <ToastContainer
-              position="top-right"
-              autoClose={5000}
-              hideProgressBar={false}
-              newestOnTop
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              theme="light"
-            />
-          </ContextProvider>
-        </ErrorBoundary>
-          </ContextProvider>
+          {/* <ErrorBoundary
+            onError={(error, errorInfo) => {
+              logError({
+                error,
+                componentStack: errorInfo.componentStack,
+                context: { type: 'error-boundary', location: 'root-layout' },
+              });
+            }}
+          > */}
+            <ContextProvider cookies={cookies}>
+              <Header />
+              <main>
+                {children}
+              </main>
+              <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+              />
+            </ContextProvider>
+          {/* </ErrorBoundary> */}
         </ThemeProvider>
       </body>
     </html>

@@ -2,19 +2,11 @@
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { WalletConnectButton } from './wallet-connect-button'
+// import { WalletConnectButton } from './wallet-connect-button'
 import { NetworkSwitcher } from './network-switcher'
 import { useAccount } from 'wagmi'
 import { useState, useEffect, useRef } from 'react'
-import { ChevronDown } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
-import { usePathname } from "next/navigation"
-import Link from "next/link"
-import Image from "next/image"
-import WalletConnectButton from "./wallet-connect-button"
-import { NetworkSwitcher } from "./network-switcher"
-import { useAccount } from "wagmi"
-import { useState, useEffect, useRef } from "react"
 import { Menu, X, ChevronDown } from "lucide-react"
 
 import { CustomConnectButton } from './CustomConnectButton'
@@ -57,10 +49,10 @@ export default function Header() {
     setIsDropdownOpen(false)
   }, [pathname])
 
-  if (!isConnected) {
-    return (
-      <header className="bg-background/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-50">
-        <div className="container mx-auto px-4 h-14 flex items-center justify-between">
+  // if (!isConnected) {
+  //   return (
+  //     <header className="bg-background/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-50">
+  //       <div className="container mx-auto px-4 h-14 flex items-center justify-between">
   const mobileToggle = () => setIsMobileMenuOpen((p) => !p)
 
   const renderLinks = (onClick?: () => void) => (
@@ -165,21 +157,21 @@ export default function Header() {
                     <Link
                       href="/dashboard"
                       className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
-                      onClick={handleDropdownLinkClick}
+                      // onClick={handleDropdownLinkClick}
                     >
                       Dashboard
                     </Link>
                     <Link
                       href="/tickets"
                       className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
-                      onClick={handleDropdownLinkClick}
+                      // onClick={handleDropdownLinkClick}
                     >
                       My Tickets
                     </Link>
                     <Link
                       href="/create-event"
                       className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
-                      onClick={handleDropdownLinkClick}
+                      // onClick={handleDropdownLinkClick}
                     >
                       Create Event
                     </Link>
@@ -192,7 +184,7 @@ export default function Header() {
                 <Link
                   href="/marketplace"
                   className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
-                  onClick={handleDropdownLinkClick}
+                  // onClick={handleDropdownLinkClick}
                 >
                   Marketplace
                 </Link>
@@ -200,33 +192,33 @@ export default function Header() {
                   href="https://github.com/DIFoundation/Tixora/blob/main/README.md"
                   target="_blank"
                   className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
-                  onClick={handleDropdownLinkClick}
+                  // onClick={handleDropdownLinkClick}
                 >
                   Docs
                 </Link>
                 <Link
                   href="/resources"
                   className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
-                  onClick={handleDropdownLinkClick}
+                  // onClick={handleDropdownLinkClick}
                 >
                   Resources
                 </Link>
                 <Link
                   href="/#how-it-works"
                   className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
-                  onClick={handleDropdownLinkClick}
+                  // onClick={handleDropdownLinkClick}
                 >
                   How It Works
                 </Link>
               </div>
             )}
           </div>
-        </nav>
+        </div>
 
         <div className="flex items-center space-x-2">
           <ThemeToggle />
           <NetworkSwitcher />
-          <WalletConnectButton />
+          {/* <WalletConnectButton /> */}
           <CustomConnectButton />
         </div>
       </div>
