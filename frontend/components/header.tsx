@@ -5,8 +5,8 @@ import Image from "next/image"
 import WalletConnectButton from "./wallet-connect-button"
 import { NetworkSwitcher } from "./network-switcher"
 import { useAccount } from "wagmi"
-import { useState, useEffect, useRef, ChevronDown } from "react"
-import { Menu, X } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { Menu, X, ChevronDown } from "lucide-react"
 
 import { CustomConnectButton } from './CustomConnectButton'
 import { CustomNetworkButton } from './CustomNetworkButton'
@@ -121,7 +121,7 @@ export default function Header() {
                 className="rounded-full h-12 w-auto"
               />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
               Tixora
             </span>
           </Link>
@@ -137,7 +137,7 @@ export default function Header() {
           </div>
           <div className="relative" ref={dropdownRef}>
             <button
-              onClick={toggleDropdown}
+              onClick={mobileToggle}
               className="flex items-center space-x-1 text-slate-300 hover:text-purple-400 transition-colors md:hidden"
             >
               <span>Menu</span>
