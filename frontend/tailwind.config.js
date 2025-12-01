@@ -16,6 +16,28 @@ module.exports = {
       },
     },
     extend: {
+      animation: {
+        'pulse-glow': 'pulse-glow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'float': 'float 6s ease-in-out infinite',
+        'float-delay-200': 'float 6s ease-in-out 0.2s infinite',
+        'float-delay-400': 'float 6s ease-in-out 0.4s infinite',
+        'float-delay-600': 'float 6s ease-in-out 0.6s infinite',
+        'float-delay-800': 'float 6s ease-in-out 0.8s infinite',
+      },
+      keyframes: {
+        'pulse-glow': {
+          '0%, 100%': { opacity: 1 },
+          '50%': { opacity: 0.7, transform: 'scale(1.05)' },
+        },
+        'float': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+      },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
