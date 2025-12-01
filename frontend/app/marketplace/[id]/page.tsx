@@ -43,7 +43,7 @@ export default function EventDetailPage() {
   const [events, setEvents] = useState<EventData | null>(null)
   const { register, hash, isPending, isConfirming, isConfirmed, error: writeError } = useEventTicketingSetters()
   const { useTickets, useIsRegistered } = useEventTicketingGetters()
-  const safeChainId = typeof chain?.id === 'number' ? chain.id : ChainId.CELO_SEPOLIA
+  const safeChainId = typeof chain?.id === 'number' ? chain.id : ChainId.BASE
   const { eventTicketing } = getContractAddresses(safeChainId)
   const isRegisteredQuery = useIsRegistered(BigInt(params.id as string), address)
   const isRegistered = Boolean(isRegisteredQuery?.data)
@@ -262,7 +262,7 @@ export default function EventDetailPage() {
     }
 
     // Check network
-    if (![ChainId.CELO_SEPOLIA, ChainId.BASE_SEPOLIA].includes(chainId as number)) {
+    if (![ChainId.CELO_SEPOLIA, ChainId.BASE_SEPOLIA, ChainId.BASE, ChainId.CELO].includes(chainId as number)) {
       toast.error("⚠️ Please switch to Celo Sepolia or Base Sepolia testnet")
       return
     }
@@ -340,7 +340,7 @@ export default function EventDetailPage() {
   }, [writeError]);
 
   const isProcessing = purchasing || isPending || isConfirming
-  const isCorrectNetwork = chainId === ChainId.CELO_SEPOLIA || chainId === ChainId.BASE_SEPOLIA
+  const isCorrectNetwork = chainId === ChainId.CELO_SEPOLIA || chainId === ChainId.BASE_SEPOLIA || chainId === ChainId.BASE || chainId === ChainId.CELO
 
   if (isLoading) {
     return (

@@ -31,6 +31,8 @@ export default function Dashboard() {
     if (!recentTicketsData || !address) return []
     
     const tickets = recentTicketsData as any[]
+
+    const price = chainId === ChainId.BASE || chainId === ChainId.BASE_SEPOLIA ? "BASE" : "CELO"
     
     return tickets
       .filter(ticket => ticket.creator.toLowerCase() === address.toLowerCase())
@@ -41,13 +43,13 @@ export default function Dashboard() {
         action: ticket.canceled ? `Canceled ${ticket.eventName}` : `Created ${ticket.eventName}`,
         timestamp: Number(ticket.eventTimestamp), // Keep timestamp for reference
         time: new Date(Number(ticket.eventTimestamp) * 1000).toLocaleDateString(),
-        amount: `${formatEther(ticket.price)} CELO`,
+        amount: `${formatEther(ticket.price)} ${price}`,
         type: ticket.canceled ? "cancel" : "create",
         status: ticket.closed ? "Closed" : ticket.canceled ? "Canceled" : "Active",
         sold: Number(ticket.sold),
         maxSupply: Number(ticket.maxSupply)
       }))
-  }, [recentTicketsData, address])
+  }, [recentTicketsData, address, chainId])
 
   // Redirect if not connected
   useEffect(() => {
