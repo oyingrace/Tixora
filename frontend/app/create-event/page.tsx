@@ -102,7 +102,48 @@ export default function CreateEvent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    createEvent()
+    
+    // Form validation
+    if (!formData.title || !formData.description || !formData.date || !formData.time || !formData.location || !formData.price || !formData.totalSupply) {
+      toast.error("Please fill in all required fields")
+      return
+    }
+
+    const price = parseFloat(formData.price)
+    const totalSupply = parseInt(formData.totalSupply)
+    
+    if (isNaN(price) || price <= 0) {
+      toast.error("Please enter a valid price greater than 0")
+      return
+    }
+    
+    if (isNaN(totalSupply) || totalSupply <= 0) {
+      toast.error("Please enter a valid total supply greater than 0")
+      return
+    }
+
+    // Check if event date is in the future
+    const eventDateTime = new Date(`${formData.date}T${formData.time}`)
+    if (eventDateTime <= new Date()) {
+      toast.error("Event date must be in the future")
+      return
+    }
+
+    // Create the ticket
+    createTicket(
+      BigInt(Math.floor(price * 10**18)),
+      formData.title,
+      formData.description,
+      BigInt(Math.floor(eventDateTime.getTime() / 1000)),
+      BigInt(totalSupply),
+      JSON.stringify({
+        bannerImage: "",
+        date: formData.date,
+        time: formData.time
+      }),
+      formData.location
+    )
+  }
   }
 
   const totalRevenue = formData.price && formData.totalSupply
@@ -260,32 +301,6 @@ export default function CreateEvent() {
                       </div>
                       <p className="text-slate-400 text-xs sm:text-sm">Where will your event take place?</p>
                     </div>
-
-                    {/* Temporarily disabled as per issue #63
-                    <div className="space-y-2">
-                      <Label htmlFor="banner" className="text-blue-200 font-medium flex items-center gap-2">
-                        <Image className="h-4 w-4" />
-                        Event Banner
-                      </Label>
-                      <div 
-                        className="border-2 border-dashed border-blue-500/50 rounded-xl p-8 text-center bg-gradient-to-br from-blue-900/10 to-purple-900/10 hover:border-blue-400/70 transition-colors cursor-pointer group"
-                        onClick={() => document.getElementById('banner')?.click()}
-                      >
-                        <Upload className="h-12 w-12 text-blue-400 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                        <p className="text-blue-200 font-medium mb-2">
-                          {formData.bannerImage ? formData.bannerImage.name : "Upload event banner"}
-                        </p>
-                        <p className="text-slate-400 text-sm">PNG, JPG up to 10MB</p>
-                        <Input
-                          id="banner"
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => setFormData({ ...formData, bannerImage: e.target.files?.[0] || null })}
-                        />
-                      </div>
-                    </div>
-                    */}
                   </CardContent>
                 </Card>
               </div>
@@ -312,176 +327,98 @@ export default function CreateEvent() {
                           type="number"
                           inputMode="decimal"
                           step="0.01"
+                          min="0.01"
+                          value={formData.price}
+                          onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                          placeholder="25.00"
                           required
-                          className="w-full bg-slate-800/80 border-blue-500/30 text-white focus:border-blue-400 focus:ring-blue-400/20 h-12"
-                          style={{ paddingRight: '1rem' }}
+                          className="w-full bg-slate-800/80 border-green-500/30 text-white focus:border-green-400 focus:ring-green-400/20 h-12 text-base sm:text-lg pl-8"
+                          style={{ WebkitAppearance: 'none', MozAppearance: 'textfield' }}
+                        />
+                        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-400" />
+                      </div>
+                      <p className="text-slate-400 text-xs sm:text-sm">Price per ticket in ETH</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="totalSupply" className="text-green-200 font-medium flex items-center gap-2 text-sm sm:text-base">
+                        <Users className="h-4 w-4 flex-shrink-0" />
+                        Number of Tickets *
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="totalSupply"
+                          type="number"
+                          inputMode="numeric"
+                          min="1"
+                          value={formData.totalSupply}
+                          onChange={(e) => setFormData({ ...formData, totalSupply: e.target.value })}
+                          placeholder="100"
+                          required
+                          className="w-full bg-slate-800/80 border-green-500/30 text-white focus:border-green-400 focus:ring-green-400/20 h-12 text-base sm:text-lg"
+                          style={{ WebkitAppearance: 'none', MozAppearance: 'textfield' }}
                         />
                       </div>
+                      <p className="text-slate-400 text-xs sm:text-sm">Maximum number of tickets available</p>
                     </div>
-                  </div>
+                  </CardContent>
+                </Card>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="location" className="text-blue-200 font-medium flex items-center gap-2 text-sm sm:text-base">
-                      <MapPin className="h-4 w-4 flex-shrink-0" />
-                      Location *
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        id="location"
-                        value={formData.location}
-                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                        placeholder="Convention Center, Miami Beach, FL"
-                        required
-                        className="w-full bg-slate-800/80 border-blue-500/30 text-white focus:border-blue-400 focus:ring-blue-400/20 h-12 text-base sm:text-lg"
-                        style={{ paddingRight: '2.5rem' }}
-                      />
+                {/* Revenue Summary */}
+                <Card className="bg-linear-to-br from-slate-800/90 to-yellow-900/20 border-yellow-500/30 shadow-2xl">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-3 text-white text-2xl">
+                      <DollarSign className="h-6 w-6 text-yellow-400" />
+                      Revenue Summary
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="p-3 sm:p-4 bg-slate-800/50 rounded-lg border border-green-500/20">
+                      <div className="flex justify-between items-center mb-2 text-sm sm:text-base">
+                        <span className="text-slate-300">Total Revenue</span>
+                        <span className="text-green-400 font-medium">${totalRevenue}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs sm:text-sm text-slate-400">
+                        <span>Platform Fee (2.5%)</span>
+                        <span>${platformFee}</span>
+                      </div>
+                      <div className="border-t border-green-500/20 my-2"></div>
+                      <div className="flex justify-between items-center font-medium text-sm sm:text-base">
+                        <span className="text-green-200">Your Earnings</span>
+                        <span className="text-lg sm:text-xl text-green-400">${yourEarnings}</span>
+                      </div>
                     </div>
-                    <p className="text-slate-400 text-xs sm:text-sm">Where will your event take place?</p>
-                  </div>
+                  </CardContent>
+                </Card>
 
-                  {/* Temporarily disabled as per issue #63
-                  <div className="space-y-2">
-                    <Label htmlFor="banner" className="text-blue-200 font-medium flex items-center gap-2">
-                      <Image className="h-4 w-4" />
-                      Event Banner
-                    </Label>
-                    <div 
-                      className="border-2 border-dashed border-blue-500/50 rounded-xl p-8 text-center bg-gradient-to-br from-blue-900/10 to-purple-900/10 hover:border-blue-400/70 transition-colors cursor-pointer group"
-                      onClick={() => document.getElementById('banner')?.click()}
+                {/* Create Button */}
+                <Card className="bg-linear-to-r from-purple-900/30 to-pink-900/30 border-purple-500/30 shadow-2xl">
+                  <CardContent className="p-6">
+                    <Button
+                      type="submit"
+                      className="w-full h-14 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-base sm:text-lg font-semibold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:scale-[1.02] active:scale-95"
+                      disabled={isPending || isConfirming}
+                      style={{ minHeight: '56px' }}
                     >
-                      <Upload className="h-12 w-12 text-blue-400 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                      <p className="text-blue-200 font-medium mb-2">
-                        {formData.bannerImage ? formData.bannerImage.name : "Upload event banner"}
-                      </p>
-                      <p className="text-slate-400 text-sm">PNG, JPG up to 10MB</p>
-                      <Input
-                        id="banner"
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => setFormData({ ...formData, bannerImage: e.target.files?.[0] || null })}
-                      />
-                    </div>
-                  </div>
-                  */}
-                </CardContent>
-              </Card>
+                      {isPending || isConfirming ? (
+                        <span className="flex items-center gap-2 text-sm sm:text-base">
+                          <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          {isPending ? 'Creating...' : 'Confirming...'}
+                        </span>
+                      ) : (
+                        <span className="px-2">Create Event & Mint Tickets</span>
+                      )}
+                    </Button>
+                    <p className="text-slate-400 text-xs sm:text-sm text-center mt-3">
+                      Your event will be deployed to the blockchain
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
-
-            {/* Right Column - Ticket Configuration & Summary */}
-            <div className="space-y-8">
-              {/* Ticket Configuration */}
-              <Card className="bg-gradient-to-br from-slate-800/90 to-green-900/20 border-green-500/30 shadow-2xl">
-                <CardHeader className="p-4 sm:p-6">
-                  <CardTitle className="flex items-center gap-2 sm:gap-3 text-white text-xl sm:text-2xl">
-                    <Coins className="h-5 w-5 sm:h-6 sm:w-6 text-green-400 flex-shrink-0" />
-                    Pricing
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6 pt-0">
-                  <div className="space-y-2">
-                    <Label htmlFor="price" className="text-green-200 font-medium flex items-center gap-2 text-sm sm:text-base">
-                      <DollarSign className="h-4 w-4 flex-shrink-0" />
-                      Price per Ticket *
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        id="price"
-                        type="number"
-                        inputMode="decimal"
-                        step="0.01"
-                        min="0.01"
-                        value={formData.price}
-                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                        placeholder="25.00"
-                        required
-                        className="w-full bg-slate-800/80 border-green-500/30 text-white focus:border-green-400 focus:ring-green-400/20 h-12 text-base sm:text-lg pl-8"
-                        style={{ WebkitAppearance: 'none', MozAppearance: 'textfield' }}
-                      />
-                      <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-400" />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="totalSupply" className="text-green-200 font-medium flex items-center gap-2 text-sm sm:text-base">
-                      <Users className="h-4 w-4 flex-shrink-0" />
-                      Number of Tickets *
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        id="totalSupply"
-                        type="number"
-                        inputMode="numeric"
-                        min="1"
-                        value={formData.totalSupply}
-                        onChange={(e) => setFormData({ ...formData, totalSupply: e.target.value })}
-                        placeholder="100"
-                        required
-                        className="w-full bg-slate-800/80 border-green-500/30 text-white focus:border-green-400 focus:ring-green-400/20 h-12 text-base sm:text-lg"
-                        style={{ WebkitAppearance: 'none', MozAppearance: 'textfield' }}
-                      />
-                    </div>
-                    <p className="text-slate-400 text-sm">How many people can attend?</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Revenue Summary */}
-              <Card className="bg-linear-to-br from-slate-800/90 to-yellow-900/20 border-yellow-500/30 shadow-2xl">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-3 text-white text-2xl">
-                    <DollarSign className="h-6 w-6 text-yellow-400" />
-                    Revenue Summary
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="p-3 sm:p-4 bg-slate-800/50 rounded-lg border border-green-500/20">
-                    <div className="flex justify-between items-center mb-2 text-sm sm:text-base">
-                      <span className="text-slate-300">Total Revenue</span>
-                      <span className="text-green-400 font-medium">${totalRevenue}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs sm:text-sm text-slate-400">
-                      <span>Platform Fee (2.5%)</span>
-                      <span>${platformFee}</span>
-                    </div>
-                    <div className="border-t border-green-500/20 my-2"></div>
-                    <div className="flex justify-between items-center font-medium text-sm sm:text-base">
-                      <span className="text-green-200">Your Earnings</span>
-                      <span className="text-lg sm:text-xl text-green-400">${yourEarnings}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Create Button */}
-              <Card className="bg-linear-to-r from-purple-900/30 to-pink-900/30 border-purple-500/30 shadow-2xl">
-                <CardContent className="p-6">
-                  <Button
-                    type="submit"
-                    className="w-full h-14 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-base sm:text-lg font-semibold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:scale-[1.02] active:scale-95"
-                    disabled={isPending || isConfirming}
-                    style={{ minHeight: '56px' }}
-                  >
-                    {isPending || isConfirming ? (
-                      <span className="flex items-center gap-2 text-sm sm:text-base">
-                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        {isPending ? 'Creating...' : 'Confirming...'}
-                      </span>
-                    ) : (
-                      <span className="px-2">Create Event & Mint Tickets</span>
-                    )}
-                  </Button>
-                  <p className="text-slate-400 text-sm text-center mt-3">
-                    Your event will be deployed to the blockchain
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </form>
           </form>
         </div>
       </div>
