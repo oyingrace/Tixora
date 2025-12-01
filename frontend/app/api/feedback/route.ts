@@ -3,6 +3,28 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status') as 'open' | 'in_progress' | 'resolved' | 'closed' | null;
+    
+    const where = status ? { status } : {};
+    
+    const feedback = await prisma.feedback.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return NextResponse.json(feedback);
+  } catch (error) {
+    console.error('Error fetching feedback:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch feedback' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
