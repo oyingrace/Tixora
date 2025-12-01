@@ -5,10 +5,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, MapPin, Users, Ticket, Loader2, Clock } from "lucide-react"
 import Image from "next/image"
-import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useWriteContract, useWaitForTransactionReceipt, useConnection, useBalance } from 'wagmi'
 import { ChainId, eventTicketingAbi, getContractAddresses } from "@/lib/addressAndAbi"
 import { useEventTicketingGetters } from "@/hooks/useEventTicketing"
-import { useAccount, useBalance } from "wagmi"
 import { toast } from "react-toastify"
 import { Address } from "viem"
 
@@ -37,8 +36,8 @@ export function EventCard({ event }: EventCardProps) {
   const { writeContract, isPending, data: hash , error: writeError} = useWriteContract()
   const [purchasing, setPurchasing] = useState(false)
   const [imageError, setImageError] = useState(false)
-  const { address, isConnected, chain } = useAccount()
-  const chainId = chain?.id || ChainId.CELO_SEPOLIA;
+  const { address, isConnected, chain } = useConnection()
+  const chainId = chain?.id || ChainId.CELO_SEPOLIA || ChainId.BASE || ChainId.BASE_SEPOLIA;
   const { eventTicketing } = getContractAddresses(chainId)
   const { useGetTotalTickets, useIsRegistered } = useEventTicketingGetters()
   
