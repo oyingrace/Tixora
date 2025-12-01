@@ -30,6 +30,7 @@ export default function Dashboard() {
   const recentActivity = useMemo(() => {
     if (!recentTicketsData || !address) return []
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tickets = recentTicketsData as any[]
 
     const price = chainId === ChainId.BASE || chainId === ChainId.BASE_SEPOLIA ? "BASE" : "CELO"
@@ -145,7 +146,7 @@ export default function Dashboard() {
               <CardContent>
                 <div className="space-y-4">
                   {recentActivity.length > 0 ? (
-                    recentActivity.map((activity, index) => (
+                    recentActivity.map((activity) => (
                       <div
                         key={activity.id}
                         className="flex items-center justify-between py-4 px-6 bg-slate-700/30 rounded-xl border border-slate-600/30"

@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, MapPin, Users, Ticket, Loader2, Clock } from "lucide-react"
+import { MapPin, Users, Ticket, Loader2, Clock } from "lucide-react"
 import Image from "next/image"
 import { useWriteContract, useWaitForTransactionReceipt, useConnection, useBalance } from 'wagmi'
 import { ChainId, eventTicketingAbi, getContractAddresses } from "@/lib/addressAndAbi"
@@ -40,6 +40,7 @@ export function EventCard({ event }: EventCardProps) {
   const chainId = chain?.id || ChainId.CELO_SEPOLIA || ChainId.BASE || ChainId.BASE_SEPOLIA;
   const { eventTicketing } = getContractAddresses(chainId)
   const { useGetTotalTickets, useIsRegistered } = useEventTicketingGetters()
+  const { data: currentBalance } = useBalance()
   
   // const { isLoading: checkingRegistration } = useGetTotalTickets()
   const { isLoading: checkingRegistration, data: isRegistered } = useIsRegistered(BigInt(event.id), address)
@@ -48,6 +49,8 @@ export function EventCard({ event }: EventCardProps) {
   const { isLoading: isConfirming, isSuccess, error: receiptError } = useWaitForTransactionReceipt({
     hash,
   })
+
+  const price = chainId === ChainId.BASE || chainId === ChainId.BASE_SEPOLIA ? "BASE" : "CELO"
 
   const getStatusBadge = (event: MarketplaceEvent) => {
     if (event.status === "passed") {
@@ -90,16 +93,13 @@ export function EventCard({ event }: EventCardProps) {
 
     try {
       // Check if user has enough balance
-      const {data: balance} = useBalance({
-        address,
-        chainId: chainId
-      })
+      const balance = currentBalance
       
       const requiredAmount = event.originalPrice
       const userBalance = Number(balance?.value)
       
       if (userBalance < requiredAmount) {
-        toast.error(`Insufficient balance. You need ${event.price} CELO to purchase this ticket.`)
+        toast.error(`Insufficient balance. You need ${event.price} ${price} to purchase this ticket.`)
         setPurchasing(false)
         return
       }
@@ -174,7 +174,7 @@ export function EventCard({ event }: EventCardProps) {
   }, [receiptError])
 
   // Check if user is on the correct network
-  const isCorrectNetwork = chainId === ChainId.CELO_SEPOLIA || ChainId.BASE_SEPOLIA // Celo Sepolia testnet
+  const isCorrectNetwork = chainId === ChainId.CELO_SEPOLIA || ChainId.BASE_SEPOLIA || ChainId.BASE || ChainId.BASE_SEPOLIA
 
   const isProcessing = purchasing || isPending || isConfirming
 
@@ -188,7 +188,7 @@ export function EventCard({ event }: EventCardProps) {
 
   const handleNetworkSwitch = (e: React.MouseEvent) => {
     e.stopPropagation()
-    toast.error("⚠️ Please switch to Celo Sepolia testnet (Chain ID: 11142220) to purchase tickets")
+    toast.error(`⚠️ Please switch to ${price} Sepolia testnet (Chain ID: 11142220) to purchase tickets`)
   }
 
   const formatEventDate = (dateString: string) => {
@@ -226,7 +226,7 @@ export function EventCard({ event }: EventCardProps) {
             onError={() => setImageError(true)}
             priority={false}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           
           <Badge className="absolute top-3 left-3 text-xs bg-blue-600/90 backdrop-blur-sm border border-blue-500/50">
             {event.category}
@@ -237,7 +237,7 @@ export function EventCard({ event }: EventCardProps) {
           </div>
           
           {event.trending && (
-            <Badge className="absolute bottom-3 left-3 text-xs bg-gradient-to-r from-orange-500 to-red-500 text-white animate-pulse">
+            <Badge className="absolute bottom-3 left-3 text-xs bg-linear-to-r from-orange-500 to-red-500 text-white animate-pulse">
               🔥 Trending
             </Badge>
           )}
@@ -250,21 +250,21 @@ export function EventCard({ event }: EventCardProps) {
 
           <div className="space-y-2 text-xs text-slate-400 mb-2">
             <div className="flex items-center gap-2">
-              <Clock className="h-3 w-3 text-purple-400 flex-shrink-0" />
+              <Clock className="h-3 w-3 text-purple-400 shrink-0" />
               <span className="truncate">{formatEventDate(event.date)}</span>
             </div>
             <div className="flex items-center gap-2">
-              <MapPin className="h-3 w-3 text-blue-400 flex-shrink-0" />
+              <MapPin className="h-3 w-3 text-blue-400 shrink-0" />
               <span className="truncate">{event.location}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Users className="h-3 w-3 text-purple-400 flex-shrink-0" />
+              <Users className="h-3 w-3 text-purple-400 shrink-0" />
               <span>{event.attendees.toLocaleString()} attendees</span>
             </div>
           </div>
 
           <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-700/50">
-            <span className="text-base font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+            <span className="text-base font-bold bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
               {event.price}
             </span>
             
@@ -289,7 +289,7 @@ export function EventCard({ event }: EventCardProps) {
                 </Button>
               ) : (
                 <Button
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/25"
+                  className="bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/25"
                   onClick={handlePurchaseTicket}
                   disabled={isProcessing}
                   size="sm"

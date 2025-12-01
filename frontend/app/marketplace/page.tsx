@@ -49,7 +49,7 @@ interface MarketplaceEvent {
 
 export default function Marketplace() {
   const router = useRouter()
-  const { address, isConnected, chain } = useConnection()
+  const { isConnected, chain } = useConnection()
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("trending")
   const [activeTab, setActiveTab] = useState("upcoming")
@@ -68,7 +68,7 @@ export default function Marketplace() {
     functionName: 'getTotalTickets',
   })
 
-  const { data: recentTickets, error: recentTicketsError } = useReadContract({
+  const { data: recentTickets } = useReadContract({
     address: eventTicketing as Address,
     abi: eventTicketingAbi,
     functionName: 'getRecentTickets', 
@@ -85,7 +85,7 @@ export default function Marketplace() {
   // Transform blockchain data to marketplace format
   useEffect(() => {
     if (recentTickets && Array.isArray(recentTickets)) {
-      const transformedEvents: MarketplaceEvent[] = recentTickets.map((ticket: TicketData, index: number) => {
+      const transformedEvents: MarketplaceEvent[] = recentTickets.map((ticket: TicketData) => {
         const eventDate = new Date(Number(ticket.eventTimestamp) * 1000)
         const now = new Date()
         const isUpcoming = eventDate > now
@@ -110,7 +110,7 @@ export default function Marketplace() {
             image = metadata.image || "/placeholder.svg"
           }
         } catch (e) {
-          console.log("Could not parse metadata")
+          console.log("Could not parse metadata", e)
         }
 
         return {
