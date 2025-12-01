@@ -1,34 +1,28 @@
-type Metric = {
-  name: string;
-  value: number;
-  id: string;
-  delta: number;
-  entries: PerformanceEntry[];
+import { Metric, ReportCallback } from 'web-vitals';
+
+export type WebVitalsMetric = Metric & {
+  name: 'CLS' | 'FCP' | 'FID' | 'INP' | 'LCP' | 'TTFB';
 };
 
-type ReportHandler = (metric: Metric) => void;
+type ReportHandler = (metric: WebVitalsMetric) => void;
 
 const reportWebVitals = (onPerfEntry?: ReportHandler) => {
-  if (onPerfEntry && onPerfEntry instanceof Function) {
-    import('web-vitals').then(({ onCLS, onFID, onFCP, onLCP, onTTFB }) => {
-      // Core Web Vitals
-      onCLS(onPerfEntry);
-      onFID(onPerfEntry);
-      onFCP(onPerfEntry);
-      onLCP(onPerfEntry);
+  if (onPerfEntry && typeof onPerfEntry === 'function') {
+    import('web-vitals').then(({ onCLS, onFCP, onLCP, onTTFB, onINP }) => {
+      // Core Web Vitals (2023)
+      onCLS(onPerfEntry as ReportCallback);
+      onINP(onPerfEntry as ReportCallback);
+      onLCP(onPerfEntry as ReportCallback);
       
-      // Additional metrics
-      onTTFB(onPerfEntry);
+      // Additional helpful metrics
+      onFCP(onPerfEntry as ReportCallback);
+      onTTFB(onPerfEntry as ReportCallback);
       
-      // Note: For web-vitals v3.5.0, we use the 'on' prefix for all metrics
-      // The callback will receive a metric object with the following shape:
-      // {
-      //   name: string, // The name of the metric (e.g., 'CLS', 'FID', 'FCP', 'LCP', 'TTFB')
-      //   value: number, // The metric value
-      //   id: string,    // A unique ID for this metric
-      //   delta: number, // The difference between the current and previous value (if applicable)
-      //   entries: PerformanceEntry[] // The raw performance entries used to calculate the metric
-      // }
+      // Note: FID is deprecated in favor of INP in 2023
+      // If you still need FID, you can use onFID if available
+      // but it's recommended to use INP for better user experience measurement
+    }).catch(error => {
+      console.error('Error loading web-vitals:', error);
     });
   }
 };
