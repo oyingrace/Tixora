@@ -4,13 +4,13 @@ import Link from 'next/link'
 import Image from 'next/image'
 // import { WalletConnectButton } from './wallet-connect-button'
 import { NetworkSwitcher } from './network-switcher'
-import { useAccount } from 'wagmi'
+import { useConnection } from 'wagmi'
 import { useState, useEffect, useRef } from 'react'
 import { ThemeToggle } from './theme-toggle'
-import { Menu, X, ChevronDown } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 
 import { CustomConnectButton } from './CustomConnectButton'
-import { CustomNetworkButton } from './CustomNetworkButton'
+// import { CustomNetworkButton } from './CustomNetworkButton'
 
 const navLinks = [
   { name: "Dashboard", path: "/dashboard", requiresAuth: true },
@@ -20,7 +20,7 @@ const navLinks = [
 
 export default function Header() {
   const pathname = usePathname()
-  const { isConnected } = useAccount()
+  const { isConnected } = useConnection()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -138,7 +138,7 @@ export default function Header() {
 
         <div className="flex items-center space-x-4">
           <div className="hidden md:block">
-            <CustomNetworkButton />
+            {/* <CustomNetworkButton /> */}
           </div>
           <div className="relative" ref={dropdownRef}>
             <button
@@ -179,7 +179,7 @@ export default function Header() {
                   </>
                 )}
                 <div className="px-4 py-2">
-                  <CustomNetworkButton />
+                  {/* <CustomNetworkButton /> */}
                 </div>
                 <Link
                   href="/marketplace"

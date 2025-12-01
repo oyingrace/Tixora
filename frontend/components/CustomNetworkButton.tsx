@@ -2,20 +2,24 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useAccount, useSwitchChain } from 'wagmi';
-import { celoSepolia, baseSepolia } from 'viem/chains';
+import { base, celo, celoSepolia, baseSepolia } from 'viem/chains';
 import { CustomButton } from "./ui/CustomButton";
 import Image from "next/image";
 import { ChevronDown } from 'lucide-react';
 import { networks as supportedChains } from "../config";
 
 const CHAIN_ICONS: Record<number, string> = {
-  [celoSepolia.id]: '/celo.png',
+  [base.id]: '/base.png',
   [baseSepolia.id]: '/base.png',
+  [celo.id]: '/celo.png',
+  [celoSepolia.id]: '/celo.png',
 };
 
 const CHAIN_NAMES: Record<number, string> = {
-  [celoSepolia.id]: 'Celo Sepolia',
+  [base.id]: 'Base',
   [baseSepolia.id]: 'Base Sepolia',
+  [celo.id]: 'Celo',
+  [celoSepolia.id]: 'Celo Sepolia',
 };
 
 export function CustomNetworkButton() {

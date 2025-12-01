@@ -178,9 +178,9 @@ export default function CreateEvent() {
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         placeholder="Join us for an incredible journey into the future of Web3 technology. Connect with industry leaders, discover innovative projects, and shape the decentralized future..."
-                        rows={6}
+                        rows={10}
                         required
-                        className="bg-slate-800/80 border-purple-500/30 text-white focus:border-purple-400 focus:ring-purple-400/20 text-base resize-none"
+                        className="bg-slate-800/80 border-purple-500/30 text-white focus:border-purple-400 focus:ring-purple-400/20 text-base resize-none h-64"
                       />
                       <p className="text-slate-400 text-sm">Tell people what makes your event special</p>
                     </div>

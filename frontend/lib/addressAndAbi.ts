@@ -1,7 +1,9 @@
 // Supported chains
 export enum ChainId {
-  CELO_SEPOLIA = 11142220,
+  BASE = 8453,
   BASE_SEPOLIA = 84532,
+  CELO = 42220,
+  CELO_SEPOLIA = 11142220,
 }
 
 // Contract addresses by chain ID
@@ -14,15 +16,25 @@ interface ContractAddresses {
 }
 
 export const CONTRACT_ADDRESSES: ContractAddresses = {
+  [ChainId.BASE]: {
+    ticketNft: "",
+    eventTicketing: "",
+    resaleMarket: "",
+  },
+  [ChainId.CELO]: {
+    ticketNft: "",
+    eventTicketing: "",
+    resaleMarket: "",
+  },
   [ChainId.CELO_SEPOLIA]: {
     ticketNft: "0x3C4603b75EaB1dccC581Eefc2ac8A9FD99bFFb88",
     eventTicketing: "0xA4488a88Bc2508Ea3B80f262C35b886B6f99A5f6",
     resaleMarket: "0x1a5CBd231304DED72beDe6edaf06c00C25011f4e",
   },
   [ChainId.BASE_SEPOLIA]: {
-    ticketNft: "0X...",
-    eventTicketing: "0X...",
-    resaleMarket: "0X...",
+    ticketNft: "",
+    eventTicketing: "",
+    resaleMarket: "",
   },
 };
 

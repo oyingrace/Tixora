@@ -1,6 +1,6 @@
 "use client";
 
-import { useAccount, useSwitchChain, useChainId } from 'wagmi';
+import { useConnection, useSwitchChain, useChainId } from 'wagmi';
 import { Button } from './ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { ChainId } from '@/lib/addressAndAbi';
@@ -11,8 +11,10 @@ export function NetworkSwitcher() {
   const { switchChain } = useSwitchChain();
 
   const networks = [
-    { id: ChainId.CELO_SEPOLIA, name: 'Celo Sepolia' },
+    { id: ChainId.BASE, name: 'Base' },
     { id: ChainId.BASE_SEPOLIA, name: 'Base Sepolia' },
+    { id: ChainId.CELO, name: 'Celo' },
+    { id: ChainId.CELO_SEPOLIA, name: 'Celo Sepolia' },
   ];
 
   const currentNetwork = networks.find((n) => n.id === chainId) || networks[0];
@@ -20,7 +22,7 @@ export function NetworkSwitcher() {
   const handleNetworkSwitch = async (networkId: number) => {
     try {
       await switchChain({ chainId: networkId });
-      toast.success(`Switched to ${networkId === ChainId.CELO_SEPOLIA ? 'Celo Sepolia' : 'Base Sepolia'}`);
+      toast.success(`Switched to ${networkId === ChainId.BASE ? 'Base' : networkId === ChainId.BASE_SEPOLIA ? 'Base Sepolia' : networkId === ChainId.CELO ? 'Celo' : 'Celo Sepolia'}`);
     } catch (error) {
       console.error('Failed to switch network:', error);
       toast.error(
