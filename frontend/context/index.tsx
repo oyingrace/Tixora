@@ -16,10 +16,10 @@ if (!projectId) {
 
 // Set up metadata
 const metadata = {
-  name: 'Tixora Tickets',
-  description: 'Decentralized Event Ticketing Platform',
-  url: 'https://tixora-tickets.vercel.app',
-  icons: ['/favicon.ico']
+  name: 'appkit-example',
+  description: 'AppKit Example',
+  url: 'https://appkitexampleapp.com', // origin must match your domain & subdomain
+  icons: ['https://avatars.githubusercontent.com/u/179229932']
 }
 
 // Create the modal
@@ -27,31 +27,19 @@ const modal = createAppKit({
   adapters: [wagmiAdapter],
   projectId,
   networks: [celoSepolia, baseSepolia],
-  defaultNetwork: celoSepolia,
+  defaultNetwork: baseSepolia,
   metadata: metadata,
   features: {
-    analytics: true, // Optional - defaults to your Cloud configuration
-    email: false,
-    socials: false
-  },
-  themeMode: 'dark', // or 'light'
-    themeVariables: {
-      '--w3m-accent': '#7c3aed',
-    },
-    // IMPORTANT: Enable all connectors
-    enableInjected: true,
-    enableCoinbase: true,
-    enableWalletConnect: true,
+    analytics: true // Optional - defaults to your Cloud configuration
+  }
 })
 
 function ContextProvider({ children, cookies }: { children: ReactNode; cookies: string | null }) {
-  // const initialState = cookieToInitialState(wagmiAdapter.wagmiConfig as Config, cookies)
+  const initialState = cookieToInitialState(wagmiAdapter.wagmiConfig as Config, cookies)
 
   return (
-    <WagmiProvider config={wagmiAdapter.wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+    <WagmiProvider config={wagmiAdapter.wagmiConfig as Config} initialState={initialState}>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </WagmiProvider>
   )
 }
