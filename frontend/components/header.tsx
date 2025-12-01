@@ -2,226 +2,292 @@
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-// import { WalletConnectButton } from './wallet-connect-button'
 import { NetworkSwitcher } from './network-switcher'
 import { useConnection } from 'wagmi'
 import { useState, useEffect, useRef } from 'react'
 import { ThemeToggle } from './theme-toggle'
-import { ChevronDown } from "lucide-react"
-
+import { Menu, X, ChevronDown } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { CustomConnectButton } from './CustomConnectButton'
-// import { CustomNetworkButton } from './CustomNetworkButton'
 
 const navLinks = [
   { name: "Dashboard", path: "/dashboard", requiresAuth: true },
   { name: "My Tickets", path: "/tickets", requiresAuth: true },
-  { name: "Create Event", path: "/create-event", requiresAuth: true }
+  { name: "Create Event", path: "/create-event", requiresAuth: true },
+  { name: "Marketplace", path: "/marketplace", requiresAuth: false },
+  { 
+    name: "Docs", 
+    path: "https://github.com/DIFoundation/Tixora/blob/main/README.md", 
+    external: true,
+    requiresAuth: false 
+  },
+  { name: "Resources", path: "/resources", requiresAuth: false },
+  { name: "How It Works", path: "/#how-it-works", requiresAuth: false }
 ]
+
+// Minimum touch target size for better mobile interaction
+const TOUCH_TARGET_SIZE = 44;
+
+// Animation variants for mobile menu
+const mobileMenuVariants = {
+  hidden: { opacity: 0, y: -20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: {
+      duration: 0.2,
+      ease: "easeInOut" as const
+    }
+  },
+  exit: { 
+    opacity: 0, 
+    y: -20,
+    transition: {
+      duration: 0.15,
+      ease: "easeIn" as const
+    }
+  }
+};
 
 export default function Header() {
   const pathname = usePathname()
   const { isConnected } = useConnection()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const mobileRef = useRef<HTMLDivElement>(null)
+  const mobileMenuRef = useRef<HTMLDivElement>(null)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
 
+  // Close mobile menu when clicking outside or navigating
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setIsDropdownOpen(false)
-      }
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (
-        mobileRef.current &&
-        !mobileRef.current.contains(e.target as Node) &&
-        !(e.target as HTMLElement).closest("button[aria-label='Toggle menu']")
+        mobileMenuRef.current && 
+        !mobileMenuRef.current.contains(event.target as Node) &&
+        menuButtonRef.current &&
+        !menuButtonRef.current.contains(event.target as Node)
       ) {
-        setIsMobileMenuOpen(false)
+        setIsMobileMenuOpen(false);
       }
+    };
+
+    // Handle escape key
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    // Add event listeners
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    // Prevent body scroll when mobile menu is open
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
     }
 
-    document.addEventListener("mousedown", handler)
-    return () => document.removeEventListener("mousedown", handler)
-  }, [])
+    // Cleanup
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'auto';
+    };
+  }, [isMobileMenuOpen]);
 
+  // Close mobile menu on route change
   useEffect(() => {
-    setIsMobileMenuOpen(false)
-    setIsDropdownOpen(false)
-  }, [pathname])
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
-  // if (!isConnected) {
-  //   return (
-  //     <header className="bg-background/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-50">
-  //       <div className="container mx-auto px-4 h-14 flex items-center justify-between">
-  const mobileToggle = () => setIsMobileMenuOpen((p) => !p)
+  // Toggle mobile menu
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
 
-  const renderLinks = (onClick?: () => void) => (
-    <>
-      {isConnected &&
-        navLinks.map((link) => (
+  // Render navigation links
+  const renderNavLinks = (isMobile = false) => {
+    const links = navLinks
+      .filter(link => !link.requiresAuth || isConnected)
+      .map((link) => (
+        <li key={link.path} className="w-full">
           <Link
-            key={link.path}
             href={link.path}
-            onClick={onClick}
-            className={`px-4 py-2 transition-colors rounded-lg text-sm md:text-base ${pathname === link.path
+            target={link.external ? "_blank" : "_self"}
+            rel={link.external ? "noopener noreferrer" : ""}
+            className={`block w-full px-4 py-3 text-left text-sm font-medium transition-colors rounded-lg ${
+              pathname === link.path
                 ? "text-purple-400 bg-purple-900/30"
                 : "text-slate-300 hover:bg-slate-800/50"
-              }`}
+            }`}
+            onClick={() => isMobile && setIsMobileMenuOpen(false)}
           >
             {link.name}
           </Link>
-        ))}
+        </li>
+      ));
 
-      <Link
-        href="/marketplace"
-        onClick={onClick}
-        className={`px-4 py-2 transition-colors rounded-lg text-sm md:text-base ${pathname === "/marketplace" || pathname === "/resale-market"
-            ? "text-purple-400 bg-purple-900/30"
-            : "text-slate-300 hover:bg-slate-800/50"
-          }`}
-      >
-        Marketplace
-      </Link>
+    return (
+      <ul className={`space-y-2 ${isMobile ? 'w-full' : 'hidden md:flex md:items-center md:space-x-2 md:space-y-0'}`}>
+        {links}
+      </ul>
+    );
+  };
 
-      <Link
-        href="https://github.com/DIFoundation/Tixora/blob/main/README.md"
-        target="_blank"
-        onClick={onClick}
-        className="px-4 py-2 transition-colors rounded-lg text-slate-300 hover:bg-slate-800/50 text-sm md:text-base"
-      >
-        Docs
-      </Link>
+  // Render mobile menu button
+  const renderMobileMenuButton = () => (
+    <button
+      ref={menuButtonRef}
+      onClick={toggleMobileMenu}
+      className="md:hidden p-2 rounded-md text-slate-300 hover:text-white hover:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+      aria-expanded={isMobileMenuOpen}
+      aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+      style={{
+        minWidth: TOUCH_TARGET_SIZE,
+        minHeight: TOUCH_TARGET_SIZE,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
+    >
+      {isMobileMenuOpen ? (
+        <X className="h-6 w-6" aria-hidden="true" />
+      ) : (
+        <Menu className="h-6 w-6" aria-hidden="true" />
+      )}
+    </button>
+  );
 
-      <Link
-        href="/resources"
-        onClick={onClick}
-        className="px-4 py-2 transition-colors rounded-lg text-slate-300 hover:bg-slate-800/50 text-sm md:text-base"
-      >
-        Resources
-      </Link>
-
-      <Link
-        href="/#how-it-works"
-        onClick={onClick}
-        className="px-4 py-2 transition-colors rounded-lg text-slate-300 hover:bg-slate-800/50 text-sm md:text-base"
-      >
-        How It Works
-      </Link>
-    </>
-  )
+  // Render mobile menu overlay and content
+  const renderMobileMenu = () => (
+    <AnimatePresence>
+      {isMobileMenuOpen && (
+        <>
+          {/* Overlay */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/60 z-40 md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
+          
+          {/* Mobile menu panel */}
+          <motion.div
+            ref={mobileMenuRef}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={mobileMenuVariants}
+            className="fixed top-0 right-0 w-4/5 max-w-sm h-full bg-slate-900/95 backdrop-blur-lg shadow-2xl z-50 overflow-y-auto md:hidden"
+          >
+            <div className="flex flex-col h-full">
+              <div className="flex items-center justify-between p-4 border-b border-slate-800">
+                <Link 
+                  href="/" 
+                  className="flex items-center space-x-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <div className="relative h-10 w-10">
+                    <Image
+                      src="/tixora-logo.png"
+                      alt="Tixora"
+                      width={100}
+                      height={100}
+                      className="rounded-full h-10 w-auto"
+                      priority
+                    />
+                  </div>
+                  <span className="text-lg font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                    Tixora
+                  </span>
+                </Link>
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none"
+                  aria-label="Close menu"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              
+              <nav className="flex-1 p-4 space-y-4">
+                {renderNavLinks(true)}
+                
+                <div className="pt-4 border-t border-slate-800 space-y-4">
+                  <div className="flex flex-col space-y-4">
+                    <div className="w-full">
+                      <CustomConnectButton />
+                    </div>
+                    <div className="flex items-center justify-between w-full">
+                      <ThemeToggle />
+                      <NetworkSwitcher />
+                    </div>
+                  </div>
+                </div>
+              </nav>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
 
   return (
-    <header className="bg-slate-900/80 border-b border-purple-500/20 backdrop-blur-md sticky top-0 z-50">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-
-
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="relative h-12 w-12">
-              <Image
-                src="/tixora-logo.png"
-                alt="Tixora"
-                width={100}
-                height={100}
-                className="rounded-full h-12 w-auto"
-              />
-            </div>
-            <span className="text-xl font-bold bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-              Tixora
-            </span>
-          </Link>
-        </div>
-
-        <nav className="hidden md:flex items-center space-x-8">
-          {renderLinks()}
-        </nav>
-
-        <div className="flex items-center space-x-4">
-          <div className="hidden md:block">
-            {/* <CustomNetworkButton /> */}
-          </div>
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={mobileToggle}
-              className="flex items-center space-x-1 text-slate-300 hover:text-purple-400 transition-colors md:hidden"
+    <>
+      <header 
+        className="bg-slate-900/80 border-b border-purple-500/20 backdrop-blur-md sticky top-0 z-50"
+        style={{ WebkitBackdropFilter: 'blur(12px)' }} // For Safari
+      >
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center">
+            <Link 
+              href="/" 
+              className="flex items-center space-x-2"
+              aria-label="Tixora Home"
             >
-              <span>Menu</span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${
-                isDropdownOpen ? 'transform rotate-180' : ''
-              }`} />
-            </button>
-            {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-slate-800 rounded-md shadow-lg py-1 z-50">
-                {isConnected && (
-                  <>
-                    <Link
-                      href="/dashboard"
-                      className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
-                      // onClick={handleDropdownLinkClick}
-                    >
-                      Dashboard
-                    </Link>
-                    <Link
-                      href="/tickets"
-                      className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
-                      // onClick={handleDropdownLinkClick}
-                    >
-                      My Tickets
-                    </Link>
-                    <Link
-                      href="/create-event"
-                      className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
-                      // onClick={handleDropdownLinkClick}
-                    >
-                      Create Event
-                    </Link>
-                    <div className="border-t border-slate-700 my-1"></div>
-                  </>
-                )}
-                <div className="px-4 py-2">
-                  {/* <CustomNetworkButton /> */}
-                </div>
-                <Link
-                  href="/marketplace"
-                  className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
-                  // onClick={handleDropdownLinkClick}
-                >
-                  Marketplace
-                </Link>
-                <Link
-                  href="https://github.com/DIFoundation/Tixora/blob/main/README.md"
-                  target="_blank"
-                  className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
-                  // onClick={handleDropdownLinkClick}
-                >
-                  Docs
-                </Link>
-                <Link
-                  href="/resources"
-                  className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
-                  // onClick={handleDropdownLinkClick}
-                >
-                  Resources
-                </Link>
-                <Link
-                  href="/#how-it-works"
-                  className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
-                  // onClick={handleDropdownLinkClick}
-                >
-                  How It Works
-                </Link>
+              <div className="relative h-10 w-10">
+                <Image
+                  src="/tixora-logo.png"
+                  alt="Tixora"
+                  width={100}
+                  height={100}
+                  className="rounded-full h-10 w-auto"
+                  priority
+                />
               </div>
-            )}
+              <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                Tixora
+              </span>
+            </Link>
+          </div>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-1">
+            {renderNavLinks()}
+          </nav>
+
+          {/* Desktop Actions */}
+          <div className="hidden md:flex items-center space-x-2">
+            <ThemeToggle />
+            <NetworkSwitcher />
+            <CustomConnectButton />
+          </div>
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden">
+            {renderMobileMenuButton()}
           </div>
         </div>
+      </header>
 
-        <div className="flex items-center space-x-2">
-          <ThemeToggle />
-          <NetworkSwitcher />
-          {/* <WalletConnectButton /> */}
-          <CustomConnectButton />
-        </div>
-      </div>
-    </header>
+      {/* Mobile Menu */}
+      {renderMobileMenu()}
+    </>
   )
 }
