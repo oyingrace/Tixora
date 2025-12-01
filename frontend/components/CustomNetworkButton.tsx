@@ -110,7 +110,7 @@ export function CustomNetworkButton() {
             {supportedChains.map((supportedChain) => (
               <button
                 key={supportedChain.id}
-                onClick={() => handleNetworkChange(supportedChain.id)}
+                onClick={() => handleNetworkChange(Number(supportedChain.id))}
                 role="menuitem"
                 className={`flex items-center w-full px-4 py-2 text-sm text-left transition-colors ${
                   chain?.id === supportedChain.id
@@ -118,16 +118,16 @@ export function CustomNetworkButton() {
                     : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
               >
-                {CHAIN_ICONS[supportedChain.id] && (
+                {CHAIN_ICONS[Number(supportedChain.id)] && (
                   <Image
-                    src={CHAIN_ICONS[supportedChain.id]}
+                    src={CHAIN_ICONS[Number(supportedChain.id)]}
                     alt={supportedChain.name}
                     width={20}
                     height={20}
                     className="rounded-full mr-2"
                   />
                 )}
-                <span>{CHAIN_NAMES[supportedChain.id] || supportedChain.name}</span>
+                <span>{CHAIN_NAMES[Number(supportedChain.id)] || supportedChain.name}</span>
                 {chain?.id === supportedChain.id && (
                   <span className="ml-auto text-green-500" aria-label="Currently selected">
                     ✓

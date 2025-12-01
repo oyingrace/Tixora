@@ -1,7 +1,7 @@
-import { useAccount, useBalance, useDisconnect } from 'wagmi'
+import { useConnection, useBalance, useDisconnect } from 'wagmi'
 
 export function useWallet() {
-  const { address, isConnected, chain } = useAccount()
+  const { address, isConnected, chain } = useConnection()
   const { data: balance } = useBalance({
     address,
   })
@@ -11,7 +11,7 @@ export function useWallet() {
     address,
     isConnected,
     chainId: chain?.id,
-    balance: balance ? `${parseFloat(balance.formatted).toFixed(4)} ${balance.symbol}` : null,
+    balance: balance ? `${parseFloat(balance.value.toString()).toFixed(4)} ${balance.symbol}` : null,
     disconnect,
   }
 }

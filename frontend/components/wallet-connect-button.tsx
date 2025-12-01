@@ -1,11 +1,12 @@
 "use client"
 
-import { useAccount, useConnect } from 'wagmi';
+import { useConnection, useConnect } from 'wagmi';
 import { Button } from './ui/button';
 import { useAppKit } from '@reown/appkit/react';
+import { LoadingSpinner } from './ui/loading-spinner';
 
 export default function WalletConnectButton() {
-  const { isConnected, address } = useAccount();
+  const { isConnected, address } = useConnection();
   const { open } = useAppKit();
   const { isPending: isConnecting } = useConnect();
 
@@ -25,7 +26,7 @@ export default function WalletConnectButton() {
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`
   }
 
-  const isLoading = isConnecting || isConnectingWallet || isDisconnecting;
+  const isLoading = isConnecting;
 
   return (
     <div className="flex items-center gap-2">
@@ -40,7 +41,7 @@ export default function WalletConnectButton() {
         <Button
           onClick={handleConnect}
           disabled={isConnecting}
-          className={`bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white`}
+          className={`bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white`}
           style={{
             WebkitTapHighlightColor: 'transparent',
             touchAction: 'manipulation',

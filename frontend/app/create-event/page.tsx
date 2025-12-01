@@ -14,7 +14,7 @@ import Link from "next/link"
 import { useEventTicketingSetters } from '../../hooks/useEventTicketing'
 
 export default function CreateEvent() {
-  const { address, isConnected } = useConnection()
+  const { isConnected } = useConnection()
   const router = useRouter()
   const [formData, setFormData] = useState({
     title: "",
@@ -26,7 +26,7 @@ export default function CreateEvent() {
     totalSupply: "",
     // bannerImage: null as File | null, // Temporarily disabled as per issue #63
   })
-  const { createTicket, hash, error, isPending, isConfirming, isConfirmed } = useEventTicketingSetters()
+  const { createTicket, error, isPending, isConfirming, isConfirmed } = useEventTicketingSetters()
 
   useEffect(() => {
     if (isPending) {
