@@ -1,13 +1,21 @@
-import { ReportHandler } from 'web-vitals';
+type Metric = {
+  name: string;
+  value: number;
+  id: string;
+  delta: number;
+  entries: PerformanceEntry[];
+};
+
+type ReportHandler = (metric: Metric) => void;
 
 const reportWebVitals = (onPerfEntry?: ReportHandler) => {
   if (onPerfEntry && onPerfEntry instanceof Function) {
-    import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-      getCLS(onPerfEntry);
-      getFID(onPerfEntry);
-      getFCP(onPerfEntry);
-      getLCP(onPerfEntry);
-      getTTFB(onPerfEntry);
+    import('web-vitals').then(({ onCLS, onFID, onFCP, onLCP, onTTFB }) => {
+      onCLS(onPerfEntry);
+      onFID(onPerfEntry);
+      onFCP(onPerfEntry);
+      onLCP(onPerfEntry);
+      onTTFB(onPerfEntry);
     });
   }
 };
@@ -16,7 +24,7 @@ export const startPerformanceMonitoring = () => {
   // Only run in production
   if (process.env.NODE_ENV === 'production') {
     // Send metrics to your analytics/observability service
-    reportWebVitals((metric) => {
+    reportWebVitals((metric: Metric) => {
       // You can send these metrics to any analytics service
       console.log('[Performance]', metric);
       
