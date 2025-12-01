@@ -25,11 +25,26 @@ const config: HardhatUserConfig = {
       url: "https://alfajores-forno.celo-testnet.org",
       accounts: [PRIVATE_KEY],
     },
+    celo_mainnet: {
+      url: "https://rpc.ankr.com/celo",
+      accounts: [PRIVATE_KEY],
+    },
+    base_sepolia: {
+      url: "https://base-sepolia-public.nodies.app",
+      accounts: [PRIVATE_KEY],
+    },
+    base_mainnet: {
+      url: "https://base.drpc.org",
+      accounts: [PRIVATE_KEY],
+    }
   },
   etherscan: {
     apiKey: {
       "celo-sepolia": API_KEY,
       "celo_alfajores": API_KEY,
+      "celo_mainnet": API_KEY,
+      "base_sepolia": "AFH33ICW4NXRCWMQB78YDCEUB1CPMHYKYU",
+      "base_mainnet": API_KEY,
     },
     customChains: [
       {
@@ -48,6 +63,30 @@ const config: HardhatUserConfig = {
           browserURL: "https://celo-alfajores.blockscout.com/"
         }
       },
+      {
+        network: "celo_mainnet",
+        chainId: 42220,
+        urls: {
+          apiURL: "https://celo.blockscout.com/api",
+          browserURL: "https://celo.blockscout.com/"
+        }
+      },
+      {
+        network: "base_sepolia",
+        chainId: 84531,
+        urls: {
+          apiURL: "https://base-sepolia.blockscout.com/api",
+          browserURL: "https://base-sepolia.blockscout.com/"
+        }
+      },
+      {
+        network: "base_mainnet",
+        chainId: 8453,
+        urls: {
+          apiURL: "https://base.blockscout.com/api",
+          browserURL: "https://base.blockscout.com/"
+        }
+      }
     ],
   },
   sourcify: {

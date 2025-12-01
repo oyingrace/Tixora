@@ -3,10 +3,13 @@
 
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
+const owner = "0x08d0d1572A8a714D90D670Ea344Dd23B1dF565Dd";
+ 
+
 const NFTName = "Tixora NFT";
 const NFTSymbol = "TIXft";
 const imageUri = "ipfs://bafybeidjmguiviozpgptmvbkq4mzivq5vp3uktw3fuouzk2i25binmfyxy";
-const deployerAddress = "0x6Cac76f9e8d6F55b3823D8aEADEad970a5441b67";
+const deployerAddress = owner;
 
 const EventTicketingModule = buildModule("EventTicketing", (m) => {
   const ticketNFT = m.contract("TicketNft", [NFTName, NFTSymbol, imageUri]);
