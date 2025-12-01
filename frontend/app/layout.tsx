@@ -5,6 +5,13 @@ import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 import { headers } from "next/headers";
 import { ThemeProvider } from "@/components/theme-provider";
+import dynamic from 'next/dynamic';
+
+// Dynamically import PerformanceMonitor with no SSR
+const PerformanceMonitor = dynamic(
+  () => import('@/components/performance-monitor'),
+  { ssr: false }
+);
 
 const inter = Inter({
   subsets: ["latin"],
@@ -42,6 +49,7 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <ContextProvider cookies={cookies}>
+            <PerformanceMonitor />
             <Header/>
             {children}
           </ContextProvider>
