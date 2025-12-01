@@ -10,12 +10,25 @@ type ReportHandler = (metric: Metric) => void;
 
 const reportWebVitals = (onPerfEntry?: ReportHandler) => {
   if (onPerfEntry && onPerfEntry instanceof Function) {
-    import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-      getCLS(onPerfEntry);
-      getFID(onPerfEntry);
-      getFCP(onPerfEntry);
-      getLCP(onPerfEntry);
-      getTTFB(onPerfEntry);
+    import('web-vitals').then(({ onCLS, onFID, onFCP, onLCP, onTTFB }) => {
+      // Core Web Vitals
+      onCLS(onPerfEntry);
+      onFID(onPerfEntry);
+      onFCP(onPerfEntry);
+      onLCP(onPerfEntry);
+      
+      // Additional metrics
+      onTTFB(onPerfEntry);
+      
+      // Note: For web-vitals v3.5.0, we use the 'on' prefix for all metrics
+      // The callback will receive a metric object with the following shape:
+      // {
+      //   name: string, // The name of the metric (e.g., 'CLS', 'FID', 'FCP', 'LCP', 'TTFB')
+      //   value: number, // The metric value
+      //   id: string,    // A unique ID for this metric
+      //   delta: number, // The difference between the current and previous value (if applicable)
+      //   entries: PerformanceEntry[] // The raw performance entries used to calculate the metric
+      // }
     });
   }
 };
