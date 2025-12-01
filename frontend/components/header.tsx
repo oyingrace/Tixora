@@ -36,7 +36,7 @@ const mobileMenuVariants = {
     y: 0,
     transition: {
       duration: 0.2,
-      ease: "easeInOut"
+      ease: "easeInOut" as const
     }
   },
   exit: { 
@@ -44,7 +44,7 @@ const mobileMenuVariants = {
     y: -20,
     transition: {
       duration: 0.15,
-      ease: "easeIn"
+      ease: "easeIn" as const
     }
   }
 };
@@ -218,13 +218,15 @@ export default function Header() {
               <nav className="flex-1 p-4 space-y-4">
                 {renderNavLinks(true)}
                 
-                <div className="pt-4 border-t border-slate-800">
-                  <div className="flex items-center justify-between space-x-4">
-                    <ThemeToggle />
-                    <NetworkSwitcher />
-                  </div>
-                  <div className="mt-4">
-                    <CustomConnectButton />
+                <div className="pt-4 border-t border-slate-800 space-y-4">
+                  <div className="flex flex-col space-y-4">
+                    <div className="w-full">
+                      <CustomConnectButton />
+                    </div>
+                    <div className="flex items-center justify-between w-full">
+                      <ThemeToggle />
+                      <NetworkSwitcher />
+                    </div>
                   </div>
                 </div>
               </nav>
