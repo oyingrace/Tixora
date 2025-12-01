@@ -17,14 +17,14 @@ interface ContractAddresses {
 
 export const CONTRACT_ADDRESSES: ContractAddresses = {
   [ChainId.BASE]: {
-    ticketNft: "",
-    eventTicketing: "",
-    resaleMarket: "",
+    ticketNft: "0x79e6a4c5688f76C3CafCf6bcDA8341A0f5287423",
+    eventTicketing: "0xe616132Bc43474DBb5968ad4438DAC1b0Ad70803",
+    resaleMarket: "0x03597D130387702B29B21155fAA80C3A7d40FC3d",
   },
   [ChainId.CELO]: {
-    ticketNft: "",
-    eventTicketing: "",
-    resaleMarket: "",
+    ticketNft: "0x7d05e5F211E53F2D5F867042b26673D9e47035d0",
+    eventTicketing: "0xea1895CaB77dD22204942747c0A96AD094B76512",
+    resaleMarket: "0x004CCd796Dd3bABA76F83B79C332BcCA36558F39",
   },
   [ChainId.CELO_SEPOLIA]: {
     ticketNft: "0x3C4603b75EaB1dccC581Eefc2ac8A9FD99bFFb88",
@@ -32,9 +32,9 @@ export const CONTRACT_ADDRESSES: ContractAddresses = {
     resaleMarket: "0x1a5CBd231304DED72beDe6edaf06c00C25011f4e",
   },
   [ChainId.BASE_SEPOLIA]: {
-    ticketNft: "",
-    eventTicketing: "",
-    resaleMarket: "",
+    ticketNft: "0xe616132Bc43474DBb5968ad4438DAC1b0Ad70803",
+    eventTicketing: "0x02ea74b37EB21a0DF7Ab06bBCA892Ec0a1135226",
+    resaleMarket: "0x2dCe6F795565CeC6FeF0C29DdF4D0787b1d929eB",
   },
 };
 
