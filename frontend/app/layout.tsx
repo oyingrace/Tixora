@@ -1,8 +1,6 @@
 // 'use client';
 
 import type { Metadata } from "next";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
 import { Inter } from "next/font/google";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -39,7 +37,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${GeistSans.variable} ${GeistMono.variable} ${inter.variable}`}
+      className={inter.variable}
     // suppressHydrationWarning
     >
       <body className="min-h-screen bg-background font-sans antialiased">
