@@ -25,10 +25,10 @@ export function register() {
       replaysSessionSampleRate: 0.1,
       replaysOnErrorSampleRate: 1.0,
       integrations: [
-        new Sentry.BrowserTracing({
+        // new Sentry.BrowserTracing({
           // Add browser tracing integration
-        }),
-        new Sentry.Replay(),
+        // }),
+        // new Sentry.Replay(),
       ],
     });
   }
