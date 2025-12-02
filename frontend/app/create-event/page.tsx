@@ -62,7 +62,7 @@ export default function CreateEvent() {
     const price = parseFloat(formData.price)
     const totalSupply = parseInt(formData.totalSupply)
 
-    if (isNaN(price) || price <= 0) {
+    if (isNaN(price)) {
       toast.error("Please enter a valid price greater than 0")
       return
     }
@@ -103,39 +103,16 @@ export default function CreateEvent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Form validation
-    if (!formData.title || !formData.description || !formData.date || !formData.time || !formData.location || !formData.price || !formData.totalSupply) {
-      toast.error("Please fill in all required fields")
-      return
-    }
-
-    const price = parseFloat(formData.price)
-    const totalSupply = parseInt(formData.totalSupply)
-
-    if (isNaN(price) || price <= 0) {
-      toast.error("Please enter a valid price greater than 0")
-      return
-    }
-
-    if (isNaN(totalSupply) || totalSupply <= 0) {
-      toast.error("Please enter a valid total supply greater than 0")
-      return
-    }
-
     // Check if event date is in the future
     const eventDateTime = new Date(`${formData.date}T${formData.time}`)
-    if (eventDateTime <= new Date()) {
-      toast.error("Event date must be in the future")
-      return
-    }
 
     // Create the ticket
     createTicket(
-      BigInt(Math.floor(price * 10 ** 18)),
+      BigInt(Math.floor(Number(formData.price) * 10 ** 18)),
       formData.title,
       formData.description,
       BigInt(Math.floor(eventDateTime.getTime() / 1000)),
-      BigInt(totalSupply),
+      BigInt(Number(formData.totalSupply)),
       JSON.stringify({
         bannerImage: "",
         date: formData.date,
@@ -326,7 +303,7 @@ export default function CreateEvent() {
                           type="number"
                           inputMode="decimal"
                           step="0.01"
-                          min="0.01"
+                          min="0"
                           value={formData.price}
                           onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                           placeholder="25.00"

@@ -10,6 +10,13 @@ import { ChainId, eventTicketingAbi, getContractAddresses } from "@/lib/addressA
 import { useEventTicketingGetters } from "@/hooks/useEventTicketing"
 import { toast } from "react-toastify"
 import { Address } from "viem"
+import dynamic from 'next/dynamic'
+
+// Lazy load the SelfVerification component to avoid SSR issues
+const SelfVerification = dynamic(
+  () => import('@/components/Self').then((mod) => mod.default),
+  { ssr: false }
+)
 
 interface MarketplaceEvent {
   id: number
@@ -33,8 +40,10 @@ interface EventCardProps {
 
 export function EventCard({ event }: EventCardProps) {
   const router = useRouter()
-  const { writeContract, isPending, data: hash , error: writeError} = useWriteContract()
+  const { writeContract, isPending, data: hash, error: writeError } = useWriteContract()
   const [purchasing, setPurchasing] = useState(false)
+  const [showVerification, setShowVerification] = useState(false)
+  const [verificationComplete, setVerificationComplete] = useState(false)
   const [imageError, setImageError] = useState(false)
   const { address, isConnected, chain } = useConnection()
   const chainId = chain?.id || ChainId.CELO_SEPOLIA || ChainId.BASE || ChainId.BASE_SEPOLIA;
@@ -42,10 +51,8 @@ export function EventCard({ event }: EventCardProps) {
   const { useGetTotalTickets, useIsRegistered } = useEventTicketingGetters()
   const { data: currentBalance } = useBalance()
   
-  // const { isLoading: checkingRegistration } = useGetTotalTickets()
   const { isLoading: checkingRegistration, data: isRegistered } = useIsRegistered(BigInt(event.id), address)
   
-  // Wait for transaction receipt
   const { isLoading: isConfirming, isSuccess, error: receiptError } = useWaitForTransactionReceipt({
     hash,
   })
@@ -71,8 +78,20 @@ export function EventCard({ event }: EventCardProps) {
     return <Badge className="bg-purple-500 text-white">{event.ticketsLeft} left</Badge>
   }
 
-  const handlePurchaseTicket = (e: React.MouseEvent) => {
-    e.stopPropagation() // Prevent card click navigation
+  const handleVerificationSuccess = () => {
+    setVerificationComplete(true)
+    setShowVerification(false)
+    // Proceed with ticket purchase after successful verification
+    proceedWithTicketPurchase()
+  }
+
+  const handleVerificationError = (error: Error) => {
+    toast.error("Identity verification failed. Please try again.")
+    setPurchasing(false)
+  }
+
+  const handlePurchaseClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
     
     if (!isConnected) {
       toast.error("Please connect your wallet first")
@@ -89,42 +108,41 @@ export function EventCard({ event }: EventCardProps) {
       return
     }
 
-    setPurchasing(true)
+    // Check if verification is required and not yet completed
+    if (process.env.NEXT_PUBLIC_ENABLE_SELF_VERIFICATION === 'true' && !verificationComplete) {
+      setShowVerification(true)
+      return
+    }
 
+    proceedWithTicketPurchase()
+  }
+
+  const proceedWithTicketPurchase = () => {
+    setPurchasing(true)
+    
     try {
       // Check if user has enough balance
       const balance = currentBalance
-      
       const requiredAmount = event.originalPrice
       const userBalance = Number(balance?.value)
       
       if (userBalance < requiredAmount) {
-        toast.error(`Insufficient balance. You need ${event.price} ${price} to purchase this ticket.`)
+        toast.error("Insufficient balance for this purchase")
         setPurchasing(false)
         return
       }
 
-      toast.info(`Purchasing ticket for "${event.eventTitle}", click Confirm in your wallet to approve the transaction...`)
-      // Call the smart contract to register for the event
-      try {
-        const result = writeContract({
-          address: eventTicketing as Address,
-          abi: eventTicketingAbi,
+      // Proceed with ticket purchase
+      writeContract({
+        address: eventTicketing as `0x${string}`,
+        abi: eventTicketingAbi,
           functionName: 'register',
-          args: [BigInt(event.id)],
+        args: [BigInt(event.id)],
           value: event.originalPrice,
-        })
-        
-        console.log('Write contract result:', result)
-      } catch (contractError) {
-        console.error('Contract call error:', contractError)
-        toast.error(`Contract call failed`)
-        setPurchasing(false)
-      }
-
+      })
     } catch (error) {
-      console.error("Purchase error:", error)
-      toast.error("Transaction failed. Please check your wallet and try again.")
+      console.error("Error purchasing ticket:", error)
+      toast.error("Failed to process ticket purchase")
       setPurchasing(false)
     }
   }
@@ -133,7 +151,7 @@ export function EventCard({ event }: EventCardProps) {
   useEffect(() => {
     if (isSuccess && purchasing) {
       setPurchasing(false)
-      toast.success("🎉 Ticket purchased successfully! Welcome to the event!")
+      toast.success("Ticket purchased successfully! Welcome to the event!")
       // Small delay before refresh to show success message
       setTimeout(() => {
         window.location.reload()
@@ -149,17 +167,17 @@ export function EventCard({ event }: EventCardProps) {
       
       // Check for specific error types
       if (writeError.message.includes("insufficient funds")) {
-        toast.error("💰 Insufficient funds for transaction. Please check your balance.")
+        toast.error("Insufficient funds for transaction. Please check your balance.")
       } else if (writeError.message.includes("rejected")) {
-        toast.error("❌ Transaction was rejected by user.")
+        toast.error("Transaction was rejected by user.")
       } else if (writeError.message.includes("network")) {
-        toast.error("🌐 Network error. Please check your connection.")
+        toast.error("Network error. Please check your connection.")
       } else if (writeError.message.includes("reverted")) {
-        toast.error("⚠️ Transaction failed: Execution reverted.")
+        toast.error("Transaction failed: Execution reverted.")
       } else if (writeError.message.includes("RPC")) {
-        toast.error("🔄 Transaction failed: Internal JSON-RPC error. Please try again.")
+        toast.error("Transaction failed: Internal JSON-RPC error. Please try again.")
       } else {
-        toast.error(`❗ Transaction failed: ${writeError.message.slice(0, 100)}...`)
+        toast.error(`Transaction failed: ${writeError.message.slice(0, 100)}...`)
       }
     }
   }, [writeError])
@@ -169,7 +187,7 @@ export function EventCard({ event }: EventCardProps) {
     if (receiptError) {
       console.error("Transaction receipt error:", receiptError)
       setPurchasing(false)
-      toast.error(`❗ Transaction failed: ${receiptError.message}`)
+      toast.error(`Transaction failed: ${receiptError.message}`)
     }
   }, [receiptError])
 
@@ -188,7 +206,7 @@ export function EventCard({ event }: EventCardProps) {
 
   const handleNetworkSwitch = (e: React.MouseEvent) => {
     e.stopPropagation()
-    toast.error(`⚠️ Please switch to ${price} Sepolia testnet (Chain ID: 11142220) to purchase tickets`)
+    toast.error(`Please switch to ${price} Sepolia testnet ${chainId === ChainId.BASE_SEPOLIA || chainId === ChainId.BASE ? "Base" : "Celo"} to purchase tickets`)
   }
 
   const formatEventDate = (dateString: string) => {
@@ -238,7 +256,7 @@ export function EventCard({ event }: EventCardProps) {
           
           {event.trending && (
             <Badge className="absolute bottom-3 left-3 text-xs bg-linear-to-r from-orange-500 to-red-500 text-white animate-pulse">
-              🔥 Trending
+              Trending
             </Badge>
           )}
         </div>
@@ -290,7 +308,7 @@ export function EventCard({ event }: EventCardProps) {
               ) : (
                 <Button
                   className="bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/25"
-                  onClick={handlePurchaseTicket}
+                  onClick={handlePurchaseClick}
                   disabled={isProcessing}
                   size="sm"
                 >
@@ -322,6 +340,32 @@ export function EventCard({ event }: EventCardProps) {
           </div>
         </div>
       </CardContent>
+
+      {/* Self Verification Modal */}
+      {showVerification && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4">Identity Verification Required</h3>
+            <p className="mb-4 text-gray-600">
+              To purchase tickets, please verify your identity using the Self app.
+            </p>
+            <SelfVerification 
+              onVerificationSuccess={handleVerificationSuccess}
+              onVerificationError={handleVerificationError}
+            />
+            <Button 
+              onClick={() => {
+                setShowVerification(false)
+                setPurchasing(false)
+              }} 
+              variant="outline" 
+              className="mt-4 w-full"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
     </Card>
   )
 }
