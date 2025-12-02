@@ -3,14 +3,14 @@ import html2canvas from 'html2canvas';
 export async function captureScreenshot(): Promise<string | null> {
   try {
     const canvas = await html2canvas(document.documentElement, {
-      scale: 0.5,
+      // scale: 0.5,
       useCORS: true,
       logging: false,
       allowTaint: true,
-      scrollX: -window.scrollX,
-      scrollY: -window.scrollY,
-      windowWidth: document.documentElement.scrollWidth,
-      windowHeight: document.documentElement.scrollHeight,
+      // scrollX: -window.scrollX,
+      // scrollY: -window.scrollY,
+      // windowWidth: document.documentElement.scrollWidth,
+      // windowHeight: document.documentElement.scrollHeight,
     });
     
     // Convert canvas to blob then to base64

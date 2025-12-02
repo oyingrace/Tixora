@@ -32,7 +32,7 @@ export default function CreateEvent() {
     if (isPending) {
       toast.info("Creating event on blockchain...")
     }
-  }, [isPending]) 
+  }, [isPending])
 
   useEffect(() => {
     if (isConfirming) {
@@ -61,12 +61,12 @@ export default function CreateEvent() {
 
     const price = parseFloat(formData.price)
     const totalSupply = parseInt(formData.totalSupply)
-    
+
     if (isNaN(price) || price <= 0) {
       toast.error("Please enter a valid price greater than 0")
       return
     }
-    
+
     if (isNaN(totalSupply) || totalSupply <= 0) {
       toast.error("Please enter a valid total supply greater than 0")
       return
@@ -80,19 +80,19 @@ export default function CreateEvent() {
     }
 
     createTicket(
-        BigInt(Math.floor(price * 10**18)),
-        formData.title,
-        formData.description,
-        BigInt(eventDateTime.getTime() / 1000),
-        BigInt(totalSupply),
-        JSON.stringify({
-          // bannerImage: formData.bannerImage ? formData.bannerImage.name : "", // Temporarily disabled as per issue #63
-          bannerImage: "",
-          date: formData.date,
-          time: formData.time
-        }),
-        formData.location
-      )
+      BigInt(Math.floor(price * 10 ** 18)),
+      formData.title,
+      formData.description,
+      BigInt(eventDateTime.getTime() / 1000),
+      BigInt(totalSupply),
+      JSON.stringify({
+        // bannerImage: formData.bannerImage ? formData.bannerImage.name : "", // Temporarily disabled as per issue #63
+        bannerImage: "",
+        date: formData.date,
+        time: formData.time
+      }),
+      formData.location
+    )
   }
 
   if (!isConnected) {
@@ -102,7 +102,7 @@ export default function CreateEvent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     // Form validation
     if (!formData.title || !formData.description || !formData.date || !formData.time || !formData.location || !formData.price || !formData.totalSupply) {
       toast.error("Please fill in all required fields")
@@ -111,12 +111,12 @@ export default function CreateEvent() {
 
     const price = parseFloat(formData.price)
     const totalSupply = parseInt(formData.totalSupply)
-    
+
     if (isNaN(price) || price <= 0) {
       toast.error("Please enter a valid price greater than 0")
       return
     }
-    
+
     if (isNaN(totalSupply) || totalSupply <= 0) {
       toast.error("Please enter a valid total supply greater than 0")
       return
@@ -131,7 +131,7 @@ export default function CreateEvent() {
 
     // Create the ticket
     createTicket(
-      BigInt(Math.floor(price * 10**18)),
+      BigInt(Math.floor(price * 10 ** 18)),
       formData.title,
       formData.description,
       BigInt(Math.floor(eventDateTime.getTime() / 1000)),
@@ -144,28 +144,27 @@ export default function CreateEvent() {
       formData.location
     )
   }
-  }
 
   const totalRevenue = formData.price && formData.totalSupply
     ? (Number.parseFloat(formData.price) * Number.parseInt(formData.totalSupply)).toFixed(2)
     : "0"
-
+  
   const platformFee = formData.price && formData.totalSupply
     ? (Number.parseFloat(totalRevenue) * 0.025).toFixed(2) // 2.5% platform fee
     : "0"
-
+  
   const yourEarnings = formData.price && formData.totalSupply
     ? (Number.parseFloat(totalRevenue) - Number.parseFloat(platformFee)).toFixed(2)
     : "0"
-
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/10 to-slate-900">
+    <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900/10 to-slate-900">
       <div className="pb-8 sm:pb-16 px-3 sm:px-4 pt-6 sm:pt-8">
         <div className="container mx-auto max-w-6xl px-2 sm:px-4">
           {/* Header with back button */}
           <div className="mb-8 sm:mb-12">
-            <Link 
-              href="/dashboard" 
+            <Link
+              href="/dashboard"
               className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors mb-4 sm:mb-6 text-sm sm:text-base"
               style={{ minHeight: '44px' }}
             >
@@ -173,34 +172,34 @@ export default function CreateEvent() {
               Back to Dashboard
             </Link>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-2">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex-shrink-0 flex items-center justify-center">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-linear-to-r from-purple-500 to-pink-500 shrink-0 flex items-center justify-center">
                 <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-linear-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
                   Create Your Event
                 </h1>
                 <p className="text-slate-300 text-sm sm:text-base mt-1 sm:mt-2">Launch your next amazing event on the blockchain</p>
               </div>
             </div>
           </div>
-
+  
           <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
             <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
               {/* Left Column - Event Details */}
               <div className="lg:col-span-2 space-y-6 sm:space-y-8">
                 {/* Basic Information */}
-                <Card className="bg-gradient-to-br from-slate-800/90 to-purple-900/20 border-purple-500/30 shadow-2xl">
+                <Card className="bg-linear-to-br from-slate-800/90 to-purple-900/20 border-purple-500/30 shadow-2xl">
                   <CardHeader className="p-4 sm:p-6">
                     <CardTitle className="flex items-center gap-2 sm:gap-3 text-white text-xl sm:text-2xl">
-                      <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400 flex-shrink-0" />
+                      <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400 shrink-0" />
                       Basic Information
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6 pt-0">
                     <div className="space-y-2">
                       <Label htmlFor="title" className="text-purple-200 font-medium flex items-center gap-2 text-sm sm:text-base">
-                        <Sparkles className="h-4 w-4 flex-shrink-0" />
+                        <Sparkles className="h-4 w-4 shrink-0" />
                         Event Title *
                       </Label>
                       <div className="relative">
@@ -215,10 +214,10 @@ export default function CreateEvent() {
                         />
                       </div>
                     </div>
-
+  
                     <div className="space-y-2">
                       <Label htmlFor="description" className="text-purple-200 font-medium flex items-center gap-2 text-sm sm:text-base">
-                        <FileText className="h-4 w-4 flex-shrink-0" />
+                        <FileText className="h-4 w-4 shrink-0" />
                         Description *
                       </Label>
                       <div className="relative">
@@ -229,19 +228,19 @@ export default function CreateEvent() {
                           placeholder="Join us for an incredible journey into the future of Web3 technology. Connect with industry leaders, discover innovative projects, and shape the decentralized future..."
                           rows={8}
                           required
-                          className="w-full bg-slate-800/80 border-purple-500/30 text-white focus:border-purple-400 focus:ring-purple-400/20 text-sm sm:text-base resize-none min-h-[12rem] sm:min-h-[16rem]"
+                          className="w-full bg-slate-800/80 border-purple-500/30 text-white focus:border-purple-400 focus:ring-purple-400/20 text-sm sm:text-base resize-none min-h-48 sm:min-h-64"
                         />
                       </div>
                       <p className="text-slate-400 text-xs sm:text-sm">Tell people what makes your event special</p>
                     </div>
                   </CardContent>
                 </Card>
-
+  
                 {/* Event Details */}
-                <Card className="bg-gradient-to-br from-slate-800/90 to-blue-900/20 border-blue-500/30 shadow-2xl">
+                <Card className="bg-linear-to-br from-slate-800/90 to-blue-900/20 border-blue-500/30 shadow-2xl">
                   <CardHeader className="p-4 sm:p-6">
                     <CardTitle className="flex items-center gap-2 sm:gap-3 text-white text-xl sm:text-2xl">
-                      <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-blue-400 flex-shrink-0" />
+                      <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-blue-400 shrink-0" />
                       Event Details
                     </CardTitle>
                   </CardHeader>
@@ -249,7 +248,7 @@ export default function CreateEvent() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                       <div className="space-y-2">
                         <Label htmlFor="date" className="text-blue-200 font-medium flex items-center gap-2 text-sm sm:text-base">
-                          <Calendar className="h-4 w-4 flex-shrink-0" />
+                          <Calendar className="h-4 w-4 shrink-0" />
                           Date *
                         </Label>
                         <div className="relative">
@@ -266,7 +265,7 @@ export default function CreateEvent() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="time" className="text-blue-200 font-medium flex items-center gap-2 text-sm sm:text-base">
-                          <Clock className="h-4 w-4 flex-shrink-0" />
+                          <Clock className="h-4 w-4 shrink-0" />
                           Time *
                         </Label>
                         <div className="relative">
@@ -282,10 +281,10 @@ export default function CreateEvent() {
                         </div>
                       </div>
                     </div>
-
+  
                     <div className="space-y-2">
                       <Label htmlFor="location" className="text-blue-200 font-medium flex items-center gap-2 text-sm sm:text-base">
-                        <MapPin className="h-4 w-4 flex-shrink-0" />
+                        <MapPin className="h-4 w-4 shrink-0" />
                         Location *
                       </Label>
                       <div className="relative">
@@ -304,21 +303,21 @@ export default function CreateEvent() {
                   </CardContent>
                 </Card>
               </div>
-
+  
               {/* Right Column - Ticket Configuration & Summary */}
               <div className="space-y-8">
                 {/* Ticket Configuration */}
-                <Card className="bg-gradient-to-br from-slate-800/90 to-green-900/20 border-green-500/30 shadow-2xl">
+                <Card className="bg-linear-to-br from-slate-800/90 to-green-900/20 border-green-500/30 shadow-2xl">
                   <CardHeader className="p-4 sm:p-6">
                     <CardTitle className="flex items-center gap-2 sm:gap-3 text-white text-xl sm:text-2xl">
-                      <Coins className="h-5 w-5 sm:h-6 sm:w-6 text-green-400 flex-shrink-0" />
+                      <Coins className="h-5 w-5 sm:h-6 sm:w-6 text-green-400 shrink-0" />
                       Pricing
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6 pt-0">
                     <div className="space-y-2">
                       <Label htmlFor="price" className="text-green-200 font-medium flex items-center gap-2 text-sm sm:text-base">
-                        <DollarSign className="h-4 w-4 flex-shrink-0" />
+                        <DollarSign className="h-4 w-4 shrink-0" />
                         Price per Ticket *
                       </Label>
                       <div className="relative">
@@ -339,10 +338,10 @@ export default function CreateEvent() {
                       </div>
                       <p className="text-slate-400 text-xs sm:text-sm">Price per ticket in ETH</p>
                     </div>
-
+  
                     <div className="space-y-2">
                       <Label htmlFor="totalSupply" className="text-green-200 font-medium flex items-center gap-2 text-sm sm:text-base">
-                        <Users className="h-4 w-4 flex-shrink-0" />
+                        <Users className="h-4 w-4 shrink-0" />
                         Number of Tickets *
                       </Label>
                       <div className="relative">
@@ -363,7 +362,7 @@ export default function CreateEvent() {
                     </div>
                   </CardContent>
                 </Card>
-
+  
                 {/* Revenue Summary */}
                 <Card className="bg-linear-to-br from-slate-800/90 to-yellow-900/20 border-yellow-500/30 shadow-2xl">
                   <CardHeader>
@@ -390,14 +389,15 @@ export default function CreateEvent() {
                     </div>
                   </CardContent>
                 </Card>
-
+  
                 {/* Create Button */}
                 <Card className="bg-linear-to-r from-purple-900/30 to-pink-900/30 border-purple-500/30 shadow-2xl">
                   <CardContent className="p-6">
                     <Button
                       type="submit"
-                      className="w-full h-14 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-base sm:text-lg font-semibold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:scale-[1.02] active:scale-95"
+                      className="w-full h-14 bg-linear-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-base sm:text-lg font-semibold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:scale-[1.02] active:scale-95"
                       disabled={isPending || isConfirming}
+                      onClick={createEvent}
                       style={{ minHeight: '56px' }}
                     >
                       {isPending || isConfirming ? (
@@ -424,4 +424,5 @@ export default function CreateEvent() {
       </div>
     </div>
   )
+  
 }
