@@ -11,10 +11,13 @@ import { useEventTicketingGetters } from "@/hooks/useEventTicketing"
 import { toast } from "react-toastify"
 import { Address } from "viem"
 import dynamic from 'next/dynamic'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
+// import SelfVerification from './SelfVerification'
+
 
 // Lazy load the SelfVerification component to avoid SSR issues
 const SelfVerification = dynamic(
-  () => import('@/components/Self').then((mod) => mod.default),
+  () => import('@/components/SelfVerification').then((mod) => mod.default),
   { ssr: false }
 )
 
@@ -85,7 +88,7 @@ export function EventCard({ event }: EventCardProps) {
     proceedWithTicketPurchase()
   }
 
-  const handleVerificationError = (error: Error) => {
+  const handleVerificationError = () => {
     toast.error("Identity verification failed. Please try again.")
     setPurchasing(false)
   }
@@ -111,11 +114,10 @@ export function EventCard({ event }: EventCardProps) {
     // Check if verification is required and not yet completed
     if (process.env.NEXT_PUBLIC_ENABLE_SELF_VERIFICATION === 'true' && !verificationComplete) {
       setShowVerification(true)
-      return
+      } else {
+        proceedWithTicketPurchase()
+      }
     }
-
-    proceedWithTicketPurchase()
-  }
 
   const proceedWithTicketPurchase = () => {
     setPurchasing(true)
@@ -339,10 +341,19 @@ export function EventCard({ event }: EventCardProps) {
             )}
           </div>
         </div>
+        <SelfVerification
+          open={showVerification}
+          onOpenChange={setShowVerification}
+          onVerificationSuccess={handleVerificationSuccess}
+          onVerificationError={(error) => {
+            console.error('Verification error:', error)
+            toast.error('Identity verification failed. Please try again.')
+          }}
+        />
       </CardContent>
 
       {/* Self Verification Modal */}
-      {showVerification && (
+      {/* {showVerification && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-lg font-semibold mb-4">Identity Verification Required</h3>
@@ -365,7 +376,7 @@ export function EventCard({ event }: EventCardProps) {
             </Button>
           </div>
         </div>
-      )}
+      )} */}
     </Card>
   )
 }
