@@ -1,12 +1,8 @@
-import React from 'react'
-import { ArrowRight, Calendar, MapPin, Users } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
-function featureEvents() {
+function FeatureEvents() {
 
     const router = useRouter();
 
@@ -16,7 +12,7 @@ function featureEvents() {
     <section id="featured-events" className="bg-slate-900/30 px-15 md:px-20 lg:px-24 md:pt-[calc(100vh-42rem)] pt-[calc(100vh-65rem)] pb-10">
         <div className="container mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold gradient-text bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent mb-3">
+            <h2 className="text-3xl md:text-4xl font-bold gradient-text bg-linear-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent mb-3">
               Featured Events
             </h2>
             <p className="text-md text-muted-foreground max-w-2xl mx-auto">
@@ -99,4 +95,4 @@ function featureEvents() {
   )
 }
 
-export default featureEvents;
+export default FeatureEvents;

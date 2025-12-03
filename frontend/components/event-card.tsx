@@ -9,10 +9,7 @@ import { useWriteContract, useWaitForTransactionReceipt, useConnection, useBalan
 import { ChainId, eventTicketingAbi, getContractAddresses } from "@/lib/addressAndAbi"
 import { useEventTicketingGetters } from "@/hooks/useEventTicketing"
 import { toast } from "react-toastify"
-import { Address } from "viem"
 import dynamic from 'next/dynamic'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
-// import SelfVerification from './SelfVerification'
 
 
 // Lazy load the SelfVerification component to avoid SSR issues
