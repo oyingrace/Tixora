@@ -88,7 +88,7 @@ export default function Marketplace() {
       const transformedEvents: MarketplaceEvent[] = recentTickets.map((ticket: TicketData) => {
         const eventDate = new Date(Number(ticket.eventTimestamp) * 1000)
         const now = new Date()
-        const isUpcoming = eventDate > now
+        // const isUpcoming = eventDate > now
         const isPassed = eventDate < now
         const isCanceled = ticket.canceled
         const isClosed = ticket.closed
@@ -116,7 +116,7 @@ export default function Marketplace() {
         return {
           id: Number(ticket.id),
           eventTitle: ticket.eventName,
-          price: `${formatEther(ticket.price)} CELO`,
+          price: `${formatEther(ticket.price)} ${chainId === ChainId.CELO_SEPOLIA || chainId === ChainId.CELO ? "CELO" : "ETH"}`,
           date: eventDate.toLocaleDateString('en-US', { 
             year: 'numeric', 
             month: 'short', 
@@ -137,7 +137,7 @@ export default function Marketplace() {
       setEvents(transformedEvents)
       setLoading(false)
     }
-  }, [recentTickets])
+  }, [chainId, recentTickets])
 
   // Redirect to landing page if wallet is not connected
   if (!isConnected) {
@@ -230,7 +230,7 @@ export default function Marketplace() {
                     <AlertCircle className="h-54w-4 text-orange-400 shrink-0" />
                     <div>
                       <p className="text-orange-200 font-medium text-base">Wrong Network</p>
-                      <p className="text-orange-300 text-xs">Please switch to Celo Sepolia testnet to interact with events.</p>
+                      <p className="text-orange-300 text-xs">Please switch to Celo or Base to interact with events.</p>
                     </div>
                   </div>
                 </CardContent>
@@ -363,7 +363,7 @@ export default function Marketplace() {
                   {activeTab === "closed" && "Closed Events"}
                   {searchTerm && (
                     <span className="text-purple-400 ml-2">
-                      matching "{searchTerm}"
+                      matching &quot;{searchTerm}&quot;
                     </span>
                   )}
                 </h2>

@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { useAccount } from "wagmi"
+import { useConnection } from "wagmi"
 import { getContractAddresses, ChainId } from "@/lib/addressAndAbi"
 import { formatEther, parseEther } from "viem"
 import { Button } from "@/components/ui/button"
@@ -34,7 +34,7 @@ interface EventData {
 export default function EventDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { isConnected, address, chainId, chain } = useAccount()
+  const { isConnected, address, chainId, chain } = useConnection()
   const [isLoading, setIsLoading] = useState(true)
   const [purchasing, setPurchasing] = useState(false)
   const [imageError, setImageError] = useState(false)
@@ -263,19 +263,17 @@ export default function EventDetailPage() {
 
     // Check network
     if (![ChainId.CELO_SEPOLIA, ChainId.BASE_SEPOLIA, ChainId.BASE, ChainId.CELO].includes(chainId as number)) {
-      toast.error("⚠️ Please switch to Celo Sepolia or Base Sepolia testnet")
+      toast.error("⚠️ Please switch to Celo or Base network")
       return
     }
 
     setPurchasing(true)
 
-    try {
-      toast.info(`🎫 Preparing to purchase ticket for "${events.eventName}"...`)
-      
+    try {    
       // Convert price from ETH to Wei for the contract call
       const priceInWei = parseEther(events.price)
       
-      toast.info(`💰 Purchasing ticket for "${events.eventName}" - Please confirm the transaction in your wallet. Ticket price: ${events.price} CELO`)
+      toast.info(`💰 Purchasing ticket for "${events.eventName}" - Please confirm the transaction in your wallet. Ticket price: ${events.price} ${chainId === ChainId.CELO_SEPOLIA || chainId === ChainId.CELO ? "CELO" : "ETH"}`)
       
       register(BigInt(events.id), priceInWei)
     } catch (error) {
@@ -286,12 +284,6 @@ export default function EventDetailPage() {
   }
 
   // Handle transaction states with toast notifications
-  useEffect(() => {
-    if (isPending) {
-      toast.info("📤 Transaction submitted! Waiting for confirmation...")
-    }
-  }, [isPending])
-
   useEffect(() => {
     if (isConfirming) {
       toast.info("⏳ Transaction confirmed! Processing on the blockchain...")
@@ -503,7 +495,7 @@ export default function EventDetailPage() {
                     <div>
                       <p className="text-slate-300 text-sm">Price per ticket</p>
                       <p className="text-2xl font-bold bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                        {events?.price} CELO
+                        {events?.price} {chainId === ChainId.CELO_SEPOLIA || chainId === ChainId.CELO ? "CELO" : "ETH"}
                       </p>
                     </div>
                     <div className="text-right">
@@ -526,7 +518,7 @@ export default function EventDetailPage() {
                     <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
                       <p className="text-red-400 text-sm flex items-center gap-2">
                         <AlertTriangle className="w-4 h-4" />
-                        Please switch to Celo Sepolia or Base Sepolia testnet
+                        Please switch to Celo or Base network
                       </p>
                     </div>
                   )}
