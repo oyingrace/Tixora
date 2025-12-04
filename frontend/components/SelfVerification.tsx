@@ -2,10 +2,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { countries, SelfQRcodeWrapper } from '@selfxyz/qrcode'
-import { SelfAppBuilder } from '@selfxyz/qrcode'
+import { SelfQRcodeWrapper, SelfAppBuilder } from '@selfxyz/qrcode'
 import { useConnection } from 'wagmi'
-import { Loader2, AlertCircle, CheckCircle2, X } from 'lucide-react'
+import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
