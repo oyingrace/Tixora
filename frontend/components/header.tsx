@@ -21,8 +21,8 @@ const navLinks = [
     external: true,
     requiresAuth: false 
   },
-  { name: "Resources", path: "/resources", requiresAuth: false },
-  { name: "How It Works", path: "/#how-it-works", requiresAuth: false }
+  { name: "Resources", path: "/resources", requiresAuth: false, hideWhenConnected: true },
+  { name: "How It Works", path: "/#how-it-works", requiresAuth: false, hideWhenConnected: true }
 ]
 
 // Minimum touch target size for better mobile interaction
@@ -110,7 +110,7 @@ export default function Header() {
   // Render navigation links
   const renderNavLinks = (isMobile = false) => {
     const links = navLinks
-      .filter(link => !link.requiresAuth || isConnected)
+      .filter(link => (!link.requiresAuth || isConnected) && !(isConnected && link.hideWhenConnected))
       .map((link) => (
         <li key={link.path} className="w-full">
           <Link
@@ -202,7 +202,7 @@ export default function Header() {
                       priority
                     />
                   </div>
-                  <span className="text-lg font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                  <span className="text-lg font-bold bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
                     Tixora
                   </span>
                 </Link>
@@ -261,7 +261,7 @@ export default function Header() {
                   priority
                 />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+              <span className="text-xl font-bold bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
                 Tixora
               </span>
             </Link>
