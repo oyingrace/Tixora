@@ -67,21 +67,21 @@ export default function Dashboard() {
       description: "Browse and purchase event tickets",
       icon: ShoppingBag,
       href: "/marketplace",
-      gradient: "from-purple-500 to-blue-500",
+      gradient: "bg-slate-500",
     },
     {
       title: "My Tickets",
       description: "View and manage your NFT tickets",
       icon: TicketIcon,
       href: "/tickets",
-      gradient: "from-blue-500 to-cyan-500",
+      gradient: "bg-slate-500",
     },
     {
       title: "Create Event",
       description: "Launch your own ticketed event",
       icon: Plus,
       href: "/create-event",
-      gradient: "from-purple-600 to-pink-500",
+      gradient: "bg-slate-600",
     },
   ]
 
