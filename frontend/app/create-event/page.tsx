@@ -149,11 +149,11 @@ export default function CreateEvent() {
               Back to Dashboard
             </Link>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-2">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-linear-to-r from-purple-500 to-pink-500 shrink-0 flex items-center justify-center">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-linear-to-r from-purple-500 to-blue-500 shrink-0 flex items-center justify-center">
                 <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-linear-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
                   Create Your Event
                 </h1>
                 <p className="text-slate-300 text-sm sm:text-base mt-1 sm:mt-2">Launch your next amazing event on the blockchain</p>
@@ -205,7 +205,7 @@ export default function CreateEvent() {
                           placeholder="Join us for an incredible journey into the future of Web3 technology. Connect with industry leaders, discover innovative projects, and shape the decentralized future..."
                           rows={4}
                           required
-                          className="w-full bg-slate-800/80 border-purple-500/30 text-white focus:border-purple-400 focus:ring-purple-400/20 text-sm sm:text-base resize-none min-h-48 sm:min-h-64"
+                          className="w-full bg-slate-800/80 border-purple-500/30 text-white focus:border-purple-400 focus:ring-purple-400/20 text-sm sm:text-base resize-none min-h-38 sm:min-h-46"
                         />
                       </div>
                       <p className="text-slate-400 text-xs sm:text-sm">Tell people what makes your event special</p>
@@ -368,7 +368,7 @@ export default function CreateEvent() {
                 </Card>
   
                 {/* Create Button */}
-                <Card className="bg-linear-to-r from-purple-900/30 to-pink-900/30 border-purple-500/30 shadow-2xl">
+                <Card className="bg-purple-900/20 border-purple-500/30 shadow-2xl">
                   <CardContent className="p-6">
                     <Button
                       type="submit"
