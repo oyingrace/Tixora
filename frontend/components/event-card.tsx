@@ -281,7 +281,7 @@ export function EventCard({ event }: EventCardProps) {
           </div>
 
           <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-700/50">
-            <span className="text-base font-bold bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+            <span className="text-base font-bold bg-purple-400 bg-clip-text text-transparent">
               {event.price}
             </span>
             
@@ -306,7 +306,7 @@ export function EventCard({ event }: EventCardProps) {
                 </Button>
               ) : (
                 <Button
-                  className="bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/25"
+                  className="bg-purple-600 hover:bg-purple-700 text-white transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/25"
                   onClick={handlePurchaseClick}
                   disabled={isProcessing}
                   size="sm"

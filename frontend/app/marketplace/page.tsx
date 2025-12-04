@@ -211,7 +211,7 @@ export default function Marketplace() {
           <div className="text-center mb-10">
             <h1 className="text-4xl font-bold mb-4">
               Event{" "}
-              <span className="bg-linear-to-r text-5xl from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r text-5xl from-purple-400 to-blue-400 bg-clip-text text-transparent">
                 Marketplace
               </span>
             </h1>
@@ -268,7 +268,7 @@ export default function Marketplace() {
                   onClick={() => setSortBy("trending")}
                   className={`h-10 transition-all duration-200 ${
                     sortBy === "trending"
-                      ? "bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-lg"
+                      ? "bg-purple-600 hover:bg-purple-500 hover:shadow-lg"
                       : "border-slate-600 text-slate-300 hover:border-purple-500 hover:text-white"
                   }`}
                 >
@@ -280,7 +280,7 @@ export default function Marketplace() {
                   onClick={() => setSortBy("recent")}
                   className={`h-10 transition-all duration-200 ${
                     sortBy === "recent"
-                      ? "bg-linear-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-lg"
+                      ? "bg-cyan-600 hover:bg-cyan-500 hover:shadow-lg"
                       : "border-slate-600 text-slate-300 hover:border-blue-500 hover:text-white"
                   }`}
                 >
