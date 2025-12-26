@@ -3,7 +3,7 @@
 import { wagmiAdapter, projectId } from '@/config'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createAppKit } from '@reown/appkit/react'
-import { base, baseSepolia, celo, celoSepolia } from '@reown/appkit/networks'
+import { base, celo, } from '@reown/appkit/networks'
 import React, { type ReactNode } from 'react'
 import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi'
 
@@ -16,17 +16,17 @@ if (!projectId) {
 
 // Set up metadata
 const metadata = {
-  name: 'appkit-example',
-  description: 'AppKit Example',
+  name: 'Tixora - Decentralized Event Ticketin',
+  description: 'NFT-based event ticketing platform built',
   url: 'https://appkitexampleapp.com', // origin must match your domain & subdomain
-  icons: ['https://avatars.githubusercontent.com/u/179229932']
+  icons: ['/favicon.ico']
 }
 
 // Create the modal
-const modal = createAppKit({
+export const modal = createAppKit({
   adapters: [wagmiAdapter],
   projectId,
-  networks: [base, baseSepolia, celo, celoSepolia],
+  networks: [base, celo],
   defaultNetwork: base,
   metadata: metadata,
   features: {
