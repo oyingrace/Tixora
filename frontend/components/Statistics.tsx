@@ -62,14 +62,14 @@ function Statistics() {
           value: userStats.attendedEvents.toString(),
           change: userStats.attendedEvents > 0 ? "Based on ticket ownership" : "Connect to see your events",
           icon: Calendar,
-          color: "from-blue-500 to-cyan-500"
+          color: "from-[#51a2ff] to-[#1c398e]"
         },
         {
           label: "Total Spent",
           value: `${userStats.totalSpent} ${price}`,
           change: userStats.attendedEvents > 0 ? "Estimated spending" : "No purchases yet",
           icon: DollarSign,
-          color: "from-green-500 to-emerald-500"
+          color: "from-[#1c398e] to-[#0f172b]"
         },
         {
           label: "Events Created",
@@ -77,7 +77,7 @@ function Statistics() {
           change: userStats.createdEvents > 0 ? 
             `${userStats.createdEvents} events launched` : "Create your first event",
           icon: Plus,
-          color: "from-purple-500 to-pink-500"
+          color: "from-[#51a2ff] to-[#1c398e]"
         },
         {
           label: "Revenue Earned",
@@ -85,7 +85,7 @@ function Statistics() {
           change: userStats.createdEvents > 0 ? 
             `From ${userStats.createdEvents} events` : "No revenue yet",
           icon: Users,
-          color: "from-orange-500 to-red-500"
+          color: "from-[#1c398e] to-[#0f172b]"
         },
       ], [userStats, price])
 
@@ -113,32 +113,32 @@ function Statistics() {
             {/* Platform Overview */}
             {platformStats && (
                 <div className="mb-10">
-                    <h2 className="text-2xl font-semibold mb-3 bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                    <h2 className="text-2xl font-semibold mb-3 text-white">
                         Platform Overview
                     </h2>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-6 px-6">
-                        <Card className="bg-purple-900/30 border-purple-500/30">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <Card className="bg-[#1c398e]/20 border-[#1c398e]/30">
                             <CardContent className="p-4 text-center">
                                 <p className="text-2xl font-bold text-white">{platformStats.totalEvents}</p>
-                                <p className="text-slate-300 text-sm">Total Events</p>
+                                <p className="text-[#a1a1a1] text-sm">Total Events</p>
                             </CardContent>
                         </Card>
-                        <Card className="bg-blue-900/30 border-blue-500/30">
+                        <Card className="bg-[#1c398e]/20 border-[#1c398e]/30">
                             <CardContent className="p-4 text-center">
                                 <p className="text-2xl font-bold text-white">{platformStats.activeEvents}</p>
-                                <p className="text-slate-300 text-sm">Active Events</p>
+                                <p className="text-[#a1a1a1] text-sm">Active Events</p>
                             </CardContent>
                         </Card>
-                        <Card className="bg-green-900/30 border-green-500/30">
+                        <Card className="bg-[#1c398e]/20 border-[#1c398e]/30">
                             <CardContent className="p-4 text-center">
                                 <p className="text-2xl font-bold text-white">{platformStats.totalTicketsSold}</p>
-                                <p className="text-slate-300 text-sm">Tickets Sold</p>
+                                <p className="text-[#a1a1a1] text-sm">Tickets Sold</p>
                             </CardContent>
                         </Card>
-                        <Card className="bg-orange-900/30 border-orange-500/30">
+                        <Card className="bg-[#1c398e]/20 border-[#1c398e]/30">
                             <CardContent className="p-4 text-center">
                                 <p className="text-2xl font-bold text-white">{Number(platformStats.totalPlatformRevenue).toFixed(2)}</p>
-                                <p className="text-slate-300 text-sm">Platform Revenue ({price})</p>
+                                <p className="text-[#a1a1a1] text-sm">Platform Revenue ({price})</p>
                             </CardContent>
                         </Card>
                     </div>
@@ -147,26 +147,26 @@ function Statistics() {
 
             {/* Personal Stats */}
             <div className="mb-10">
-                <h2 className="text-2xl font-semibold mb-3 bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                <h2 className="text-2xl font-semibold mb-3 text-white">
                     Your Stats
                 </h2>
-                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-5 px-6">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {stats.map((stat, index) => {
                         const Icon = stat.icon
                         return (
-                            <Card key={index} className="bg-slate-800/80 border-slate-500/30 overflow-hidden relative">
-                                {/* <div className={`absolute inset-0 bg-linear-to-br ${stat.color} opacity-10`} /> */}
-                                <CardContent className="py-3 px-6 relative z-10">
+                            <Card key={index} className="bg-[#1c398e]/10 border-[#1c398e]/30 hover:border-[#51a2ff]/50 transition-colors">
+                                <CardContent className="py-4 px-4">
                                     <div className="flex items-center justify-between mb-2">
-                                        <Icon className="h-6 w-6 text-purple-400" />
-                                        <div className={`w-3 h-3 rounded-full bg-linear-to-r ${stat.color}`} />
+                                        <div className={`w-10 h-10 rounded-lg bg-linear-to-br ${stat.color} flex items-center justify-center`}>
+                                            <Icon className="h-5 w-5 text-white" />
+                                        </div>
                                     </div>
                                     <div>
-                                        <p className="text-2xl font-bold text-white mb-2">
+                                        <p className="text-2xl font-bold text-white mb-1">
                                             {stat.value}
                                         </p>
-                                        <p className="text-slate-300 font-medium mb-1 text-sm">{stat.label}</p>
-                                        <p className="text-green-400 text-sm font-medium">{stat.change}</p>
+                                        <p className="text-[#a1a1a1] font-medium text-sm mb-1">{stat.label}</p>
+                                        <p className="text-[#51a2ff] text-xs font-medium">{stat.change}</p>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -174,7 +174,6 @@ function Statistics() {
                     })}
                 </div>
             </div>
-
         </div>
     )
 }

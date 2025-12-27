@@ -140,3 +140,13 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* #0f172b → Navbar, footer, dark mode background
+
+#1c398e → Headings, cards, secondary buttons
+
+#51a2ff → Primary CTA buttons, links, icons
+
+#a1a1a1 → Borders, placeholders, muted text
+
+#ffffff → Main background, text on dark sections */
