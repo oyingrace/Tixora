@@ -54,7 +54,7 @@ export function CustomConnectButton() {
     <Button
       onClick={handleConnectWallet}
       variant="secondary"
-      className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+      className="w-full md:w-auto bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
       disabled={isLoading}
     >
       {isLoading ? (

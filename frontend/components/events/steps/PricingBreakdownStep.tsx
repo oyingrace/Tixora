@@ -10,12 +10,10 @@ type PricingBreakdownData = {
 
 type PricingBreakdownStepProps = {
   data: PricingBreakdownData
-  onBack: () => void
-  onSubmit: () => void
   className?: string
 }
 
-export function PricingBreakdownStep({ data, onBack, onSubmit, className }: PricingBreakdownStepProps) {
+export function PricingBreakdownStep({ data, className }: PricingBreakdownStepProps) {
   const PLATFORM_FEE_PERCENTAGE = 2.5 // 2.5% platform fee
   
   const price = parseFloat(data.price) || 0

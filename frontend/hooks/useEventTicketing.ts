@@ -1,4 +1,4 @@
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { Address } from 'viem';
 import { getContractAddresses, ChainId, eventTicketingAbi } from '@/lib/addressAndAbi';
 
@@ -29,8 +29,7 @@ enum Status {
 }
 
 export function useEventTicketingGetters() {
-  const { chain } = useAccount();
-  const chainId = chain?.id || ChainId.CELO_SEPOLIA;
+  const chainId = ChainId.CELO || ChainId.BASE;
   
   const { eventTicketing } = getContractAddresses(chainId);
 
@@ -210,8 +209,7 @@ export function useEventTicketingGetters() {
 }
 
 export function useEventTicketingSetters() {
-  const { chain } = useAccount();
-  const chainId = chain?.id || ChainId.CELO_SEPOLIA;
+  const chainId = ChainId.CELO || ChainId.BASE;
   
   const { eventTicketing } = getContractAddresses(chainId);
 

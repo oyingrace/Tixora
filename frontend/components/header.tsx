@@ -119,8 +119,8 @@ export default function Header() {
             rel={link.external ? "noopener noreferrer" : ""}
             className={`block w-full px-4 py-3 text-left text-sm font-medium transition-colors rounded-lg ${
               pathname === link.path
-                ? "text-purple-400 bg-purple-900/30"
-                : "text-slate-300 hover:bg-slate-800/50"
+                ? "text-white bg-[#1c398e]"
+                : "text-[#a1a1a1] hover:bg-[#1c398e]/30"
             }`}
             onClick={() => isMobile && setIsMobileMenuOpen(false)}
           >
@@ -141,7 +141,7 @@ export default function Header() {
     <button
       ref={menuButtonRef}
       onClick={toggleMobileMenu}
-      className="md:hidden p-2 rounded-md text-slate-300 hover:text-white hover:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+      className="md:hidden p-2 rounded-md text-[#a1a1a1] hover:text-white hover:bg-[#1c398e]/50 focus:outline-none focus:ring-2 focus:ring-[#51a2ff] focus:ring-offset-2 focus:ring-offset-[#0f172b]"
       aria-expanded={isMobileMenuOpen}
       aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
       style={{
@@ -171,7 +171,7 @@ export default function Header() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/60 z-40 md:hidden"
+            className="fixed inset-0 bg-black/70 z-40 md:hidden"
             onClick={() => setIsMobileMenuOpen(false)}
             aria-hidden="true"
           />
@@ -183,10 +183,10 @@ export default function Header() {
             animate="visible"
             exit="exit"
             variants={mobileMenuVariants}
-            className="fixed top-0 right-0 w-4/5 max-w-sm h-full bg-slate-900/95 backdrop-blur-lg shadow-2xl z-50 overflow-y-auto md:hidden"
+            className="fixed top-0 right-0 w-4/5 max-w-sm h-full bg-[#0f172b] backdrop-blur-lg shadow-2xl z-50 overflow-y-auto md:hidden"
           >
             <div className="flex flex-col h-full">
-              <div className="flex items-center justify-between p-4 border-b border-slate-800">
+              <div className="flex items-center justify-between p-4 border-b border-[#1c398e]/50">
                 <Link 
                   href="/" 
                   className="flex items-center space-x-2"
@@ -202,13 +202,13 @@ export default function Header() {
                       priority
                     />
                   </div>
-                  <span className="text-lg font-bold bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                  <span className="text-lg font-bold text-[#51a2ff]">
                     Tixora
                   </span>
                 </Link>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none"
+                  className="p-2 rounded-md text-[#a1a1a1] hover:text-white hover:bg-[#1c398e]/30 focus:outline-none"
                   aria-label="Close menu"
                 >
                   <X className="h-6 w-6" />
@@ -218,7 +218,7 @@ export default function Header() {
               <nav className="flex-1 p-4 space-y-4">
                 {renderNavLinks(true)}
                 
-                <div className="pt-4 border-t border-slate-800 space-y-4">
+                <div className="pt-4 border-t border-[#1c398e]/50 space-y-4">
                   <div className="flex flex-col space-y-4">
                     <div className="w-full">
                       <CustomConnectButton />
@@ -240,7 +240,7 @@ export default function Header() {
   return (
     <>
       <header 
-        className="bg-slate-900/80 border-b border-purple-500/20 backdrop-blur-md sticky top-0 z-50"
+        className="bg-[#0f172b] border-b border-[#1c398e]/50 backdrop-blur-md sticky top-0 z-50"
         style={{ WebkitBackdropFilter: 'blur(12px)' }} // For Safari
       >
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -261,7 +261,7 @@ export default function Header() {
                   priority
                 />
               </div>
-              <span className="text-xl font-bold bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+              <span className="text-xl font-bold text-[#51a2ff]">
                 Tixora
               </span>
             </Link>

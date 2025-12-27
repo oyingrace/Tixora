@@ -1,4 +1,4 @@
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { Address } from 'viem';
 import { getContractAddresses, ChainId, resaleMarketAbi } from '@/lib/addressAndAbi';
 
@@ -12,8 +12,7 @@ interface Listing {
 }
 
 export function useResaleMarketGetters() {
-  const { chain } = useAccount();
-  const chainId = chain?.id || ChainId.CELO_SEPOLIA;
+  const chainId = ChainId.CELO || ChainId.BASE;
   
   const { resaleMarket } = getContractAddresses(chainId);
 
@@ -120,8 +119,7 @@ export function useResaleMarketGetters() {
 }
 
 export function useResaleMarketSetters() {
-  const { chain } = useAccount();
-  const chainId = chain?.id || ChainId.CELO_SEPOLIA;
+  const chainId = ChainId.CELO || ChainId.BASE;
   
   const { resaleMarket } = getContractAddresses(chainId);
 
