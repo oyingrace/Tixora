@@ -4,30 +4,27 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useEventTicketingSetters } from "@/hooks/useEventTicketing"
+import { EventFormProgress } from "./EventFormProgress"
 import { EventDetailsStep } from "./steps/EventDetailsStep"
 import { TicketSetupStep } from "./steps/TicketSetupStep"
+import { PricingBreakdownStep } from "./steps/PricingBreakdownStep"
 import { ReviewStep } from "./steps/ReviewStep"
-import { STEPS } from "../events/EventFormProgress"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 type FormData = {
-  // Event Details
   title: string
   description: string
   date: string
   time: string
   location: string
-  
-  // Ticket Setup
   price: string
   totalSupply: string
 }
 
-type FormErrors = Partial<Record<keyof FormData, string>>
-
 export function CreateEventForm() {
   const router = useRouter()
   const { createTicket, isPending, isConfirming, isConfirmed, error } = useEventTicketingSetters()
-  
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -36,58 +33,46 @@ export function CreateEventForm() {
     time: "",
     location: "",
     price: "",
-    totalSupply: "",
+    totalSupply: ""
   })
-  const [errors, setErrors] = useState<FormErrors>({})
+  const [errors, setErrors] = useState<Partial<FormData>>({})
 
-  // Handle form data updates
-  const updateFormData = (updates: Partial<FormData>) => {
-    setFormData(prev => ({
-      ...prev,
-      ...updates
-    }))
-    // Clear errors for updated fields
-    const updatedFields = Object.keys(updates)
-    const newErrors = { ...errors }
-    updatedFields.forEach(field => {
-      if (newErrors[field as keyof FormErrors]) {
-        delete newErrors[field as keyof FormErrors]
-      }
-    })
-    setErrors(newErrors)
-  }
+  const steps = [
+    { id: 1, name: 'Event Details', status: 'current' as const },
+    { id: 2, name: 'Ticket Setup', status: 'upcoming' as const },
+    { id: 3, name: 'Pricing', status: 'upcoming' as const },
+    { id: 4, name: 'Review', status: 'upcoming' as const },
+  ]
 
-  // Validation functions
+  const updatedSteps = steps.map((step, index) => {
+    if (index < currentStep) {
+      return { ...step, status: 'complete' as const }
+    } else if (index === currentStep) {
+      return { ...step, status: 'current' as const }
+    } else {
+      return { ...step, status: 'upcoming' as const }
+    }
+  })
+
   const validateStep = (step: number): boolean => {
-    const newErrors: FormErrors = {}
+    const newErrors: Partial<FormData> = {}
     
     if (step === 0) {
-      // Validate event details
-      if (!formData.title.trim()) newErrors.title = "Event title is required"
+      if (!formData.title.trim()) newErrors.title = "Title is required"
       if (!formData.description.trim()) newErrors.description = "Description is required"
-      if (!formData.date) newErrors.date = "Event date is required"
-      if (!formData.time) newErrors.time = "Event time is required"
+      if (!formData.date) newErrors.date = "Date is required"
+      if (!formData.time) newErrors.time = "Time is required"
       if (!formData.location.trim()) newErrors.location = "Location is required"
-      
-      // Validate date is in the future
-      if (formData.date && formData.time) {
-        const eventDate = new Date(`${formData.date}T${formData.time}`)
-        if (eventDate <= new Date()) {
-          newErrors.date = "Event date must be in the future"
-        }
-      }
     } else if (step === 1) {
-      // Validate ticket setup
-      if (!formData.price) {
-        newErrors.price = "Price is required"
-      } else if (parseFloat(formData.price) <= 0) {
-        newErrors.price = "Price must be greater than 0"
+      const price = parseFloat(formData.price)
+      const totalSupply = parseInt(formData.totalSupply)
+      
+      if (isNaN(price) || price <= 0) {
+        newErrors.price = "Please enter a valid price greater than 0"
       }
       
-      if (!formData.totalSupply) {
-        newErrors.totalSupply = "Number of tickets is required"
-      } else if (parseInt(formData.totalSupply) <= 0) {
-        newErrors.totalSupply = "Must have at least 1 ticket"
+      if (isNaN(totalSupply) || totalSupply <= 0) {
+        newErrors.totalSupply = "Please enter a valid number of tickets"
       }
     }
     
@@ -95,43 +80,50 @@ export function CreateEventForm() {
     return Object.keys(newErrors).length === 0
   }
 
-  // Navigation handlers
   const nextStep = () => {
-    if (validateStep(currentStep)) {
-      setCurrentStep(prev => Math.min(prev + 1, STEPS.length - 1))
+    if (!validateStep(currentStep)) return
+    
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1)
     }
   }
 
   const prevStep = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 0))
+    setCurrentStep(currentStep - 1)
   }
 
-  // Form submission
   const handleSubmit = async () => {
-    if (validateStep(currentStep)) {
-      try {
-        const eventDateTime = new Date(`${formData.date}T${formData.time}`)
-        
-        await createTicket(
-          BigInt(Math.floor(parseFloat(formData.price) * 10 ** 18)),
-          formData.title,
-          formData.description,
-          BigInt(Math.floor(eventDateTime.getTime() / 1000)),
-          BigInt(parseInt(formData.totalSupply)),
-          JSON.stringify({
-            date: formData.date,
-            time: formData.time,
-            location: formData.location
-          }),
-          formData.location
-        )
-        
-        // Success handling is done via the isConfirmed effect
-      } catch (err) {
-        console.error("Error creating event:", err)
-        toast.error("Failed to create event. Please try again.")
-      }
+    if (!validateStep(2)) return
+    
+    try {
+      const eventDateTime = new Date(`${formData.date}T${formData.time}`)
+      
+      await createTicket(
+        BigInt(Math.floor(parseFloat(formData.price) * 10 ** 18)),
+        formData.title,
+        formData.description,
+        BigInt(Math.floor(eventDateTime.getTime() / 1000)),
+        BigInt(parseInt(formData.totalSupply)),
+        JSON.stringify({
+          date: formData.date,
+          time: formData.time,
+          location: formData.location
+        }),
+        formData.location
+      )
+      
+      // Success handling is done via the isConfirmed effect
+    } catch (error) {
+      console.error("Error creating event:", error)
+      toast.error("Failed to create event. Please try again.")
     }
+  }
+
+  const updateFormData = (updates: Partial<FormData>) => {
+    setFormData(prev => ({
+      ...prev,
+      ...updates
+    }))
   }
 
   // Handle successful creation
@@ -140,91 +132,111 @@ export function CreateEventForm() {
     return null
   }
 
-  // Render current step
   return (
     <div className="space-y-8">
-      {/* Progress indicator */}
-      <div className="border-b pb-6">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl font-bold tracking-tight">Create New Event</h1>
-          <span className="text-sm text-muted-foreground">
-            Step {currentStep + 1} of {STEPS.length}
-          </span>
-        </div>
-        <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-primary transition-all duration-300 ease-in-out"
-            style={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
-          />
+      <div className="bg-card p-6 rounded-xl border">
+        <EventFormProgress 
+          steps={updatedSteps} 
+          currentStep={currentStep + 1} 
+          className="mb-8" 
+        />
+        
+        <div className="space-y-6">
+          {currentStep === 0 && (
+            <EventDetailsStep
+              data={{
+                title: formData.title,
+                description: formData.description,
+                date: formData.date,
+                time: formData.time,
+                location: formData.location,
+              }}
+              onChange={updateFormData}
+              errors={errors}
+            />
+          )}
+          
+          {currentStep === 1 && (
+            <TicketSetupStep
+              data={{
+                price: formData.price,
+                totalSupply: formData.totalSupply
+              }}
+              onChange={updateFormData}
+              errors={errors}
+            />
+          )}
+          
+          {currentStep === 2 && (
+            <PricingBreakdownStep
+              data={{
+                price: formData.price,
+                totalSupply: formData.totalSupply
+              }}
+            />
+          )}
+          
+          {currentStep === 3 && (
+            <ReviewStep
+              data={formData}
+              onSubmit={handleSubmit}
+              isSubmitting={isPending || isConfirming}
+            />
+          )}
+
+          {/* Navigation Buttons */}
+          <div className="flex items-center justify-between pt-6 border-t">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={prevStep}
+              disabled={currentStep === 0 || isPending || isConfirming}
+              className={cn(
+                currentStep === 0 ? 'invisible' : '',
+                "min-w-[100px]"
+              )}
+            >
+              Back
+            </Button>
+            
+            <div className="flex-1 flex justify-end">
+              {currentStep < steps.length - 1 ? (
+                <Button
+                  type="button"
+                  onClick={nextStep}
+                  disabled={isPending || isConfirming}
+                  className="min-w-[120px]"
+                >
+                  Continue
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={isPending || isConfirming}
+                  className="min-w-[160px]"
+                >
+                  {isPending || isConfirming ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Creating Event...
+                    </>
+                  ) : (
+                    'Create Event'
+                  )}
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Form steps */}
-      <div className="space-y-6">
-        {currentStep === 0 && (
-          <EventDetailsStep
-            data={{
-              title: formData.title,
-              description: formData.description,
-              date: formData.date,
-              time: formData.time,
-              location: formData.location,
-            }}
-            onChange={updateFormData}
-            errors={{
-              title: errors.title,
-              description: errors.description,
-              date: errors.date,
-              time: errors.time,
-              location: errors.location,
-            }}
-          />
-        )}
-
-        {currentStep === 1 && (
-          <TicketSetupStep
-            data={{
-              price: formData.price,
-              totalSupply: formData.totalSupply,
-            }}
-            onChange={updateFormData}
-            errors={{
-              price: errors.price,
-              totalSupply: errors.totalSupply,
-            }}
-          />
-        )}
-
-        {currentStep === 2 && (
-          <ReviewStep
-            data={formData}
-            onBack={prevStep}
-            onSubmit={handleSubmit}
-            isSubmitting={isPending || isConfirming}
-          />
-        )}
+      
+      <div className="text-center text-sm text-muted-foreground">
+        <p>Step {currentStep + 1} of {steps.length} • All information can be edited later</p>
       </div>
-
-      {/* Navigation buttons */}
-      {currentStep < 2 && (
-        <div className="flex justify-between pt-4 border-t">
-          <button
-            type="button"
-            onClick={prevStep}
-            disabled={currentStep === 0}
-            className="px-4 py-2 text-sm font-medium text-primary disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Back
-          </button>
-          <button
-            type="button"
-            onClick={nextStep}
-            className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Continue
-          </button>
-        </div>
-      )}
     </div>
   )
 }
