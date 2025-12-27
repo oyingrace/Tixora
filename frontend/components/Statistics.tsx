@@ -54,7 +54,7 @@ function Statistics() {
 
     }, [recentTicketsData, address])
 
-    const price = chainId === ChainId.BASE || chainId === ChainId.BASE_SEPOLIA ? "BASE" : "CELO"
+    const price = chainId === ChainId.BASE ? "BASE" : "CELO"
 
     const stats = useMemo(() => [
         {

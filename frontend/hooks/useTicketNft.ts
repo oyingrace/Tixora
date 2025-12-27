@@ -1,4 +1,4 @@
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { Address } from 'viem';
 import { getContractAddresses, ChainId, ticketNftAbi } from '@/lib/addressAndAbi';
 
@@ -12,8 +12,7 @@ interface TicketMetadata {
 }
 
 export function useTicketNFTGetters() {
-  const { chain } = useAccount();
-  const chainId = chain?.id || ChainId.CELO_SEPOLIA;
+  const chainId = ChainId.CELO|| ChainId.BASE;
   
   const { ticketNft } = getContractAddresses(chainId);
 
@@ -182,8 +181,7 @@ export function useTicketNFTGetters() {
 }
 
 export function useTicketNFTSetters() {
-  const { chain } = useAccount();
-  const chainId = chain?.id || ChainId.CELO_SEPOLIA;
+  const chainId = ChainId.CELO || ChainId.BASE;
   
   const { ticketNft } = getContractAddresses(chainId);
 

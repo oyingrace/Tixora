@@ -1,9 +1,9 @@
 // Supported chains
 export enum ChainId {
   BASE = 8453,
-  BASE_SEPOLIA = 84532,
+  // BASE_SEPOLIA = 84532,
   CELO = 42220,
-  CELO_SEPOLIA = 11142220,
+  // CELO_SEPOLIA = 11142220,
 }
 
 // Contract addresses by chain ID
@@ -26,16 +26,16 @@ export const CONTRACT_ADDRESSES: ContractAddresses = {
     eventTicketing: "0xea1895CaB77dD22204942747c0A96AD094B76512",
     resaleMarket: "0x004CCd796Dd3bABA76F83B79C332BcCA36558F39",
   },
-  [ChainId.CELO_SEPOLIA]: {
-    ticketNft: "0x3C4603b75EaB1dccC581Eefc2ac8A9FD99bFFb88",
-    eventTicketing: "0xA4488a88Bc2508Ea3B80f262C35b886B6f99A5f6",
-    resaleMarket: "0x1a5CBd231304DED72beDe6edaf06c00C25011f4e",
-  },
-  [ChainId.BASE_SEPOLIA]: {
-    ticketNft: "0xe616132Bc43474DBb5968ad4438DAC1b0Ad70803",
-    eventTicketing: "0x02ea74b37EB21a0DF7Ab06bBCA892Ec0a1135226",
-    resaleMarket: "0x2dCe6F795565CeC6FeF0C29DdF4D0787b1d929eB",
-  },
+  // [ChainId.CELO_SEPOLIA]: {
+  //   ticketNft: "0x3C4603b75EaB1dccC581Eefc2ac8A9FD99bFFb88",
+  //   eventTicketing: "0xA4488a88Bc2508Ea3B80f262C35b886B6f99A5f6",
+  //   resaleMarket: "0x1a5CBd231304DED72beDe6edaf06c00C25011f4e",
+  // },
+  // [ChainId.BASE_SEPOLIA]: {
+  //   ticketNft: "0xe616132Bc43474DBb5968ad4438DAC1b0Ad70803",
+  //   eventTicketing: "0x02ea74b37EB21a0DF7Ab06bBCA892Ec0a1135226",
+  //   resaleMarket: "0x2dCe6F795565CeC6FeF0C29DdF4D0787b1d929eB",
+  // },
 };
 
 // Helper function to get contract address for current chain

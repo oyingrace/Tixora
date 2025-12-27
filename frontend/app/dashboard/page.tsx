@@ -16,7 +16,7 @@ export default function Dashboard() {
   const { address, isConnected, chain } = useConnection()
   const router = useRouter()
 
-  const chainId = chain?.id || ChainId.CELO_SEPOLIA;
+  const chainId = chain?.id || ChainId.BASE;
   const { eventTicketing } = getContractAddresses(chainId)
 
   // Get recent tickets data

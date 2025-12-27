@@ -1,20 +1,19 @@
 "use client";
 
-import { useConnection, useSwitchChain, useChainId } from 'wagmi';
+import { useSwitchChain, useChainId } from 'wagmi';
 import { Button } from './ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { ChainId } from '@/lib/addressAndAbi';
 import { toast } from 'react-toastify';
+import Image from 'next/image';
 
 export function NetworkSwitcher() {
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
 
   const networks = [
-    { id: ChainId.BASE, name: 'Base' },
-    { id: ChainId.BASE_SEPOLIA, name: 'Base Sepolia' },
-    { id: ChainId.CELO, name: 'Celo' },
-    { id: ChainId.CELO_SEPOLIA, name: 'Celo Sepolia' },
+    { id: ChainId.BASE, name: 'Base', icon: '/base.jpeg' },
+    { id: ChainId.CELO, name: 'Celo', icon: '/celo.png' },
   ];
 
   const currentNetwork = networks.find((n) => n.id === chainId) || networks[0];
@@ -22,7 +21,7 @@ export function NetworkSwitcher() {
   const handleNetworkSwitch = async (networkId: number) => {
     try {
       await switchChain({ chainId: networkId });
-      toast.success(`Switched to ${networkId === ChainId.BASE ? 'Base' : networkId === ChainId.BASE_SEPOLIA ? 'Base Sepolia' : networkId === ChainId.CELO ? 'Celo' : 'Celo Sepolia'}`);
+      toast.success(`Switched to ${networkId === ChainId.BASE ? 'Base' : networkId === ChainId.CELO ? 'Celo' : 'Unknown Network'}`);
     } catch (error) {
       console.error('Failed to switch network:', error);
       toast.error(
@@ -41,6 +40,13 @@ export function NetworkSwitcher() {
           variant="outline" 
           className="border-slate-700 hover:bg-slate-800/50 text-slate-200 hover:text-white"
         >
+          <Image
+            src={currentNetwork.icon}
+            alt={currentNetwork.name}
+            width={20}
+            height={20}
+            className="rounded-full mr-2"
+          />
           {currentNetwork.name}
           <svg
             width="12"
@@ -71,6 +77,13 @@ export function NetworkSwitcher() {
                 : 'text-slate-300 hover:bg-slate-700/50'
             }`}
           >
+            <Image
+              src={network.icon}
+              alt={network.name}
+              width={20}
+              height={20}
+              className="rounded-full mr-2"
+            />
             {network.name}
           </DropdownMenuItem>
         ))}
