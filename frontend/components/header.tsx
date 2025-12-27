@@ -6,13 +6,13 @@ import { NetworkSwitcher } from './network-switcher'
 import { useConnection } from 'wagmi'
 import { useState, useEffect, useRef } from 'react'
 import { ThemeToggle } from './theme-toggle'
-import { Menu, X, ChevronDown } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CustomConnectButton } from './CustomConnectButton'
 
 const navLinks = [
   { name: "Dashboard", path: "/dashboard", requiresAuth: true },
-  { name: "My Tickets", path: "/tickets", requiresAuth: true },
+  { name: "Profile", path: "/profile", requiresAuth: true },
   { name: "Create Event", path: "/create-event", requiresAuth: true },
   { name: "Marketplace", path: "/marketplace", requiresAuth: false },
   { 

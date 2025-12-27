@@ -20,7 +20,7 @@ interface ListTicketModalProps {
   onClose: () => void
   tokenId: bigint
   eventName: string
-  originalPrice: bigint
+  originalPrice?: bigint
   onListSuccess?: () => void
 }
 
@@ -44,7 +44,9 @@ export function ListTicketModal({
     error: listError
   } = useResaleMarketSetters()
 
-  const originalPriceInEther = formatEther(originalPrice)
+  // Handle undefined originalPrice by defaulting to 0
+  const safeOriginalPrice = originalPrice || BigInt(0)
+  const originalPriceInEther = formatEther(safeOriginalPrice)
 
   // Handle listing success
   useEffect(() => {
@@ -172,7 +174,7 @@ export function ListTicketModal({
           <Button
             onClick={handleListTicket}
             disabled={isListPending || isListConfirming || !priceInput || parseFloat(priceInput) <= 0}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+            className="bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
           >
             {isListPending || isListConfirming ? (
               <>

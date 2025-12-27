@@ -1,0 +1,277 @@
+"use client"
+
+import { useState, useEffect, useMemo } from "react"
+import { useConnection, usePublicClient } from 'wagmi'
+import { formatEther } from 'viem'
+import { toast } from "sonner"
+import { useEventTicketingGetters } from "@/hooks/useEventTicketing"
+import { useResaleMarketSetters } from "@/hooks/useResaleMarket"
+import { getContractAddresses, ChainId, eventTicketingAbi } from "@/lib/addressAndAbi"
+import { ListTicketModal } from "@/components/list-ticket-modal"
+import { TransferTicketModal } from "@/components/transfer-ticket-modal"
+import { 
+  ProfileHeader, 
+  TicketList, 
+  TicketDetailsModal, 
+  QrCodeModal 
+} from "@/components/profile"
+
+export type NFTTicketDisplay = {
+  id: string
+  tokenId: bigint
+  eventTitle: string
+  eventTimestamp: number
+  location: string
+  status: 'upcoming' | 'past'
+  qrCode: string
+  price: string
+  purchaseDate: string
+  txHash: string | null
+}
+
+type TicketAction = "view" | "transfer" | "qr" | "resale"
+
+export default function ProfilePage() {
+  const [ticketTransactions, setTicketTransactions] = useState<Record<string, string>>({})
+  const [selectedTicket, setSelectedTicket] = useState<NFTTicketDisplay | null>(null)
+  const [currentAction, setCurrentAction] = useState<TicketAction | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  const { isConnected, address, chain } = useConnection()
+  const publicClient = usePublicClient()
+  
+  const { useGetRecentTickets } = useEventTicketingGetters()
+  const { listTicket, isPending: isListing, isConfirmed: isListingConfirmed } = useResaleMarketSetters()
+  
+  // Fetch all recent tickets
+  const { data: allTickets = [], isLoading: isLoadingTickets } = useGetRecentTickets()
+  
+  // Resolve contract address for current chain
+  const { eventTicketing: eventTicketingAddress } = useMemo(() => {
+    const chainId = chain?.id || ChainId.CELO_SEPOLIA
+    return getContractAddresses(chainId)
+  }, [chain])
+
+  // Registration status map for quick lookup
+  const [registrationMap, setRegistrationMap] = useState<Record<string, boolean>>({})
+
+  // Fetch registration status for all tickets for the connected user
+  useEffect(() => {
+    const fetchRegistrationStatuses = async () => {
+      if (!publicClient || !address || !allTickets?.length || !eventTicketingAddress) return
+
+      try {
+        const results = await Promise.allSettled(
+          allTickets.map((t: any) =>
+            publicClient.readContract({
+              address: eventTicketingAddress as `0x${string}`,
+              abi: eventTicketingAbi as any,
+              functionName: 'isRegistered',
+              args: [BigInt(t.id), address as `0x${string}`],
+            })
+          )
+        )
+
+        const map: Record<string, boolean> = {}
+        results.forEach((res, idx) => {
+          const id = allTickets[idx].id.toString()
+          map[id] = res.status === 'fulfilled' ? Boolean(res.value) : false
+        })
+        setRegistrationMap(map)
+      } catch (e) {
+        console.error('Failed to fetch registration statuses', e)
+        setRegistrationMap({})
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchRegistrationStatuses()
+  }, [publicClient, address, allTickets, eventTicketingAddress])
+
+  // Filter tickets to only include those registered by the user
+  const userTickets = useMemo(() => {
+    if (!allTickets) return []
+
+    return allTickets
+      .filter((ticket: any) => registrationMap[ticket.id.toString()] === true)
+      .map((ticket: any) => {
+        const now = Math.floor(Date.now() / 1000)
+        const isPast = Number(ticket.eventTimestamp) < now
+
+        return {
+          id: ticket.id.toString(),
+          tokenId: BigInt(ticket.id),
+          eventTitle: ticket.eventName,
+          eventTimestamp: Number(ticket.eventTimestamp),
+          location: ticket.location,
+          status: isPast ? "past" as const : "upcoming" as const,
+          qrCode: ticket.id.toString(),
+          price: formatEther(ticket.price) + " CELO",
+          purchaseDate: new Date(Number(ticket.eventTimestamp) * 1000).toISOString(),
+          txHash: ticketTransactions[ticket.id.toString()] || null,
+        } satisfies NFTTicketDisplay
+      })
+  }, [allTickets, registrationMap, ticketTransactions])
+
+  // Fetch transaction hashes for registered tickets
+  useEffect(() => {
+    const fetchTransactionHashes = async () => {
+      if (!allTickets || !publicClient || !address || !eventTicketingAddress) {
+        return
+      }
+
+      const registeredTickets = allTickets.filter((t: any) => registrationMap[t.id.toString()] === true)
+      const txHashes: Record<string, string> = {}
+      
+      for (const ticket of registeredTickets) {
+        try {
+          const logs = await publicClient.getLogs({
+            address: eventTicketingAddress as `0x${string}`,
+            event: {
+              type: 'event',
+              name: 'Registered',
+              inputs: [
+                { type: 'uint256', indexed: true, name: 'ticketId' },
+                { type: 'address', indexed: true, name: 'registrant' },
+                { type: 'uint256', indexed: false, name: 'nftTokenId' }
+              ]
+            },
+            args: {
+              ticketId: BigInt(ticket.id),
+              registrant: address as `0x${string}`
+            },
+            fromBlock: 'earliest',
+            toBlock: 'latest'
+          })
+          
+          if (logs.length > 0) {
+            const latestLog = logs[logs.length - 1]
+            txHashes[ticket.id.toString()] = latestLog.transactionHash
+          } else {
+            const mockTxHash = `0x${ticket.id.toString().padStart(64, '0')}`
+            txHashes[ticket.id.toString()] = mockTxHash
+          }
+        } catch (error) {
+          console.error(`Failed to fetch transaction for ticket ${ticket.id}:`, error)
+          const mockTxHash = `0x${ticket.id.toString().padStart(64, '0')}`
+          txHashes[ticket.id.toString()] = mockTxHash
+        }
+      }
+      
+      setTicketTransactions(txHashes)
+    }
+
+    fetchTransactionHashes()
+  }, [allTickets, registrationMap, publicClient, address, eventTicketingAddress])
+
+  // Handle listing confirmation
+  useEffect(() => {
+    if (isListingConfirmed) {
+      toast.success('Ticket listed for resale!')
+    }
+  }, [isListingConfirmed])
+
+  const handleAction = (action: TicketAction, ticket: NFTTicketDisplay) => {
+    setSelectedTicket(ticket)
+    setCurrentAction(action)
+  }
+
+  const handleCloseModal = () => {
+    setSelectedTicket(null)
+    setCurrentAction(null)
+  }
+
+  const handleListTicket = async (price: bigint) => {
+    if (!selectedTicket) return
+    
+    try {
+      await listTicket(selectedTicket.tokenId, price)
+      toast.success('Ticket listed for resale successfully!')
+    } catch (error) {
+      console.error('Failed to list ticket:', error)
+      toast.error('Failed to list ticket for resale')
+    } finally {
+      handleCloseModal()
+    }
+  }
+
+  const stats = useMemo(() => ({
+    totalTickets: userTickets.length,
+    upcomingEvents: userTickets.filter(t => t.status === 'upcoming').length,
+    pastEvents: userTickets.filter(t => t.status === 'past').length,
+  }), [userTickets])
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <ProfileHeader 
+          stats={stats} 
+          isLoading={isLoading || isLoadingTickets} 
+        />
+        
+        <section className="mt-8 space-y-6">
+          <div className="flex flex-col space-y-2">
+            <h2 className="text-2xl font-bold tracking-tight">My Tickets</h2>
+            <p className="text-muted-foreground">Manage and view your event tickets</p>
+          </div>
+          
+          <div className="bg-card rounded-lg border shadow-sm">
+            <TicketList 
+              tickets={userTickets} 
+              isLoading={isLoading || isLoadingTickets}
+              onAction={handleAction}
+            />
+          </div>
+        </section>
+      </div>
+
+      {/* Modals */}
+      <TicketDetailsModal
+        ticket={currentAction === 'view' ? selectedTicket : null}
+        isOpen={currentAction === 'view'}
+        onClose={handleCloseModal}
+      />
+
+      <QrCodeModal
+        ticket={currentAction === 'qr' && selectedTicket 
+          ? {
+              id: selectedTicket.id,
+              eventTitle: selectedTicket.eventTitle,
+              qrCode: selectedTicket.qrCode
+            } 
+          : null
+        }
+        isOpen={currentAction === 'qr'}
+        onClose={handleCloseModal}
+      />
+
+      <TransferTicketModal
+        tokenId={
+          currentAction === 'transfer' && selectedTicket 
+            ? selectedTicket.tokenId 
+            : undefined
+        }
+        isOpen={currentAction === 'transfer'}
+        onClose={handleCloseModal}
+      />
+
+      <ListTicketModal
+        tokenId={
+          currentAction === 'resale' && selectedTicket 
+            ? selectedTicket.tokenId 
+            : undefined
+        }
+        eventName={
+          currentAction === 'resale' && selectedTicket 
+            ? selectedTicket.eventTitle 
+            : ''
+        }
+        isOpen={currentAction === 'resale'}
+        onClose={handleCloseModal}
+        onListSuccess={handleListTicket}
+        isPending={isListing}
+      />
+    </div>
+  )
+}

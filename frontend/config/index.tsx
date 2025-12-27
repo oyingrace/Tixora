@@ -1,6 +1,6 @@
 import { cookieStorage, createStorage } from 'wagmi'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-import { base, baseSepolia, celo, celoSepolia } from '@reown/appkit/networks'
+import { base, celo } from '@reown/appkit/networks'
 import type { AppKitNetwork } from '@reown/appkit/networks'
 
 // Get projectId from https://dashboard.reown.com
@@ -11,7 +11,7 @@ if (!projectId) {
 }
 
 // Define networks with proper typing
-export const networks = [base, baseSepolia, celo, celoSepolia] as [AppKitNetwork, ...AppKitNetwork[]]
+export const networks = [base, celo] as [AppKitNetwork, ...AppKitNetwork[]]
 
 // Set up the Wagmi Adapter (Config)
 export const wagmiAdapter = new WagmiAdapter({

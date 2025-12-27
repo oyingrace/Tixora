@@ -14,7 +14,7 @@ import { Loader2, Send, AlertCircle } from "lucide-react"
 import { useTicketNFTSetters } from "@/hooks/useTicketNft"
 import { toast } from "react-toastify"
 import { Address, isAddress } from "viem"
-import { useAccount } from "wagmi"
+import { useConnection } from "wagmi"
 
 interface TransferTicketModalProps {
   isOpen: boolean
@@ -37,7 +37,7 @@ export function TransferTicketModal({
   const [isTransferring, setIsTransferring] = useState(false)
   const [addressError, setAddressError] = useState("")
   
-  const { address: userAddress } = useAccount()
+  const { address: userAddress } = useConnection()
   
   const {
     safeTransferFrom,
@@ -132,7 +132,7 @@ export function TransferTicketModal({
           {/* Warning Message */}
           <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
             <div className="flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-yellow-400 mt-0.5 flex-shrink-0" />
+              <AlertCircle className="w-4 h-4 text-yellow-400 mt-0.5 shrink-0" />
               <p className="text-xs text-yellow-400">
                 This action is permanent. Make sure you trust the recipient and have verified their address.
               </p>
@@ -160,7 +160,7 @@ export function TransferTicketModal({
             )}
           </div>
 
-          {/* Info Box */}
+          {/* Info Box */}toString
           <div className="p-3 bg-slate-700/50 rounded-lg">
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
@@ -169,7 +169,7 @@ export function TransferTicketModal({
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Token ID</span>
-                <span className="text-white font-mono">#{tokenId.toString()}</span>
+                <span className="text-white font-mono">#{String(tokenId)}</span>
               </div>
             </div>
           </div>
@@ -187,7 +187,7 @@ export function TransferTicketModal({
           <Button
             onClick={handleTransfer}
             disabled={!isActive || isPending || isConfirming || !recipientAddress || !!addressError}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white disabled:opacity-50 disabled:pointer-events-none"
+            className="bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white disabled:opacity-50 disabled:pointer-events-none"
             title={!isActive ? "This ticket is no longer active and cannot be transferred" : undefined}
           >
             {isPending || isConfirming ? (

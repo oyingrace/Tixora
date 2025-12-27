@@ -24,7 +24,7 @@ import Header from "@/components/header";
 
 export const metadata: Metadata = {
   title: "Tixora - Decentralized Event Ticketing",
-  description: "NFT-based event ticketing platform built on Ethereum",
+  description: "NFT-based event ticketing platform built",
   icons: {
     icon: "/favicon.ico",
   },
