@@ -196,25 +196,34 @@ export default function ProfilePage() {
     }
   }
 
-  const stats = {
+  const stats = useMemo(() => ({
     totalTickets: userTickets.length,
     upcomingEvents: userTickets.filter(t => t.status === 'upcoming').length,
     pastEvents: userTickets.filter(t => t.status === 'past').length,
-  }
+  }), [userTickets])
 
   return (
-    <div className="container py-8">
-      <ProfileHeader 
-        stats={stats} 
-        isLoading={isLoading || isLoadingTickets} 
-      />
-      
-      <div className="mt-8">
-        <TicketList 
-          tickets={userTickets} 
-          isLoading={isLoading || isLoadingTickets}
-          onAction={handleAction}
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <ProfileHeader 
+          stats={stats} 
+          isLoading={isLoading || isLoadingTickets} 
         />
+        
+        <section className="mt-8 space-y-6">
+          <div className="flex flex-col space-y-2">
+            <h2 className="text-2xl font-bold tracking-tight">My Tickets</h2>
+            <p className="text-muted-foreground">Manage and view your event tickets</p>
+          </div>
+          
+          <div className="bg-card rounded-lg border shadow-sm">
+            <TicketList 
+              tickets={userTickets} 
+              isLoading={isLoading || isLoadingTickets}
+              onAction={handleAction}
+            />
+          </div>
+        </section>
       </div>
 
       {/* Modals */}
@@ -225,26 +234,42 @@ export default function ProfilePage() {
       />
 
       <QrCodeModal
-        ticket={currentAction === 'qr' && selectedTicket ? {
-          id: selectedTicket.id,
-          eventTitle: selectedTicket.eventTitle,
-          qrCode: selectedTicket.qrCode
-        } : null}
+        ticket={currentAction === 'qr' && selectedTicket 
+          ? {
+              id: selectedTicket.id,
+              eventTitle: selectedTicket.eventTitle,
+              qrCode: selectedTicket.qrCode
+            } 
+          : null
+        }
         isOpen={currentAction === 'qr'}
         onClose={handleCloseModal}
       />
 
       <TransferTicketModal
-        ticketId={currentAction === 'transfer' && selectedTicket ? selectedTicket.tokenId : undefined}
+        tokenId={
+          currentAction === 'transfer' && selectedTicket 
+            ? selectedTicket.tokenId 
+            : undefined
+        }
         isOpen={currentAction === 'transfer'}
         onClose={handleCloseModal}
       />
 
       <ListTicketModal
-        ticketId={currentAction === 'resale' && selectedTicket ? selectedTicket.tokenId : undefined}
+        tokenId={
+          currentAction === 'resale' && selectedTicket 
+            ? selectedTicket.tokenId 
+            : undefined
+        }
+        eventName={
+          currentAction === 'resale' && selectedTicket 
+            ? selectedTicket.eventTitle 
+            : ''
+        }
         isOpen={currentAction === 'resale'}
         onClose={handleCloseModal}
-        onSubmit={handleListTicket}
+        onListSuccess={handleListTicket}
         isPending={isListing}
       />
     </div>
