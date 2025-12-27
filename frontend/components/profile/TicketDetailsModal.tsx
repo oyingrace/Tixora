@@ -1,6 +1,6 @@
 "use client"
 
-import { X, Calendar, Clock, MapPin, ExternalLink, Copy } from "lucide-react"
+import { X, Calendar, MapPin, ExternalLink, Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
@@ -59,7 +59,7 @@ export function TicketDetailsModal({ ticket, isOpen, onClose }: TicketDetailsMod
               
               <div className="space-y-3">
                 <div className="flex items-start">
-                  <Calendar className="h-5 w-5 text-muted-foreground mr-3 mt-0.5 flex-shrink-0" />
+                  <Calendar className="h-5 w-5 text-muted-foreground mr-3 mt-0.5 shrink-0" />
                   <div>
                     <p className="text-sm text-muted-foreground">Date & Time</p>
                     <p className="font-medium">
@@ -69,7 +69,7 @@ export function TicketDetailsModal({ ticket, isOpen, onClose }: TicketDetailsMod
                 </div>
                 
                 <div className="flex items-start">
-                  <MapPin className="h-5 w-5 text-muted-foreground mr-3 mt-0.5 flex-shrink-0" />
+                  <MapPin className="h-5 w-5 text-muted-foreground mr-3 mt-0.5 shrink-0" />
                   <div>
                     <p className="text-sm text-muted-foreground">Location</p>
                     <p className="font-medium">{ticket.location}</p>

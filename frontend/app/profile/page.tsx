@@ -16,7 +16,7 @@ import {
   QrCodeModal 
 } from "@/components/profile"
 
-type NFTTicketDisplay = {
+export type NFTTicketDisplay = {
   id: string
   tokenId: bigint
   eventTitle: string
@@ -182,7 +182,7 @@ export default function ProfilePage() {
     setCurrentAction(null)
   }
 
-  const handleListTicket = async (price: string) => {
+  const handleListTicket = async (price: bigint) => {
     if (!selectedTicket) return
     
     try {

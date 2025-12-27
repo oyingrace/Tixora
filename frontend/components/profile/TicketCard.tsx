@@ -44,7 +44,7 @@ export function TicketCard({ ticket, onAction, isLoading = false }: TicketCardPr
   return (
     <Card className="h-full flex flex-col hover:shadow-lg transition-shadow">
       <div className="relative">
-        <div className="h-40 bg-gradient-to-r from-primary/10 to-muted/50 flex items-center justify-center">
+        <div className="h-40 bg-linear-to-r from-primary/10 to-muted/50 flex items-center justify-center">
           <div className="text-4xl font-bold text-muted-foreground/30">
             {ticket.eventTitle.charAt(0).toUpperCase()}
           </div>
@@ -72,7 +72,7 @@ export function TicketCard({ ticket, onAction, isLoading = false }: TicketCardPr
           <span>{format(eventDate, 'p')}</span>
         </div>
         <div className="flex items-start">
-          <MapPin className="mr-2 h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+          <MapPin className="mr-2 h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
           <span className="line-clamp-2">{ticket.location}</span>
         </div>
         

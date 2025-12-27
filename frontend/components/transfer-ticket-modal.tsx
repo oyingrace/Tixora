@@ -169,7 +169,7 @@ export function TransferTicketModal({
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Token ID</span>
-                <span className="text-white font-mono">#{tokenId.toString()}</span>
+                <span className="text-white font-mono">#{String(tokenId)}</span>
               </div>
             </div>
           </div>
