@@ -53,6 +53,8 @@ export default function Marketplace() {
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("trending")
   const [activeTab, setActiveTab] = useState("upcoming")
+  const [selectedCategory, setSelectedCategory] = useState<string>("all")
+  const [priceFilter, setPriceFilter] = useState<string>("all")
   const [events, setEvents] = useState<MarketplaceEvent[]>([])
   const [loading, setLoading] = useState(true)
   const chainId = chain?.id || ChainId.CELO_SEPOLIA;
@@ -139,6 +141,11 @@ export default function Marketplace() {
     }
   }, [chainId, recentTickets])
 
+  // Extract unique categories from events
+  const availableCategories = Array.from(
+    new Set(events.map(event => event.category).filter(Boolean))
+  ).sort()
+
   // Redirect to landing page if wallet is not connected
   if (!isConnected) {
     toast.error("Please connect your wallet to access the marketplace")
@@ -174,6 +181,32 @@ export default function Marketplace() {
           event.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
           event.category.toLowerCase().includes(searchTerm.toLowerCase())
       )
+    }
+
+    // Apply category filter
+    if (selectedCategory !== "all") {
+      filteredEvents = filteredEvents.filter(
+        (event) => event.category === selectedCategory
+      )
+    }
+
+    // Apply price filter
+    if (priceFilter !== "all") {
+      filteredEvents = filteredEvents.filter((event) => {
+        const priceValue = parseFloat(formatEther(event.originalPrice))
+        switch (priceFilter) {
+          case "under-0.1":
+            return priceValue < 0.1
+          case "0.1-0.5":
+            return priceValue >= 0.1 && priceValue <= 0.5
+          case "0.5-1":
+            return priceValue > 0.5 && priceValue <= 1
+          case "over-1":
+            return priceValue > 1
+          default:
+            return true
+        }
+      })
     }
 
     // Apply sorting
