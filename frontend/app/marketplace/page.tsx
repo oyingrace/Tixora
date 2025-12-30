@@ -4,12 +4,13 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useConnection, useReadContract } from 'wagmi'
-import { Search, TrendingUp, Clock, Calendar, Users, Sparkles, AlertCircle } from "lucide-react"
+import { Search, TrendingUp, Clock, Calendar, Users, Sparkles, AlertCircle, Filter } from "lucide-react"
 import { ChainId, eventTicketingAbi, getContractAddresses } from "@/lib/addressAndAbi"
 import { Address, formatEther } from "viem"
 import { EventCard } from "@/components/event-card"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useRouter } from "next/navigation"
 import { toast } from "react-toastify"
 
@@ -293,9 +294,57 @@ export default function Marketplace() {
                   )}
                 </div>
               </div>
+            </div>
 
-              {/* Sort Buttons */}
-              <div className="flex flex-wrap gap-3">
+            {/* Filter Row */}
+            <div className="flex flex-wrap gap-3 mt-4">
+              {/* Category Filter */}
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="h-10 w-[180px] bg-slate-800/50 border-slate-600 text-slate-300 hover:border-purple-500 hover:text-white">
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-600">
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {availableCategories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Price Filter */}
+              <Select value={priceFilter} onValueChange={setPriceFilter}>
+                <SelectTrigger className="h-10 w-[180px] bg-slate-800/50 border-slate-600 text-slate-300 hover:border-purple-500 hover:text-white">
+                  <SelectValue placeholder="All Prices" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-600">
+                  <SelectItem value="all">All Prices</SelectItem>
+                  <SelectItem value="under-0.1">Under 0.1 {chainId === ChainId.CELO_SEPOLIA || chainId === ChainId.CELO ? "CELO" : "ETH"}</SelectItem>
+                  <SelectItem value="0.1-0.5">0.1 - 0.5 {chainId === ChainId.CELO_SEPOLIA || chainId === ChainId.CELO ? "CELO" : "ETH"}</SelectItem>
+                  <SelectItem value="0.5-1">0.5 - 1 {chainId === ChainId.CELO_SEPOLIA || chainId === ChainId.CELO ? "CELO" : "ETH"}</SelectItem>
+                  <SelectItem value="over-1">Over 1 {chainId === ChainId.CELO_SEPOLIA || chainId === ChainId.CELO ? "CELO" : "ETH"}</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Clear Filters Button */}
+              {(selectedCategory !== "all" || priceFilter !== "all") && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedCategory("all")
+                    setPriceFilter("all")
+                  }}
+                  className="h-10 border-slate-600 text-slate-300 hover:border-red-500 hover:text-red-400"
+                >
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+
+            {/* Sort Buttons */}
+            <div className="flex flex-wrap gap-3 mt-4">
                 <Button
                   variant={sortBy === "trending" ? "default" : "outline"}
                   onClick={() => setSortBy("trending")}
