@@ -1,12 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { useRouter } from 'next/navigation'
 import { useConnection, useReadContract } from 'wagmi'
 import { ChainId, eventTicketingAbi, getContractAddresses } from "@/lib/addressAndAbi"
 import { Address, formatEther } from "viem"
+import { EventCard } from "@/components/event-card"
 
 interface TicketData {
   id: number
@@ -115,6 +117,12 @@ function FeatureEvents() {
       setLoading(false)
     }, [recentTickets, chainId])
 
+    // Filter to show only upcoming events, sorted by trending first, then take top 4
+    const featuredEvents = events
+      .filter(event => event.status === "upcoming")
+      .sort((a, b) => (b.trending ? 1 : 0) - (a.trending ? 1 : 0))
+      .slice(0, 4)
+
   return (
     <section id="featured-events" className="bg-slate-900/30 px-15 md:px-20 lg:px-24 md:pt-[calc(100vh-42rem)] pt-[calc(100vh-65rem)] pb-10">
         <div className="container mx-auto">
@@ -128,63 +136,27 @@ function FeatureEvents() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* {featuredEvents.slice(0, 4).map((event, index) => (
-              <Card
-                key={event.id}
-                className={`group hover:scale-105 transition-all duration-500 cursor-pointer bg-slate-800/90 border-slate-700 hover:border-primary/50 backdrop-blur-sm hover:shadow-2xl hover:shadow-primary/20 ${
-                  index === currentEventIndex % featuredEvents.length ? 'ring-2 ring-primary/50 scale-102' : ''
-                }`}
-              >
-                <CardContent className="p-0">
-                  <div className="relative h-48 overflow-hidden rounded-t-lg">
-                    <Image
-                      src={imageErrors[Number(event.id)] ? "/placeholder.svg" : event.image || "/placeholder.svg"}
-                      alt={event.title}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-500"
-                      onError={() => handleImageError(Number(event.id))}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    
-                    <Badge className="absolute top-3 left-3 bg-primary/90 backdrop-blur-sm">
-                      {event.category}
-                    </Badge>
-                    <Badge className={`absolute top-3 right-3 backdrop-blur-sm ${
-                      event.ticketsLeft <= 10 ? 'bg-red-500/90 animate-pulse' : 'bg-secondary/90'
-                    } text-white`}>
-                      {event.ticketsLeft} left
-                    </Badge>
-                  </div>
-
-                  <div className="p-6">
-                    <h3 className="text-xl font-semibold mb-3 group-hover:text-primary transition-colors text-white line-clamp-2 min-h-[3.5rem]">
-                      {event.title}
-                    </h3>
-
-                    <div className="space-y-2 text-sm text-slate-300 mb-6">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-purple-400 flex-shrink-0" />
-                        <span className="truncate">{event.date}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-blue-400 flex-shrink-0" />
-                        <span className="truncate">{event.location}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-green-400 flex-shrink-0" />
-                        <span>{event.attendees.toLocaleString()} attendees</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-center pt-4 border-t border-slate-700/50">
-                      <span className="text-2xl font-bold gradient-text bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                        {event.price}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))} */}
+            {loading ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-purple-400 mb-4" />
+                <p className="text-slate-400">Loading featured events...</p>
+              </div>
+            ) : featuredEvents.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-slate-400 mb-4">No upcoming events available at the moment.</p>
+                <Button
+                  variant="outline"
+                  onClick={() => router.push('/marketplace')}
+                  className="border-purple-500/50 hover:bg-purple-500/10"
+                >
+                  Browse All Events <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              featuredEvents.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))
+            )}
           </div>
 
           <div className="text-center mt-12">
