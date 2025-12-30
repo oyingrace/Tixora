@@ -215,6 +215,25 @@ export default function Marketplace() {
       filteredEvents = [...filteredEvents].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     } else if (sortBy === "trending") {
       filteredEvents = [...filteredEvents].sort((a, b) => (b.trending ? 1 : 0) - (a.trending ? 1 : 0))
+    } else if (sortBy === "soonest") {
+      filteredEvents = [...filteredEvents].sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime()
+        const dateB = new Date(b.createdAt).getTime()
+        return dateA - dateB
+      })
+    } else if (sortBy === "lowest-price") {
+      filteredEvents = [...filteredEvents].sort((a, b) => {
+        const priceA = parseFloat(formatEther(a.originalPrice))
+        const priceB = parseFloat(formatEther(b.originalPrice))
+        return priceA - priceB
+      })
+    } else if (sortBy === "highest-demand") {
+      filteredEvents = [...filteredEvents].sort((a, b) => {
+        // Calculate demand as percentage sold
+        const demandA = a.attendees > 0 ? (a.attendees - a.ticketsLeft) / a.attendees : 0
+        const demandB = b.attendees > 0 ? (b.attendees - b.ticketsLeft) / b.attendees : 0
+        return demandB - demandA
+      })
     }
 
     return filteredEvents
@@ -343,33 +362,47 @@ export default function Marketplace() {
               )}
             </div>
 
-            {/* Sort Buttons */}
-            <div className="flex flex-wrap gap-3 mt-4">
-                <Button
-                  variant={sortBy === "trending" ? "default" : "outline"}
-                  onClick={() => setSortBy("trending")}
-                  className={`h-10 transition-all duration-200 ${
-                    sortBy === "trending"
-                      ? "bg-purple-600 hover:bg-purple-500 hover:shadow-lg"
-                      : "border-slate-600 text-slate-300 hover:border-purple-500 hover:text-white"
-                  }`}
-                >
-                  <TrendingUp className="w-4 h-4 mr-1" />
-                  Trending
-                </Button>
-                <Button
-                  variant={sortBy === "recent" ? "default" : "outline"}
-                  onClick={() => setSortBy("recent")}
-                  className={`h-10 transition-all duration-200 ${
-                    sortBy === "recent"
-                      ? "bg-cyan-600 hover:bg-cyan-500 hover:shadow-lg"
-                      : "border-slate-600 text-slate-300 hover:border-blue-500 hover:text-white"
-                  }`}
-                >
-                  <Clock className="w-4 h-4 mr-1" />
-                  Recent
-                </Button>
-              </div>
+            {/* Sort Dropdown */}
+            <div className="flex flex-wrap items-center gap-3 mt-4">
+              <span className="text-sm text-slate-400">Sort by:</span>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="h-10 w-[200px] bg-slate-800/50 border-slate-600 text-slate-300 hover:border-purple-500 hover:text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-600">
+                  <SelectItem value="trending">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4" />
+                      Trending
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="recent">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      Most Recent
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="soonest">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      Soonest First
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="lowest-price">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs">💰</span>
+                      Lowest Price
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="highest-demand">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      Highest Demand
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             </div>
           </div>
 
