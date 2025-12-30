@@ -50,7 +50,70 @@ function FeatureEvents() {
     const chainId = chain?.id || ChainId.CELO_SEPOLIA;
     const { eventTicketing } = getContractAddresses(chainId)
 
-    // fetch the last four events from the contract
+    // Read recent tickets from the contract
+    const { data: recentTickets } = useReadContract({
+      address: eventTicketing as Address,
+      abi: eventTicketingAbi,
+      functionName: 'getRecentTickets',
+    })
+
+    // Transform blockchain data into display-ready events
+    useEffect(() => {
+      if (!recentTickets || !Array.isArray(recentTickets)) {
+        setLoading(false)
+        return
+      }
+
+      const transformed: MarketplaceEvent[] = recentTickets.map((ticket: TicketData) => {
+        const eventDate = new Date(Number(ticket.eventTimestamp) * 1000)
+        const now = new Date()
+        const isPassed = eventDate < now
+        const isCanceled = ticket.canceled
+        const isClosed = ticket.closed
+        const ticketsLeft = Number(ticket.maxSupply - ticket.sold)
+
+        let status = "upcoming"
+        if (isCanceled) status = "canceled"
+        else if (isClosed) status = "closed"
+        else if (isPassed) status = "passed"
+        else if (ticketsLeft === 0) status = "sold_out"
+
+        let category = "Event"
+        let image = "/placeholder.svg"
+        try {
+          if (ticket.metadata) {
+            const metadata = JSON.parse(ticket.metadata)
+            category = metadata.category || "Event"
+            image = metadata.image || "/placeholder.svg"
+          }
+        } catch {
+          // ignore metadata parse errors for now
+        }
+
+        return {
+          id: Number(ticket.id),
+          eventTitle: ticket.eventName,
+          price: `${formatEther(ticket.price)} ${chainId === ChainId.CELO_SEPOLIA || chainId === ChainId.CELO ? "CELO" : "ETH"}`,
+          date: eventDate.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+          }),
+          location: ticket.location,
+          image,
+          attendees: Number(ticket.maxSupply),
+          ticketsLeft,
+          status,
+          category,
+          trending: ticket.sold > (ticket.maxSupply * BigInt(7)) / BigInt(10),
+          createdAt: eventDate.toISOString(),
+          originalPrice: ticket.price,
+        }
+      })
+
+      setEvents(transformed)
+      setLoading(false)
+    }, [recentTickets, chainId])
 
   return (
     <section id="featured-events" className="bg-slate-900/30 px-15 md:px-20 lg:px-24 md:pt-[calc(100vh-42rem)] pt-[calc(100vh-65rem)] pb-10">
