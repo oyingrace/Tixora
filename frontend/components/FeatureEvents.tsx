@@ -1,10 +1,54 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
+import { useConnection, useReadContract } from 'wagmi'
+import { ChainId, eventTicketingAbi, getContractAddresses } from "@/lib/addressAndAbi"
+import { Address, formatEther } from "viem"
+
+interface TicketData {
+  id: number
+  creator: string
+  price: bigint
+  eventName: string
+  description: string
+  eventTimestamp: bigint
+  location: string
+  closed: boolean
+  canceled: boolean
+  metadata: string
+  maxSupply: bigint
+  sold: bigint
+  totalCollected: bigint
+  totalRefunded: bigint
+  proceedsWithdrawn: boolean
+}
+
+interface MarketplaceEvent {
+  id: number
+  eventTitle: string
+  price: string
+  date: string
+  location: string
+  image: string
+  attendees: number
+  ticketsLeft: number
+  status: string
+  category: string
+  trending: boolean
+  createdAt: string
+  originalPrice: bigint
+}
 
 function FeatureEvents() {
-
     const router = useRouter();
+    const { chain } = useConnection()
+    const [events, setEvents] = useState<MarketplaceEvent[]>([])
+    const [loading, setLoading] = useState(true)
+    const chainId = chain?.id || ChainId.CELO_SEPOLIA;
+    const { eventTicketing } = getContractAddresses(chainId)
 
     // fetch the last four events from the contract
 
